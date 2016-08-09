@@ -1,0 +1,14 @@
+{
+  "name": "videojs-contrib-eme",
+  "version": "0.0.0",
+  "author": "Garrett Singer &lt;gesinger@gmail.com&gt;",
+  "license": "MIT",
+  "main": [
+    "dist/videojs-contrib-eme.min.js"
+  ],
+  "keywords": [
+    "videojs",
+    "videojs-plugin"
+  ]
+}
+
