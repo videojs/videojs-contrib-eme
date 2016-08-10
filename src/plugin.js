@@ -1,7 +1,23 @@
 import videojs from 'video.js';
+import {standard5July2016} from './eme';
+import fairplay from './fairplay';
 
-// Default options for the plugin.
-const defaults = {};
+const handleEncryptedEvent = (event, options) => {
+  standard5July2016({
+    video: event.target,
+    initDataType: event.initDataType,
+    initData: event.initData,
+    options
+  });
+};
+
+const handleWebKitNeedKeyEvent = (event, options) => {
+  fairplay({
+    video: event.target,
+    initData: event.initData,
+    options
+  });
+};
 
 /**
  * Function to invoke when the player is ready.
@@ -15,7 +31,19 @@ const defaults = {};
  * @param    {Object} [options={}]
  */
 const onPlayerReady = (player, options) => {
-  player.addClass('vjs-contrib-eme');
+  if (!player.tech_.el_.techName_ === 'Html5') {
+    return;
+  }
+
+  // Support EME 05 July 2016
+  player.tech_.el_.addEventListener('encrypted', (event) => {
+    handleEncryptedEvent(event, options);
+  });
+  // Support Safari EME with FairPlay
+  // (also used in early Chrome or Chrome with EME disabled flag)
+  player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+    handleWebKitNeedKeyEvent(event, options);
+  });
 };
 
 /**
@@ -32,7 +60,7 @@ const onPlayerReady = (player, options) => {
  */
 const contribEme = function(options) {
   this.ready(() => {
-    onPlayerReady(this, videojs.mergeOptions(defaults, options));
+    onPlayerReady(this, videojs.mergeOptions({}, options));
   });
 };
 

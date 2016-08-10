@@ -15,6 +15,59 @@ Supports Encrypted Media Extensions for playback of encrypted content in Video.j
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Options
+
+```javascript
+{
+  configurations: {
+    audio: {
+      'http://www.somesource.com/someext.ext': 'audio/webm; codecs="vorbis"',
+      'http://www.someothersource.com/someext.ext': 'audio/webm; codecs="opus"'
+    },
+    video: {
+      'http://www.somesource.com/someext.ext': 'video/webm; codecs="vp9"',
+      'http://www.someothersource.com/someext.ext': 'video/webm; codecs="vp8"'
+    }
+  },
+  keySystems: {
+    "com.apple.fps.1_0": {
+      getCertificate: (options, callback) => {
+        // request certificate
+        // if err, callback(err)
+        // if success, callback(null, certificate)
+      },
+      getContentId: (initData) => {
+        // return content ID
+      },
+      getConcatenatedInitData: (initData, certificate) => {
+        // return concatenated init data
+      },
+      getKey: (options, callback) => {
+        let { contentId, webKitKeyMessage } = options;
+
+        // request key using options
+        // if err, callback(err)
+        // if success, callback(null, key) as arraybuffer
+      }
+    },
+    "org.w3.clearkey": {
+      getCertificate: (options, callback) => {
+        // request certificate
+        // if err, callback(err)
+        // if success, callback(null, certificate)
+      },
+      getLicense: (options, callback) => {
+        let mediaKeyMessage = options.mediaKeyMessage;
+
+        // request license using mediaKeyMessage
+        // if err, callback(err)
+        // if success, callback(null, license)
+      }
+    }
+  }
+}
+```
+
 ## Getting Started
 
 1. Clone this repository!
