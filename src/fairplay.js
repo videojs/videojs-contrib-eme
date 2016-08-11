@@ -1,9 +1,12 @@
+import videojs from 'video.js';
+import window from 'global/window';
+
 const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const addKey = ({video, contentId, concatenatedInitData, getKey}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
-      video.webkitSetMediaKeys(new WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
     }
 
     if (!video.webkitKeys) {
@@ -21,8 +24,6 @@ const addKey = ({video, contentId, concatenatedInitData, getKey}) => {
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
-      let message = event.message;
-
       getKey({
         contentId,
         webKitKeyMessage: event.message
@@ -66,9 +67,7 @@ const fairplay = ({video, initData, options}) => {
                                                                     certificate),
       getKey: fairplayOptions.getKey
     });
-  }).catch((e) => {
-    console.error(e);
-  });
+  }).catch(videojs.log.error.bind(videojs.log.error));
 };
 
 export default fairplay;

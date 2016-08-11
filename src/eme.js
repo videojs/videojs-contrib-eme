@@ -1,3 +1,5 @@
+import videojs from 'video.js';
+
 const getSupportedKeySystem = ({video, configurations, keySystems}) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
@@ -7,7 +9,7 @@ const getSupportedKeySystem = ({video, configurations, keySystems}) => {
     systemOptions.audioCapabilities = [{ contentType: configurations.audio[video.src] }];
   }
   if (configurations.video && configurations.video[video.src]) {
-    systemOptions.videoCapabilities =  [{ contentType: configurations.video[video.src] }];
+    systemOptions.videoCapabilities = [{ contentType: configurations.video[video.src] }];
   }
 
   // TODO determine if and when initDataTypes are necessary in systemOptions
@@ -18,13 +20,30 @@ const getSupportedKeySystem = ({video, configurations, keySystems}) => {
     if (!promise) {
       promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
     } else {
-      promise.catch((error) => {
-        promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions])
+      promise.catch((e) => {
+        promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
       });
     }
   });
 
   return promise;
+};
+
+const makeNewRequest = ({mediaKeys, initDataType, initData, getLicense}) => {
+  let keySession = mediaKeys.createSession();
+
+  keySession.addEventListener('message', (event) => {
+    getLicense(event.message)
+      .then((license) => {
+        return keySession.update(license);
+      })
+      .catch(videojs.log.error.bind(videojs.log.error, 'failed to get and set license'));
+  }, false);
+
+  keySession.generateRequest(initDataType, initData).catch(
+    videojs.log.error.bind(videojs.log.error,
+                           'Unable to create or initialize key session')
+  );
 };
 
 const addSession = ({video, initDataType, initData, getLicense}) => {
@@ -38,22 +57,6 @@ const addSession = ({video, initDataType, initData, getLicense}) => {
   } else {
     video.pendingSessionData.push({initDataType, initData});
   }
-};
-
-const makeNewRequest = ({mediaKeys, initDataType, initData, getLicense}) => {
-  let keySession = mediaKeys.createSession();
-
-  keySession.addEventListener("message", (event) => {
-    getLicense(event.message)
-      .then((license) => {
-        return keySession.update(license);
-      })
-      .catch(console.error.bind(console, 'failed to get and set license'));
-  }, false);
-
-  keySession.generateRequest(initDataType, initData).catch(
-    console.error.bind(console, 'Unable to create or initialize key session')
-  );
 };
 
 const setMediaKeys = ({video, certificate, createdMediaKeys, getLicense}) => {
@@ -130,7 +133,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
           certificate = cert;
 
           resolve(keySystemAccess);
-        })
+        });
       });
     }).then((keySystemAccess) => {
       return keySystemAccess.createMediaKeys();
@@ -142,7 +145,8 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
         getLicense: promisifyGetLicense(keySystemOptions.getLicense)
       });
     }).catch(
-      console.error.bind(console, 'Failed to create and initialize a MediaKeys object')
+      videojs.log.error.bind(videojs.log.error,
+                             'Failed to create and initialize a MediaKeys object')
     );
   }
 
