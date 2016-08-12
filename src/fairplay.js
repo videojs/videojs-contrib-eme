@@ -41,6 +41,7 @@ const addKey = ({video, contentId, concatenatedInitData, getKey}) => {
       resolve(event);
     });
 
+    // for testing purposes, adding webkitkeyerror must be the last item in this method
     keySession.addEventListener('webkitkeyerror', (event) => {
       reject(event);
     });

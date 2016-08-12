@@ -16,9 +16,7 @@ QUnit.test('the environment is sane', function(assert) {
 });
 
 QUnit.module('videojs-contrib-eme', {
-
   beforeEach() {
-
     // Mock the environment's timers because certain things - particularly
     // player readiness - are asynchronous in video.js 5. This MUST come
     // before any player is created; otherwise, timers could get created
@@ -38,21 +36,9 @@ QUnit.module('videojs-contrib-eme', {
 });
 
 QUnit.test('registers itself with video.js', function(assert) {
-  assert.expect(2);
-
   assert.strictEqual(
     Player.prototype.contribEme,
     plugin,
     'videojs-contrib-eme plugin was registered'
-  );
-
-  this.player.contribEme();
-
-  // Tick the clock forward enough to trigger the player to be "ready".
-  this.clock.tick(1);
-
-  assert.ok(
-    this.player.hasClass('vjs-contrib-eme'),
-    'the plugin adds a class to the player'
   );
 });
