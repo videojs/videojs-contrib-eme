@@ -2,7 +2,7 @@ import QUnit from 'qunit';
 
 import fairplay from '../src/fairplay';
 
-QUnit.module('videojs-contrib-eme');
+QUnit.module('videojs-contrib-eme fairplay');
 
 QUnit.test('lifecycle', function(assert) {
   assert.expect(19);
