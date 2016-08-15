@@ -12,7 +12,7 @@ const getSupportedKeySystem = ({video, configurations, keySystems}) => {
     systemOptions.videoCapabilities = [{ contentType: configurations.video[video.src] }];
   }
 
-  // TODO determine if and when initDataTypes are necessary in systemOptions
+  // TODO use initDataTypes when appropriate
 
   let promise;
 
@@ -62,7 +62,6 @@ const addSession = ({video, initDataType, initData, getLicense}) => {
 const setMediaKeys = ({video, certificate, createdMediaKeys, getLicense}) => {
   video.mediaKeysObject = createdMediaKeys;
 
-  // TODO determine if OK to skip
   if (certificate) {
     createdMediaKeys.setServerCertificate(certificate);
   }
@@ -119,7 +118,6 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
 
         keySystemOptions = options.keySystems[keySystemAccess.keySystem];
 
-        // TODO determine if OK to skip
         if (!keySystemOptions.getCertificate) {
           resolve(keySystemAccess);
         }
