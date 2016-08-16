@@ -57,7 +57,7 @@ Supports Encrypted Media Extensions for playback of encrypted content in Video.j
         // if success, callback(null, certificate)
       },
       getLicense: (options, callback) => {
-        let mediaKeyMessage = options.mediaKeyMessage;
+        let keyMessage = options.keyMessage;
 
         // request license using mediaKeyMessage
         // if err, callback(err)
