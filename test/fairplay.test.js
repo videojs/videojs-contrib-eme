@@ -8,7 +8,7 @@ QUnit.test('lifecycle', function(assert) {
   assert.expect(19);
 
   let done = assert.async();
-  let initData = '';
+  let initData = new Uint8Array([1, 2, 3, 4]).buffer;
 
   let getCertificateCallCount = 0;
   let getCertificateCallback;
@@ -28,9 +28,8 @@ QUnit.test('lifecycle', function(assert) {
       'com.apple.fps.1_0': {
         getCertificate,
         getKey,
-        // due to mocking, methods are not needed
-        getContentId: () => {},
-        getConcatenatedInitData: () => {}
+        // not needed due to mocking
+        getContentId: () => 'some content id'
       }
     }
   };
@@ -46,7 +45,7 @@ QUnit.test('lifecycle', function(assert) {
   let onKeySessionCreated;
 
   let createSessionCallCount = 0;
-  let createSession = (type, concatenatedInitData) => {
+  let createSession = (type, concatenatedData) => {
     createSessionCallCount++;
     return {
       addEventListener: (name, callback) => {
@@ -81,7 +80,7 @@ QUnit.test('lifecycle', function(assert) {
   assert.equal(getKeyCallCount, 0, 'getKey has not been called');
   assert.equal(updateKeySessionCallCount, 0, 'update key session has not been called');
 
-  getCertificateCallback(null, 'some certificate');
+  getCertificateCallback(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
   onKeySessionCreated = () => {
     // Step 2: create a key session
