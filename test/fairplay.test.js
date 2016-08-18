@@ -9,18 +9,21 @@ QUnit.test('lifecycle', function(assert) {
 
   let done = assert.async();
   let initData = new Uint8Array([1, 2, 3, 4]).buffer;
-
-  let getCertificateCallCount = 0;
-  let getCertificateCallback;
-  let getCertificate = (options, callback) => {
-    getCertificateCallCount++;
-    getCertificateCallback = callback;
+  let callbacks = {};
+  let callCounts = {
+    getCertificate: 0,
+    getKey: 0,
+    updateKeySession: 0,
+    createSession: 0
   };
-  let getKeyCallCount = 0;
-  let getKeyCallback;
+
+  let getCertificate = (options, callback) => {
+    callCounts.getCertificate++;
+    callbacks.getCertificate = callback;
+  };
   let getKey = (options, callback) => {
-    getKeyCallCount++;
-    getKeyCallback = callback;
+    callCounts.getKey++;
+    callbacks.getKey = callback;
   };
 
   let options = {
@@ -37,16 +40,14 @@ QUnit.test('lifecycle', function(assert) {
   // trap event listeners
   let keySessionEventListeners = {};
 
-  let updateKeySessionCallCount = 0;
   let updateKeySession = (key) => {
-    updateKeySessionCallCount++;
+    callCounts.updateKeySession++;
   };
 
   let onKeySessionCreated;
 
-  let createSessionCallCount = 0;
   let createSession = (type, concatenatedData) => {
-    createSessionCallCount++;
+    callCounts.createSession++;
     return {
       addEventListener: (name, callback) => {
         keySessionEventListeners[name] = callback;
@@ -75,19 +76,19 @@ QUnit.test('lifecycle', function(assert) {
     });
 
   // Step 1: getCertificate
-  assert.equal(getCertificateCallCount, 1, 'getCertificate has been called');
-  assert.equal(createSessionCallCount, 0, 'a key session has not been created');
-  assert.equal(getKeyCallCount, 0, 'getKey has not been called');
-  assert.equal(updateKeySessionCallCount, 0, 'update key session has not been called');
+  assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
+  assert.equal(callCounts.createSession, 0, 'a key session has not been created');
+  assert.equal(callCounts.getKey, 0, 'getKey has not been called');
+  assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
-  getCertificateCallback(null, new Uint16Array([4, 5, 6, 7]).buffer);
+  callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
   onKeySessionCreated = () => {
     // Step 2: create a key session
-    assert.equal(getCertificateCallCount, 1, 'getCertificate has been called');
-    assert.equal(createSessionCallCount, 1, 'a key session has been created');
-    assert.equal(getKeyCallCount, 0, 'getKey has not been called');
-    assert.equal(updateKeySessionCallCount, 0, 'update key session has not been called');
+    assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
+    assert.equal(callCounts.createSession, 1, 'a key session has been created');
+    assert.equal(callCounts.getKey, 0, 'getKey has not been called');
+    assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
     assert.ok(keySessionEventListeners.webkitkeymessage,
               'added an event listener for webkitkeymessage');
@@ -99,18 +100,18 @@ QUnit.test('lifecycle', function(assert) {
     keySessionEventListeners.webkitkeymessage({});
 
     // Step 3: get the key on webkitkeymessage
-    assert.equal(getCertificateCallCount, 1, 'getCertificate has been called');
-    assert.equal(createSessionCallCount, 1, 'a key session has been created');
-    assert.equal(getKeyCallCount, 1, 'getKey has been called');
-    assert.equal(updateKeySessionCallCount, 0, 'update key session has not been called');
+    assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
+    assert.equal(callCounts.createSession, 1, 'a key session has been created');
+    assert.equal(callCounts.getKey, 1, 'getKey has been called');
+    assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
-    getKeyCallback(null, []);
+    callbacks.getKey(null, []);
 
     // Step 4: update the key session with the key
-    assert.equal(getCertificateCallCount, 1, 'getCertificate has been called');
-    assert.equal(createSessionCallCount, 1, 'a key session has been created');
-    assert.equal(getKeyCallCount, 1, 'getKey has been called');
-    assert.equal(updateKeySessionCallCount, 1, 'update key session has been called');
+    assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
+    assert.equal(callCounts.createSession, 1, 'a key session has been created');
+    assert.equal(callCounts.getKey, 1, 'getKey has been called');
+    assert.equal(callCounts.updateKeySession, 1, 'updateKeySession has been called');
 
     keySessionEventListeners.webkitkeyadded();
   };

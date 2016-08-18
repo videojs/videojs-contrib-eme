@@ -8,27 +8,31 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.expect(40);
 
   let done = assert.async();
-  let requestMediaKeySystemAccessCallback;
-  let requestMediaKeySystemAccessCallCount = 0;
+  let callbacks = {};
+  let callCounts = {
+    requestMediaKeySystemAccess: 0,
+    getCertificate: 0,
+    getLicense: 0,
+    createSession: 0,
+    keySessionGenerateRequest: 0,
+    keySessionUpdate: 0,
+    createMediaKeys: 0
+  };
 
   navigator.requestMediaKeySystemAccess = (keySystem, options) => {
-    requestMediaKeySystemAccessCallCount++;
+    callCounts.requestMediaKeySystemAccess++;
     return new Promise((resolve, reject) => {
-      requestMediaKeySystemAccessCallback = resolve;
+      callbacks.requestMediaKeySystemAccess = resolve;
     });
   };
 
-  let getCertificateCallCount = 0;
-  let getCertificateCallback;
   let getCertificate = (options, callback) => {
-    getCertificateCallCount++;
-    getCertificateCallback = callback;
+    callCounts.getCertificate++;
+    callbacks.getCertificate = callback;
   };
-  let getLicenseCallCount = 0;
-  let getLicenseCallback;
   let getLicense = (options, callback) => {
-    getLicenseCallCount++;
-    getLicenseCallback = callback;
+    callCounts.getLicense++;
+    callbacks.getLicense = callback;
   };
 
   let setMediaKeys;
@@ -48,33 +52,29 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     }
   };
 
-  let createSessionCallCount = 0;
   let keySessionEventListeners = {};
-  let keySessionGenerateRequestCallCount = 0;
-  let keySessionUpdateCallCount = 0;
   let mediaKeys = {
     createSession: () => {
-      createSessionCallCount++;
+      callCounts.createSession++;
       return {
         addEventListener: (name, callback) => {
           keySessionEventListeners[name] = callback;
         },
         generateRequest: () => {
-          keySessionGenerateRequestCallCount++;
+          callCounts.keySessionGenerateRequest++;
           return new Promise(() => {});
         },
         update: () => {
-          keySessionUpdateCallCount++;
+          callCounts.keySessionUpdate++;
         }
       };
     }
   };
 
-  let createMediaKeysCallCount = 0;
   let keySystemAccess = {
     keySystem: 'org.w3.clearkey',
     createMediaKeys: () => {
-      createMediaKeysCallCount++;
+      callCounts.createMediaKeys++;
       return mediaKeys;
     }
   };
@@ -87,68 +87,68 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   });
 
   // Step 1: get key system
-  assert.equal(requestMediaKeySystemAccessCallCount, 1, 'access requested');
-  assert.equal(getCertificateCallCount, 0, 'certificate not requested');
-  assert.equal(createMediaKeysCallCount, 0, 'media keys not created');
+  assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+  assert.equal(callCounts.getCertificate, 0, 'certificate not requested');
+  assert.equal(callCounts.createMediaKeys, 0, 'media keys not created');
   assert.notEqual(mediaKeys, setMediaKeys, 'media keys not yet set');
-  assert.equal(createSessionCallCount, 0, 'key session not created');
-  assert.equal(keySessionGenerateRequestCallCount, 0, 'key session request not made');
-  assert.equal(getLicenseCallCount, 0, 'license not requested');
-  assert.equal(keySessionUpdateCallCount, 0, 'key session not updated');
+  assert.equal(callCounts.createSession, 0, 'key session not created');
+  assert.equal(callCounts.keySessionGenerateRequest, 0, 'key session request not made');
+  assert.equal(callCounts.getLicense, 0, 'license not requested');
+  assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
 
-  requestMediaKeySystemAccessCallback(keySystemAccess);
+  callbacks.requestMediaKeySystemAccess(keySystemAccess);
 
   // requestMediaKeySystemAccess promise resolution
   setTimeout(() => {
     // Step 2: get certificate
-    assert.equal(requestMediaKeySystemAccessCallCount, 1, 'access requested');
-    assert.equal(getCertificateCallCount, 1, 'certificate requested');
-    assert.equal(createMediaKeysCallCount, 0, 'media keys not created');
+    assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+    assert.equal(callCounts.getCertificate, 1, 'certificate requested');
+    assert.equal(callCounts.createMediaKeys, 0, 'media keys not created');
     assert.notEqual(mediaKeys, setMediaKeys, 'media keys not yet set');
-    assert.equal(createSessionCallCount, 0, 'key session not created');
-    assert.equal(keySessionGenerateRequestCallCount, 0, 'key session request not made');
-    assert.equal(getLicenseCallCount, 0, 'license not requested');
-    assert.equal(keySessionUpdateCallCount, 0, 'key session not updated');
+    assert.equal(callCounts.createSession, 0, 'key session not created');
+    assert.equal(callCounts.keySessionGenerateRequest, 0, 'key session request not made');
+    assert.equal(callCounts.getLicense, 0, 'license not requested');
+    assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
 
-    getCertificateCallback(null, '');
+    callbacks.getCertificate(null, '');
 
     // getCertificate promise resolution
     setTimeout(() => {
       // Step 3: create media keys, set them, and generate key session request
-      assert.equal(requestMediaKeySystemAccessCallCount, 1, 'access requested');
-      assert.equal(getCertificateCallCount, 1, 'certificate requested');
-      assert.equal(createMediaKeysCallCount, 1, 'media keys created');
+      assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+      assert.equal(callCounts.getCertificate, 1, 'certificate requested');
+      assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
       assert.equal(mediaKeys, setMediaKeys, 'media keys set');
-      assert.equal(createSessionCallCount, 1, 'key session created');
-      assert.equal(keySessionGenerateRequestCallCount, 1, 'key session request made');
-      assert.equal(getLicenseCallCount, 0, 'license not requested');
-      assert.equal(keySessionUpdateCallCount, 0, 'key session not updated');
+      assert.equal(callCounts.createSession, 1, 'key session created');
+      assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
+      assert.equal(callCounts.getLicense, 0, 'license not requested');
+      assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
 
       keySessionEventListeners.message({});
 
       // Step 4: get license
-      assert.equal(requestMediaKeySystemAccessCallCount, 1, 'access requested');
-      assert.equal(getCertificateCallCount, 1, 'certificate requested');
-      assert.equal(createMediaKeysCallCount, 1, 'media keys created');
+      assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+      assert.equal(callCounts.getCertificate, 1, 'certificate requested');
+      assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
       assert.equal(mediaKeys, setMediaKeys, 'media keys set');
-      assert.equal(createSessionCallCount, 1, 'key session created');
-      assert.equal(keySessionGenerateRequestCallCount, 1, 'key session request made');
-      assert.equal(getLicenseCallCount, 1, 'license requested');
-      assert.equal(keySessionUpdateCallCount, 0, 'key session not updated');
+      assert.equal(callCounts.createSession, 1, 'key session created');
+      assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
+      assert.equal(callCounts.getLicense, 1, 'license requested');
+      assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
 
-      getLicenseCallback();
+      callbacks.getLicense();
 
       // getLicense promise resolution
       setTimeout(() => {
         // Step 5: update key session
-        assert.equal(requestMediaKeySystemAccessCallCount, 1, 'access requested');
-        assert.equal(getCertificateCallCount, 1, 'certificate requested');
-        assert.equal(createMediaKeysCallCount, 1, 'media keys created');
+        assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+        assert.equal(callCounts.getCertificate, 1, 'certificate requested');
+        assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
         assert.equal(mediaKeys, setMediaKeys, 'media keys set');
-        assert.equal(createSessionCallCount, 1, 'key session created');
-        assert.equal(keySessionGenerateRequestCallCount, 1, 'key session request made');
-        assert.equal(getLicenseCallCount, 1, 'license requested');
-        assert.equal(keySessionUpdateCallCount, 1, 'key session updated');
+        assert.equal(callCounts.createSession, 1, 'key session created');
+        assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
+        assert.equal(callCounts.getLicense, 1, 'license requested');
+        assert.equal(callCounts.keySessionUpdate, 1, 'key session updated');
 
         done();
       });
