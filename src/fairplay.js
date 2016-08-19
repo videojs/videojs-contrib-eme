@@ -42,7 +42,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   return new Uint8Array(buffer, 0, buffer.byteLength);
 };
 
-const addKey = ({video, contentId, initData, cert, getKey}) => {
+const addKey = ({video, contentId, initData, cert, getLicense}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
       video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
@@ -65,16 +65,16 @@ const addKey = ({video, contentId, initData, cert, getKey}) => {
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
-      getKey({
+      getLicense({
         contentId,
         webKitKeyMessage: event.message
-      }, (err, key) => {
+      }, (err, license) => {
         if (err) {
           reject(err);
           return;
         }
 
-        keySession.update(new Uint8Array(key));
+        keySession.update(new Uint8Array(license));
       });
     });
 
@@ -109,10 +109,10 @@ const defaultGetContentId = (initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
-const defaultGetKey = (keyUri) => {
+const defaultGetLicense = (licenseUri) => {
   return (options, callback) => {
     videojs.xhr({
-      uri: keyUri,
+      uri: licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
       body: options.webKitKeyMessage,
@@ -135,7 +135,8 @@ const fairplay = ({video, initData, options}) => {
   let getCertificate = fairplayOptions.getCertificate ||
     defaultGetCertificate(fairplayOptions.certificateUri);
   let getContentId = fairplayOptions.getContentId || defaultGetContentId;
-  let getKey = fairplayOptions.getKey || defaultGetKey(fairplayOptions.keyUri);
+  let getLicense = fairplayOptions.getLicense ||
+    defaultGetLicense(fairplayOptions.licenseUri);
 
   return new Promise((resolve, reject) => {
     getCertificate({}, (err, cert) => {
@@ -151,7 +152,7 @@ const fairplay = ({video, initData, options}) => {
       video,
       cert,
       initData,
-      getKey,
+      getLicense,
       contentId: getContentId(initData)
     });
   }).catch(videojs.log.error.bind(videojs.log.error));

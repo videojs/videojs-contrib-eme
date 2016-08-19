@@ -12,7 +12,7 @@ QUnit.test('lifecycle', function(assert) {
   let callbacks = {};
   let callCounts = {
     getCertificate: 0,
-    getKey: 0,
+    getLicense: 0,
     updateKeySession: 0,
     createSession: 0
   };
@@ -21,16 +21,16 @@ QUnit.test('lifecycle', function(assert) {
     callCounts.getCertificate++;
     callbacks.getCertificate = callback;
   };
-  let getKey = (options, callback) => {
-    callCounts.getKey++;
-    callbacks.getKey = callback;
+  let getLicense = (options, callback) => {
+    callCounts.getLicense++;
+    callbacks.getLicense = callback;
   };
 
   let options = {
     keySystems: {
       'com.apple.fps.1_0': {
         getCertificate,
-        getKey,
+        getLicense,
         // not needed due to mocking
         getContentId: () => 'some content id'
       }
@@ -78,7 +78,7 @@ QUnit.test('lifecycle', function(assert) {
   // Step 1: getCertificate
   assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
   assert.equal(callCounts.createSession, 0, 'a key session has not been created');
-  assert.equal(callCounts.getKey, 0, 'getKey has not been called');
+  assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
   assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
   callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
@@ -87,7 +87,7 @@ QUnit.test('lifecycle', function(assert) {
     // Step 2: create a key session
     assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
-    assert.equal(callCounts.getKey, 0, 'getKey has not been called');
+    assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
     assert.ok(keySessionEventListeners.webkitkeymessage,
@@ -102,15 +102,15 @@ QUnit.test('lifecycle', function(assert) {
     // Step 3: get the key on webkitkeymessage
     assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
-    assert.equal(callCounts.getKey, 1, 'getKey has been called');
+    assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
 
-    callbacks.getKey(null, []);
+    callbacks.getLicense(null, []);
 
     // Step 4: update the key session with the key
     assert.equal(callCounts.getCertificate, 1, 'getCertificate has been called');
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
-    assert.equal(callCounts.getKey, 1, 'getKey has been called');
+    assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 1, 'updateKeySession has been called');
 
     keySessionEventListeners.webkitkeyadded();

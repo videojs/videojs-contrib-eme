@@ -38,7 +38,7 @@ For FairPlay, only `keySystems` is used from the options passed into videojs-con
 The required methods to provide are:
 * `getCertificate`
 * `getContentId`
-* `getKey`
+* `getLicense`
 
 Below is an example of videojs-contrib-eme options when only using FairPlay:
 
@@ -54,7 +54,7 @@ Below is an example of videojs-contrib-eme options when only using FairPlay:
       getContentId: (initData) => {
         // return content ID
       },
-      getKey: (options, callback) => {
+      getLicense: (options, callback) => {
         let { contentId, webKitKeyMessage } = options;
 
         // request key using options
