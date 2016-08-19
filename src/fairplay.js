@@ -1,12 +1,12 @@
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint8Array} from './utils';
+import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
 
 const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   if (typeof id === 'string') {
-    id = stringToUint8Array(id);
+    id = stringToUint16Array(id);
   }
 
   // layout:
@@ -89,11 +89,56 @@ const addKey = ({video, contentId, initData, cert, getKey}) => {
   });
 };
 
+const defaultGetCertificate = (certificateUri) => {
+  return (options, callback) => {
+    videojs.xhr({
+      uri: certificateUri,
+      responseType: 'arraybuffer'
+    }, (err, response, responseBody) => {
+      if (err) {
+        callback(err);
+        return;
+      }
+
+      callback(null, new Uint8Array(responseBody));
+    });
+  };
+};
+
+const defaultGetContentId = (initData) => {
+  return getHostnameFromUri(uint8ArrayToString(initData));
+};
+
+const defaultGetKey = (keyUri) => {
+  return (options, callback) => {
+    videojs.xhr({
+      uri: keyUri,
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: options.webKitKeyMessage,
+      headers: {
+        'Content-type': 'application/octet-stream'
+      }
+    }, (err, response, responseBody) => {
+      if (err) {
+        callback(err);
+        return;
+      }
+
+      callback(null, responseBody);
+    });
+  };
+};
+
 const fairplay = ({video, initData, options}) => {
   let fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
+  let getCertificate = fairplayOptions.getCertificate ||
+    defaultGetCertificate(fairplayOptions.certificateUri);
+  let getContentId = fairplayOptions.getContentId || defaultGetContentId;
+  let getKey = fairplayOptions.getKey || defaultGetKey(fairplayOptions.keyUri);
 
   return new Promise((resolve, reject) => {
-    fairplayOptions.getCertificate({}, (err, cert) => {
+    getCertificate({}, (err, cert) => {
       if (err) {
         reject(err);
         return;
@@ -106,8 +151,8 @@ const fairplay = ({video, initData, options}) => {
       video,
       cert,
       initData,
-      contentId: fairplayOptions.getContentId(initData),
-      getKey: fairplayOptions.getKey
+      getKey,
+      contentId: getContentId(initData)
     });
   }).catch(videojs.log.error.bind(videojs.log.error));
 };

@@ -1,4 +1,4 @@
-export const stringToUint8Array = (string) => {
+export const stringToUint16Array = (string) => {
   // 2 bytes for each char
   let buffer = new ArrayBuffer(string.length * 2);
   let array = new Uint16Array(buffer);
@@ -10,3 +10,13 @@ export const stringToUint8Array = (string) => {
   return array;
 };
 
+export const uint8ArrayToString = (array) => {
+  return String.fromCharCode.apply(null, new Uint16Array(array.buffer));
+};
+
+export const getHostnameFromUri = (uri) => {
+  let link = document.createElement('a');
+
+  link.href = uri;
+  return link.hostname;
+};
