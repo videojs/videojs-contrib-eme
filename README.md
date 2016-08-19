@@ -23,7 +23,8 @@ combination of key system and codec. These are provided via videojs-contrib-eme'
 
 The bare minium requirement is to provide the `keySystems` property with an object
 containing at least one key system that you will be using and an implementation of its
-required methods.
+required methods (or, if using the default FairPlay methods, only certificateUri and
+licenseUri).
 
 The `configurations` object contains audio and video sources mapped to their codecs.
 These are used to determine if the system supports that codec, and to create an
@@ -39,6 +40,9 @@ The required methods to provide are:
 * `getCertificate`
 * `getContentId`
 * `getLicense`
+or, if you are using the default FairPlay methods, the only required parameters are:
+* `certificateUri`
+* `licenseUri`
 
 Below is an example of videojs-contrib-eme options when only using FairPlay:
 
@@ -65,6 +69,26 @@ Below is an example of videojs-contrib-eme options when only using FairPlay:
   }
 }
 ```
+
+Below is an example of videojs-contrib-eme options when only using FairPlay, and using
+the default FairPlay methods:
+
+```javascript
+{
+  keySystems: {
+    "com.apple.fps.1_0": {
+      certificateUri: "<CERTIFICATE URI>",
+      licenseUri: "<LICENSE URI>"
+    }
+  }
+}
+```
+
+The default methods are defined as follows:
+* getCertificate - GET certificateUri with response type of arraybuffer
+* getContentId - gets the hostname from the initData URI
+* getLicense - POST licenseUri with response type of arraybuffer, header of
+'Content-type': 'application/octet-stream', and body of webKitKeyMessage
 
 ### Other DRM Systems
 
