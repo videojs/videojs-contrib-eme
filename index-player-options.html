@@ -24,38 +24,39 @@
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
       ]);
 
-      let player = window.player = videojs('videojs-contrib-eme-player');
-
       // Convert Uint8Array into base64 using base64url alphabet, without padding.
       let toBase64 = (u8arr) => {
         return btoa(String.fromCharCode.apply(null, u8arr)).
           replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '');
       }
 
-      player.contribEme({
-        configurations: {},
-        keySystems: {
-          'org.w3.clearkey': {
-            getLicense: (options, callback) => {
-              let keyMessage = options.keyMessage;
-              // Parse the clearkey license request.
-              let request = JSON.parse(new TextDecoder().decode(keyMessage));
-              // We only know one key, so there should only be one key ID.
-              // A real license server could easily serve multiple keys.
-              console.assert(request.kids.length === 1);
+      let player = window.player = videojs('videojs-contrib-eme-player', {
+        plugins: {
+          eme: {
+            keySystems: {
+              'org.w3.clearkey': {
+                getLicense: (options, callback) => {
+                  let keyMessage = options.keyMessage;
+                  // Parse the clearkey license request.
+                  let request = JSON.parse(new TextDecoder().decode(keyMessage));
+                  // We only know one key, so there should only be one key ID.
+                  // A real license server could easily serve multiple keys.
+                  console.assert(request.kids.length === 1);
 
-              let keyObj = {
-                kty: 'oct',
-                alg: 'A128KW',
-                kid: request.kids[0],
-                k: toBase64(KEY)
-              };
+                  let keyObj = {
+                    kty: 'oct',
+                    alg: 'A128KW',
+                    kid: request.kids[0],
+                    k: toBase64(KEY)
+                  };
 
-              console.log('Key object:', keyObj);
+                  console.log('Key object:', keyObj);
 
-              callback(null, new TextEncoder().encode(JSON.stringify({
-                keys: [keyObj]
-              })));
+                  callback(null, new TextEncoder().encode(JSON.stringify({
+                    keys: [keyObj]
+                  })));
+                }
+              }
             }
           }
         }

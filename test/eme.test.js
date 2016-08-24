@@ -43,7 +43,6 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   };
 
   let options = {
-    configurations: {},
     keySystems: {
       'org.w3.clearkey': {
         getCertificate,

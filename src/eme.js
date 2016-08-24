@@ -1,22 +1,28 @@
 import videojs from 'video.js';
 
-const getSupportedKeySystem = ({video, configurations, keySystems}) => {
+const getSupportedKeySystem = ({video, keySystems}) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
-  let systemOptions = {};
-
-  if (configurations.audio && configurations.audio[video.src]) {
-    systemOptions.audioCapabilities = [{ contentType: configurations.audio[video.src] }];
-  }
-  if (configurations.video && configurations.video[video.src]) {
-    systemOptions.videoCapabilities = [{ contentType: configurations.video[video.src] }];
-  }
-
-  // TODO use initDataTypes when appropriate
 
   let promise;
 
   Object.keys(keySystems).forEach((keySystem) => {
+    // TODO use initDataTypes when appropriate
+    let systemOptions = {};
+    let audioContentType = keySystems[keySystem].audioContentType;
+    let videoContentType = keySystems[keySystem].videoContentType;
+
+    if (audioContentType) {
+      systemOptions.audioCapabilities = [{
+        contentType: audioContentType
+      }];
+    }
+    if (videoContentType) {
+      systemOptions.videoCapabilities = [{
+        contentType: videoContentType
+      }];
+    }
+
     if (!promise) {
       promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
     } else {
@@ -109,7 +115,6 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
 
     getSupportedKeySystem({
       video,
-      configurations: options.configurations,
       keySystems: options.keySystems
     }).then((keySystemAccess) => {
       return new Promise((resolve, reject) => {

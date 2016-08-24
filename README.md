@@ -19,22 +19,13 @@ Supports Encrypted Media Extensions for playback of encrypted content in Video.j
 
 By default, videojs-contrib-eme is not able to decrypt any audio/video. In order to
 decrypt audio/video, a user must pass in methods that are specific to a source and its
-combination of key system and codec. These are provided via videojs-contrib-eme's options.
-
-The bare minium requirement is to provide the `keySystems` property with an object
-containing at least one key system that you will be using and an implementation of its
-required methods (or, if using the default FairPlay methods, only certificateUri and
-licenseUri).
-
-The `configurations` object contains audio and video sources mapped to their codecs.
-These are used to determine if the system supports that codec, and to create an
-appropriate `keySystemAccess` object. If left out, it is possible that the system will
-create a `keySystemAccess` object for the given key system, but will not be able to play
-the source due to the browser's inability to use that codec.
+combination of key system and codec. These are provided via either videojs-contrib-eme's
+plugin options, or source options.
 
 ### FairPlay
 
-For FairPlay, only `keySystems` is used from the options passed into videojs-contrib-eme.
+For FairPlay, only `keySystems` is used from the options passed into videojs-contrib-eme,
+or provided as part of the source object.
 
 The required methods to provide are:
 * `getCertificate`
@@ -92,29 +83,27 @@ The default methods are defined as follows:
 
 ### Other DRM Systems
 
-For DRM systems that use the W3C EME specification as of 5 July 2016, both `keySystems`
-and `configurations` are required.
+For DRM systems that use the W3C EME specification as of 5 July 2016, only `keySystems`
+is required.
 
 `getLicense` is the only required `keySystems` method. `getCertificate` is also supported
 if your source needs to retrieve a certificate.
+
+The `audioContentType` and `videoContentType` properties for non-FairPlay sources are
+used to determine if the system supports that codec, and to create an appropriate
+`keySystemAccess` object. If left out, it is possible that the system will create a
+`keySystemAccess` object for the given key system, but will not be able to play the
+source due to the browser's inability to use that codec.
 
 Below is an example of videojs-contrib-eme options when only using one of these DRM
 systems:
 
 ```javascript
 {
-  configurations: {
-    audio: {
-      'http://www.somesource.com/someext.ext': 'audio/webm; codecs="vorbis"',
-      'http://www.someothersource.com/someext.ext': 'audio/webm; codecs="opus"'
-    },
-    video: {
-      'http://www.somesource.com/someext.ext': 'video/webm; codecs="vp9"',
-      'http://www.someothersource.com/someext.ext': 'video/webm; codecs="vp8"'
-    }
-  },
   keySystems: {
     "org.w3.clearkey": {
+      videoContentType: 'audio/webm; codecs="vorbis"',
+      audioContentType: 'video/webm; codecs="vp9"',
       getCertificate: (options, callback) => {
         // request certificate
         // if err, callback(err)
@@ -132,19 +121,55 @@ systems:
 }
 ```
 
-### This Seems Complicated
+### Source Options
+
+Since each source may have a different set of properties and methods, it is best to use
+source options instead of plugin options when specifying key systems. To do that, simply
+pass the same options as you would as part of the plugin options, but instead pass them
+as part of the source object when specifying `player.src(sourceObject)`.
+
+For example:
+
+```javascript
+player.src({
+  // normal src and type options
+  src: '<URL>',
+  type: 'video/webm',
+  // eme options
+  keySystems: {
+    'org.w3.clearkey': {
+      videoContentType: 'audio/webm; codecs="vorbis"',
+      audioContentType: 'video/webm; codecs="vp9"',
+      getCertificate: (options, callback) => {
+        // request certificate
+        // if err, callback(err)
+        // if success, callback(null, certificate)
+      },
+      getLicense: (options, callback) => {
+        let keyMessage = options.keyMessage;
+
+        // request license using mediaKeyMessage
+        // if err, callback(err)
+        // if success, callback(null, license)
+      }
+    }
+  }
+});
+```
+
+### Passing methods seems complicated
 
 If you're wondering why there are so many methods to implement, and why the options can't
-simply have URLs, you're asking good questions.
+simply have URLs (except for the default FairPlay case), you're asking good questions.
 
-Right now, we wanted to provide as much flexibility as possible. This means that if your
-server has a different structure than most servers, you use a different format for
-FairPlay content IDs, or you want to test something in the browser without making a
-request, we can support that, since you control the methods.
+We wanted to provide as much flexibility as possible. This means that if your server has
+a different structure, you use a different format for FairPlay content IDs, or you want
+to test something in the browser without making a request, we can support that, since you
+control the methods.
 
-In the future we may provide default implementations and allow passing through the minimum
-amount of details possible. If you have any suggestions on how we should go about this,
-we'd love to hear your ideas!
+In the future we may provide other default implementations and allow passing through the
+minimum amount of details possible. If you have any suggestions on how we should go about
+this, we'd love to hear your ideas!
 
 ## Getting Started
 
