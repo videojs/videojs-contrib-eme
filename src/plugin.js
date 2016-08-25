@@ -33,7 +33,7 @@ const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
  * @param    {Object} [options={}]
  */
 const onPlayerReady = (player, options) => {
-  if (!player.tech_.el_.techName_ === 'Html5') {
+  if (player.$('.vjs-tech').tagName.toLowerCase() !== 'video') {
     return;
   }
 
