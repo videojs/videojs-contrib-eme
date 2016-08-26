@@ -41,18 +41,16 @@ Below is an example of videojs-contrib-eme options when only using FairPlay:
 {
   keySystems: {
     "com.apple.fps.1_0": {
-      getCertificate: (options, callback) => {
+      getCertificate: (emeOptions, callback) => {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getContentId: (initData) => {
+      getContentId: (emeOptions, initData) => {
         // return content ID
       },
-      getLicense: (options, callback) => {
-        let { contentId, webKitKeyMessage } = options;
-
-        // request key using options
+      getLicense: (emeOptions, contentId, keyMessage, callback) => {
+        // request key
         // if err, callback(err)
         // if success, callback(null, key) as arraybuffer
       }
@@ -104,15 +102,13 @@ systems:
     "org.w3.clearkey": {
       videoContentType: 'audio/webm; codecs="vorbis"',
       audioContentType: 'video/webm; codecs="vp9"',
-      getCertificate: (options, callback) => {
+      getCertificate: (emeOptions, callback) => {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getLicense: (options, callback) => {
-        let keyMessage = options.keyMessage;
-
-        // request license using mediaKeyMessage
+      getLicense: (emeOptions, keyMessage, callback) => {
+        // request license
         // if err, callback(err)
         // if success, callback(null, license)
       }
@@ -140,20 +136,73 @@ player.src({
     'org.w3.clearkey': {
       videoContentType: 'audio/webm; codecs="vorbis"',
       audioContentType: 'video/webm; codecs="vp9"',
-      getCertificate: (options, callback) => {
+      getCertificate: (emeOptions, callback) => {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getLicense: (options, callback) => {
-        let keyMessage = options.keyMessage;
-
-        // request license using mediaKeyMessage
+      getLicense: (emeOptions, keyMessage, callback) => {
+        // request license
         // if err, callback(err)
         // if success, callback(null, license)
       }
     }
   }
+});
+```
+
+### `emeOptions`
+
+`emeOptions` are provided for all methods. This is a reference to the plugin options
+merged with (overwritten by) the source options for the current source. It is available to
+make it easier to access options so that you don't have to maintain them yourself.
+
+For example. If you need to use a userId for the getCertificate request, you can pass in
+plugin options that have:
+
+```javascript
+{
+  keySystems: {
+    "org.w3.clearkey": {
+      getCertificate: (emeOptions, callback) => {
+        let userId = emeOptions.userId; // 'user-id'
+        // ...
+      },
+      getLicense: (emeOptions, keyMessage, callback) => {
+        let userId = emeOptions.userId; // 'user-id'
+        // ...
+      }
+    }
+  },
+  userId: 'user-id'
+}
+```
+
+Or, if you need a source-specific userId, you can overwrite it via the source options:
+
+```javascript
+// plugin options
+{
+  keySystems: {
+    "org.w3.clearkey": {
+      getCertificate: (emeOptions, callback) => {
+        let userId = emeOptions.userId; // 'source-specific-user-id'
+        // ...
+      },
+      getLicense: (emeOptions, keyMessage, callback) => {
+        let userId = emeOptions.userId; // 'source-specific-user-id'
+        // ...
+      }
+    }
+  },
+  userId: 'user-id'
+}
+
+// source options
+player.src({
+  src: '<URL>',
+  type: 'video/webm',
+  userId: 'source-specific-user-id'
 });
 ```
 

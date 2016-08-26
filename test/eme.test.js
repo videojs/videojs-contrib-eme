@@ -26,11 +26,11 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     });
   };
 
-  let getCertificate = (options, callback) => {
+  let getCertificate = (emeOptions, callback) => {
     callCounts.getCertificate++;
     callbacks.getCertificate = callback;
   };
-  let getLicense = (options, callback) => {
+  let getLicense = (emeOptions, keyMessage, callback) => {
     callCounts.getLicense++;
     callbacks.getLicense = callback;
   };
