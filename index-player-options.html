@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>videojs-contrib-eme Demo</title>
+  <link href="/node_modules/video.js/dist/video-js.css" rel="stylesheet">
+</head>
+<body>
+  <video id="videojs-contrib-eme-player" class="video-js vjs-default-skin" controls>
+    <source src="/moose_encrypted.webm" type='video/webm'>
+  </video>
+  <ul>
+    <li><a href="/test/">Run unit tests in browser.</a></li>
+
+  </ul>
+  <script src="/node_modules/video.js/dist/video.js"></script>
+  <script src="/dist/videojs-contrib-eme.js"></script>
+  <script>
+    (function(window, videojs) {
+      // Example derived from http://www.html5rocks.com/en/tutorials/eme/basics/#clear-key
+
+      const KEY = new Uint8Array([
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+      ]);
+
+      // Convert Uint8Array into base64 using base64url alphabet, without padding.
+      let toBase64 = (u8arr) => {
+        return btoa(String.fromCharCode.apply(null, u8arr)).
+          replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '');
+      }
+
+      let player = window.player = videojs('videojs-contrib-eme-player', {
+        plugins: {
+          eme: {
+            keySystems: {
+              'org.w3.clearkey': {
+                getLicense: (options, callback) => {
+                  let keyMessage = options.keyMessage;
+                  // Parse the clearkey license request.
+                  let request = JSON.parse(new TextDecoder().decode(keyMessage));
+                  // We only know one key, so there should only be one key ID.
+                  // A real license server could easily serve multiple keys.
+                  console.assert(request.kids.length === 1);
+
+                  let keyObj = {
+                    kty: 'oct',
+                    alg: 'A128KW',
+                    kid: request.kids[0],
+                    k: toBase64(KEY)
+                  };
+
+                  console.log('Key object:', keyObj);
+
+                  callback(null, new TextEncoder().encode(JSON.stringify({
+                    keys: [keyObj]
+                  })));
+                }
+              }
+            }
+          }
+        }
+      });
+    }(window, window.videojs));
+  </script>
+</body>
+</html>
