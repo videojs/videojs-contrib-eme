@@ -2,6 +2,9 @@
 
 Supports Encrypted Media Extensions for playback of encrypted content in Video.js
 
+Lead Maintainer: Garrett Singer [@gesinger](https://github.com/gesinger)
+Maintenance Status: Experimental
+
 ### Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
