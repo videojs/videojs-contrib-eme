@@ -1,4 +1,4 @@
-# videojs-contrib-eme
+# videojs-contrib-eme [![Build Status](https://travis-ci.org/videojs/videojs-contrib-eme.svg?branch=master)](https://travis-ci.org/videojs/videojs-contrib-eme)
 
 Supports Encrypted Media Extensions for playback of encrypted content in Video.js
 
