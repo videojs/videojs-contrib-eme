@@ -35,11 +35,11 @@ const getSupportedKeySystem = ({video, keySystems}) => {
   return promise;
 };
 
-const makeNewRequest = ({mediaKeys, initDataType, initData, getLicense}) => {
+const makeNewRequest = ({mediaKeys, initDataType, initData, options, getLicense}) => {
   let keySession = mediaKeys.createSession();
 
   keySession.addEventListener('message', (event) => {
-    getLicense(event.message)
+    getLicense(options, event.message)
       .then((license) => {
         return keySession.update(license);
       })
@@ -52,12 +52,13 @@ const makeNewRequest = ({mediaKeys, initDataType, initData, getLicense}) => {
   );
 };
 
-const addSession = ({video, initDataType, initData, getLicense}) => {
+const addSession = ({video, initDataType, initData, options, getLicense}) => {
   if (video.mediaKeysObject) {
     makeNewRequest({
       mediaKeys: video.mediaKeysObject,
       initDataType,
       initData,
+      options,
       getLicense
     });
   } else {
@@ -65,7 +66,7 @@ const addSession = ({video, initDataType, initData, getLicense}) => {
   }
 };
 
-const setMediaKeys = ({video, certificate, createdMediaKeys, getLicense}) => {
+const setMediaKeys = ({video, certificate, createdMediaKeys, options, getLicense}) => {
   video.mediaKeysObject = createdMediaKeys;
 
   if (certificate) {
@@ -79,6 +80,7 @@ const setMediaKeys = ({video, certificate, createdMediaKeys, getLicense}) => {
       mediaKeys: video.mediaKeysObject,
       initDataType: data.initDataType,
       initData: data.initData,
+      options,
       getLicense
     });
   }
@@ -89,9 +91,9 @@ const setMediaKeys = ({video, certificate, createdMediaKeys, getLicense}) => {
 };
 
 const promisifyGetLicense = (getLicenseFn) => {
-  return (keyMessage) => {
+  return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
-      getLicenseFn({ keyMessage }, (err, license) => {
+      getLicenseFn(emeOptions, keyMessage, (err, license) => {
         if (err) {
           reject(err);
         }
@@ -127,7 +129,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
           resolve(keySystemAccess);
         }
 
-        keySystemOptions.getCertificate({}, (err, cert) => {
+        keySystemOptions.getCertificate(options, (err, cert) => {
           if (err) {
             reject(err);
             return;
@@ -145,6 +147,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
         video,
         certificate,
         createdMediaKeys,
+        options,
         getLicense: promisifyGetLicense(keySystemOptions.getLicense)
       });
     }).catch(
@@ -157,6 +160,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
     video,
     initDataType,
     initData,
+    options,
     // if key system has not been determined then addSession doesn't need getLicense
     getLicense: video.keySystem ?
       promisifyGetLicense(options.keySystems[video.keySystem].getLicense) :

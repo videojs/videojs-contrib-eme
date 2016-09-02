@@ -42,7 +42,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   return new Uint8Array(buffer, 0, buffer.byteLength);
 };
 
-const addKey = ({video, contentId, initData, cert, getLicense}) => {
+const addKey = ({video, contentId, initData, cert, options, getLicense}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
       video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
@@ -65,10 +65,7 @@ const addKey = ({video, contentId, initData, cert, getLicense}) => {
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
-      getLicense({
-        contentId,
-        webKitKeyMessage: event.message
-      }, (err, license) => {
+      getLicense(options, contentId, event.message, (err, license) => {
         if (err) {
           reject(err);
           return;
@@ -90,7 +87,7 @@ const addKey = ({video, contentId, initData, cert, getLicense}) => {
 };
 
 const defaultGetCertificate = (certificateUri) => {
-  return (options, callback) => {
+  return (emeOptions, callback) => {
     videojs.xhr({
       uri: certificateUri,
       responseType: 'arraybuffer'
@@ -105,17 +102,17 @@ const defaultGetCertificate = (certificateUri) => {
   };
 };
 
-const defaultGetContentId = (initData) => {
+const defaultGetContentId = (emeOptions, initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
 const defaultGetLicense = (licenseUri) => {
-  return (options, callback) => {
+  return (emeOptions, contentId, keyMessage, callback) => {
     videojs.xhr({
       uri: licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
-      body: options.webKitKeyMessage,
+      body: keyMessage,
       headers: {
         'Content-type': 'application/octet-stream'
       }
@@ -139,7 +136,7 @@ const fairplay = ({video, initData, options}) => {
     defaultGetLicense(fairplayOptions.licenseUri);
 
   return new Promise((resolve, reject) => {
-    getCertificate({}, (err, cert) => {
+    getCertificate(options, (err, cert) => {
       if (err) {
         reject(err);
         return;
@@ -153,7 +150,8 @@ const fairplay = ({video, initData, options}) => {
       cert,
       initData,
       getLicense,
-      contentId: getContentId(initData)
+      options,
+      contentId: getContentId(options, initData)
     });
   }).catch(videojs.log.error.bind(videojs.log.error));
 };

@@ -36,8 +36,7 @@
         type: 'video/webm',
         keySystems: {
           'org.w3.clearkey': {
-            getLicense: (options, callback) => {
-              let keyMessage = options.keyMessage;
+            getLicense: (emeOptions, keyMessage, callback) => {
               // Parse the clearkey license request.
               let request = JSON.parse(new TextDecoder().decode(keyMessage));
               // We only know one key, so there should only be one key ID.

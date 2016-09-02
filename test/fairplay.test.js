@@ -17,11 +17,11 @@ QUnit.test('lifecycle', function(assert) {
     createSession: 0
   };
 
-  let getCertificate = (options, callback) => {
+  let getCertificate = (emeOptions, callback) => {
     callCounts.getCertificate++;
     callbacks.getCertificate = callback;
   };
-  let getLicense = (options, callback) => {
+  let getLicense = (emeOptions, contentId, keyMessage, callback) => {
     callCounts.getLicense++;
     callbacks.getLicense = callback;
   };
