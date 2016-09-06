@@ -42,3 +42,25 @@ QUnit.test('registers itself with video.js', function(assert) {
     'videojs-contrib-eme plugin was registered'
   );
 });
+
+QUnit.test('exposes options', function(assert) {
+  this.video = document.createElement('video');
+  this.video.setAttribute('data-setup', JSON.stringify({
+    plugins: {
+      eme: {
+        applicationId: 'application-id',
+        publisherId: 'publisher-id'
+      }
+    }
+  }));
+  this.fixture.appendChild(this.video);
+  this.player = videojs(this.video);
+
+  assert.ok(this.player.eme.options, 'exposes options');
+  assert.strictEqual(this.player.eme.options.applicationId,
+                     'application-id',
+                     'exposes applicationId');
+  assert.strictEqual(this.player.eme.options.publisherId,
+                     'publisher-id',
+                     'exposes publisherId');
+});

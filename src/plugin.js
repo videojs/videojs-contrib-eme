@@ -61,6 +61,8 @@ const onPlayerReady = (player, options) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options) {
+  eme.options = options;
+
   this.ready(() => {
     onPlayerReady(this, videojs.mergeOptions({}, options));
   });
