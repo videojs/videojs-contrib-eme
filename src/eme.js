@@ -105,6 +105,10 @@ const promisifyGetLicense = (getLicenseFn) => {
 };
 
 export const standard5July2016 = ({video, initDataType, initData, options}) => {
+  if (!options || !options.keySystems) {
+    return;
+  }
+
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
     video.mediaKeysObject = null;
@@ -115,10 +119,17 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
     let certificate;
     let keySystemOptions;
 
-    getSupportedKeySystem({
+    let keySystemPromise = getSupportedKeySystem({
       video,
       keySystems: options.keySystems
-    }).then((keySystemAccess) => {
+    });
+
+    if (!keySystemPromise) {
+      videojs.log.error('No supported key system found');
+      return;
+    }
+
+    keySystemPromise.then((keySystemAccess) => {
       return new Promise((resolve, reject) => {
         // save key system for adding sessions
         video.keySystem = keySystemAccess.keySystem;
