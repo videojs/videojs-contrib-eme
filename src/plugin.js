@@ -78,6 +78,9 @@ let sourceGrabber = {
   canPlayType: () => ''
 };
 
+// start with no options
+eme.options = {};
+
 // register to beginning of HTML5 source handlers
 videojs.getComponent('Html5').registerSourceHandler(sourceGrabber, 0);
 
