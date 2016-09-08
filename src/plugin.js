@@ -63,7 +63,7 @@ const onPlayerReady = (player, options) => {
 const eme = function(options) {
   eme.options = options;
 
-  this.ready(() => {
+  this.on('ready', () => {
     onPlayerReady(this, videojs.mergeOptions({}, options));
   });
 };
