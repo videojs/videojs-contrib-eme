@@ -1,6 +1,6 @@
 {
   "name": "videojs-contrib-eme",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Supports Encrypted Media Extensions for playback of encrypted content in Video.js",
   "main": "es5/plugin.js",
   "scripts": {
