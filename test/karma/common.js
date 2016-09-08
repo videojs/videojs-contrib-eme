@@ -6,7 +6,6 @@ var DEFAULTS = {
 
   files: [
     'node_modules/sinon/pkg/sinon.js',
-    'node_modules/sinon/pkg/sinon-ie.js',
     'node_modules/video.js/dist/video.js',
     'test/**/*.js'
   ],
