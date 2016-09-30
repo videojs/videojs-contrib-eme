@@ -1,8 +1,8 @@
 {
   "name": "videojs-contrib-eme",
   "version": "0.0.0",
-  "author": "Garrett Singer &lt;gesinger@gmail.com&gt;",
-  "license": "MIT",
+  "license": "Apache-2.0",
+  "author": "Brightcove, Inc.",
   "main": [
     "dist/videojs-contrib-eme.min.js"
   ],

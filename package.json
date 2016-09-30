@@ -37,8 +37,9 @@
     "videojs",
     "videojs-plugin"
   ],
-  "author": "Garrett Singer <gesinger@gmail.com>",
-  "license": "MIT",
+  "copyright": "Copyright Brightcove, Inc. <https://www.brightcove.com/>",
+  "license": "Apache-2.0",
+  "author": "Brightcove, Inc.",
   "browserify": {
     "transform": [
       "browserify-shim"
