@@ -245,4 +245,4 @@ That's it! Refer to the [video.js plugin standards](https://github.com/videojs/g
 
 ## License
 
-MIT. Copyright (c) Garrett Singer &lt;gesinger@gmail.com&gt;
+Apache License, Version 2.0. [View the license file](LICENSE)
