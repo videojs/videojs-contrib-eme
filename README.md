@@ -44,15 +44,15 @@ Below is an example of videojs-contrib-eme options when only using FairPlay:
 {
   keySystems: {
     "com.apple.fps.1_0": {
-      getCertificate: (emeOptions, callback) => {
+      getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getContentId: (emeOptions, initData) => {
+      getContentId: function(emeOptions, initData) {
         // return content ID
       },
-      getLicense: (emeOptions, contentId, keyMessage, callback) => {
+      getLicense: function(emeOptions, contentId, keyMessage, callback) {
         // request key
         // if err, callback(err)
         // if success, callback(null, key) as arraybuffer
@@ -105,12 +105,12 @@ systems:
     "org.w3.clearkey": {
       videoContentType: 'audio/webm; codecs="vorbis"',
       audioContentType: 'video/webm; codecs="vp9"',
-      getCertificate: (emeOptions, callback) => {
+      getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getLicense: (emeOptions, keyMessage, callback) => {
+      getLicense: function(emeOptions, keyMessage, callback) {
         // request license
         // if err, callback(err)
         // if success, callback(null, license)
@@ -139,12 +139,12 @@ player.src({
     'org.w3.clearkey': {
       videoContentType: 'audio/webm; codecs="vorbis"',
       audioContentType: 'video/webm; codecs="vp9"',
-      getCertificate: (emeOptions, callback) => {
+      getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getLicense: (emeOptions, keyMessage, callback) => {
+      getLicense: function(emeOptions, keyMessage, callback) {
         // request license
         // if err, callback(err)
         // if success, callback(null, license)
@@ -167,12 +167,12 @@ plugin options that have:
 {
   keySystems: {
     "org.w3.clearkey": {
-      getCertificate: (emeOptions, callback) => {
-        let userId = emeOptions.userId; // 'user-id'
+      getCertificate: function(emeOptions, callback) {
+        var userId = emeOptions.userId; // 'user-id'
         // ...
       },
-      getLicense: (emeOptions, keyMessage, callback) => {
-        let userId = emeOptions.userId; // 'user-id'
+      getLicense: function(emeOptions, keyMessage, callback) {
+        var userId = emeOptions.userId; // 'user-id'
         // ...
       }
     }
@@ -188,12 +188,12 @@ Or, if you need a source-specific userId, you can overwrite it via the source op
 {
   keySystems: {
     "org.w3.clearkey": {
-      getCertificate: (emeOptions, callback) => {
-        let userId = emeOptions.userId; // 'source-specific-user-id'
+      getCertificate: function(emeOptions, callback) {
+        var userId = emeOptions.userId; // 'source-specific-user-id'
         // ...
       },
-      getLicense: (emeOptions, keyMessage, callback) => {
-        let userId = emeOptions.userId; // 'source-specific-user-id'
+      getLicense: function(emeOptions, keyMessage, callback) {
+        var userId = emeOptions.userId; // 'source-specific-user-id'
         // ...
       }
     }
