@@ -37,8 +37,8 @@ QUnit.module('videojs-contrib-eme', {
 
 QUnit.test('registers itself with video.js', function(assert) {
   assert.strictEqual(
-    Player.prototype.eme,
-    plugin,
+    typeof Player.prototype.eme,
+    'function',
     'videojs-contrib-eme plugin was registered'
   );
 });

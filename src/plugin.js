@@ -85,7 +85,8 @@ eme.options = {};
 videojs.getTech('Html5').registerSourceHandler(sourceGrabber, 0);
 
 // Register the plugin with video.js.
-const registerPlugin = videojs.registeredPlugin || videojs.plugin;
+const registerPlugin = videojs.registerPlugin || videojs.plugin;
+
 registerPlugin('eme', eme);
 
 export default eme;
