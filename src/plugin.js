@@ -82,7 +82,7 @@ let sourceGrabber = {
 eme.options = {};
 
 // register to beginning of HTML5 source handlers
-videojs.getComponent('Html5').registerSourceHandler(sourceGrabber, 0);
+videojs.getTech('Html5').registerSourceHandler(sourceGrabber, 0);
 
 // Register the plugin with video.js.
 videojs.plugin('eme', eme);
