@@ -2,8 +2,6 @@ import videojs from 'video.js';
 import {standard5July2016} from './eme';
 import fairplay from './fairplay';
 
-let lastSource;
-
 const handleEncryptedEvent = (event, sourceOptions) => {
   standard5July2016({
     video: event.target,
@@ -37,14 +35,16 @@ const onPlayerReady = (player, options) => {
     return;
   }
 
+  let source = player.currentSource();
+
   // Support EME 05 July 2016
   player.tech_.el_.addEventListener('encrypted', (event) => {
-    handleEncryptedEvent(event, videojs.mergeOptions(options, lastSource));
+    handleEncryptedEvent(event, videojs.mergeOptions(options, source));
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
   player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-    handleWebKitNeedKeyEvent(event, videojs.mergeOptions(options, lastSource));
+    handleWebKitNeedKeyEvent(event, videojs.mergeOptions(options, source));
   });
 };
 
@@ -68,19 +68,6 @@ const eme = function(options = {}) {
 
   this.eme.options = options;
 };
-
-let sourceGrabber = {
-  canHandleSource: (sourceObject) => {
-    lastSource = sourceObject;
-    return '';
-  },
-  // should never be called
-  handleSource: () => {},
-  canPlayType: () => ''
-};
-
-// register to beginning of HTML5 source handlers
-videojs.getTech('Html5').registerSourceHandler(sourceGrabber, 0);
 
 // Register the plugin with video.js.
 const registerPlugin = videojs.registerPlugin || videojs.plugin;
