@@ -44,7 +44,10 @@ QUnit.test('registers itself with video.js', function(assert) {
 });
 
 QUnit.test('exposes options', function(assert) {
-  assert.deepEqual(this.player.eme.options, {}, 'exposes empty options at start');
+  assert.notOk(this.player.eme.options, 'options is unavailable at start');
+
+  this.player.eme();
+  assert.deepEqual(this.player.eme.options, {}, 'options defaults to empty object once initialized');
 
   this.video = document.createElement('video');
   this.video.setAttribute('data-setup', JSON.stringify({

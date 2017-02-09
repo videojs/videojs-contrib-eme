@@ -60,12 +60,13 @@ const onPlayerReady = (player, options) => {
  * @param    {Object} [options={}]
  *           An object of options left to the plugin author to define.
  */
-const eme = function(options) {
-  eme.options = options;
+const eme = function(options = {}) {
 
   this.on('ready', () => {
     onPlayerReady(this, videojs.mergeOptions({}, options));
   });
+
+  this.eme.options = options;
 };
 
 let sourceGrabber = {
@@ -77,9 +78,6 @@ let sourceGrabber = {
   handleSource: () => {},
   canPlayType: () => ''
 };
-
-// start with no options
-eme.options = {};
 
 // register to beginning of HTML5 source handlers
 videojs.getTech('Html5').registerSourceHandler(sourceGrabber, 0);
