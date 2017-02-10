@@ -4,6 +4,13 @@ var DEFAULTS = {
   basePath: '../..',
   frameworks: ['browserify', 'qunit'],
 
+  customLaunchers: {
+    travisChrome: {
+      base: 'Chrome',
+      flags: ['--no-sandbox']
+    }
+  },
+
   files: [
     'node_modules/sinon/pkg/sinon.js',
     'node_modules/video.js/dist/video.js',

@@ -37,14 +37,17 @@ QUnit.module('videojs-contrib-eme', {
 
 QUnit.test('registers itself with video.js', function(assert) {
   assert.strictEqual(
-    Player.prototype.eme,
-    plugin,
+    typeof Player.prototype.eme,
+    'function',
     'videojs-contrib-eme plugin was registered'
   );
 });
 
 QUnit.test('exposes options', function(assert) {
-  assert.deepEqual(this.player.eme.options, {}, 'exposes empty options at start');
+  assert.notOk(this.player.eme.options, 'options is unavailable at start');
+
+  this.player.eme();
+  assert.deepEqual(this.player.eme.options, {}, 'options defaults to empty object once initialized');
 
   this.video = document.createElement('video');
   this.video.setAttribute('data-setup', JSON.stringify({

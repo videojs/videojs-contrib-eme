@@ -72,7 +72,7 @@
     "test/"
   ],
   "dependencies": {
-    "video.js": "^5.0.0"
+    "video.js": "^5.13.1"
   },
   "devDependencies": {
     "babel": "^5.8.0",
