@@ -35,16 +35,14 @@ const onPlayerReady = (player, options) => {
     return;
   }
 
-  let source = player.currentSource();
-
   // Support EME 05 July 2016
   player.tech_.el_.addEventListener('encrypted', (event) => {
-    handleEncryptedEvent(event, videojs.mergeOptions(options, source));
+    handleEncryptedEvent(event, videojs.mergeOptions(options, player.currentSource()));
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
   player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-    handleWebKitNeedKeyEvent(event, videojs.mergeOptions(options, source));
+    handleWebKitNeedKeyEvent(event, videojs.mergeOptions(options, player.currentSource()));
   });
 };
 
@@ -61,8 +59,7 @@ const onPlayerReady = (player, options) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options = {}) {
-
-  this.on('ready', () => {
+  this.ready(() => {
     onPlayerReady(this, videojs.mergeOptions({}, options));
   });
 
