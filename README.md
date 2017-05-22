@@ -103,8 +103,8 @@ systems:
 {
   keySystems: {
     "org.w3.clearkey": {
-      videoContentType: 'audio/webm; codecs="vorbis"',
-      audioContentType: 'video/webm; codecs="vp9"',
+      audioContentType: 'audio/webm; codecs="vorbis"',
+      videoContentType: 'video/webm; codecs="vp9"',
       getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
@@ -137,8 +137,8 @@ player.src({
   // eme options
   keySystems: {
     'org.w3.clearkey': {
-      videoContentType: 'audio/webm; codecs="vorbis"',
-      audioContentType: 'video/webm; codecs="vp9"',
+      audioContentType: 'audio/webm; codecs="vorbis"',
+      videoContentType: 'video/webm; codecs="vp9"',
       getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
