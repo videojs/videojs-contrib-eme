@@ -36,6 +36,8 @@
         type: 'video/webm',
         keySystems: {
           'org.w3.clearkey': {
+            audioContentType: 'audio/webm; codecs="vorbis"',
+            videoContentType: 'video/webm; codecs="vp8"',
             getLicense: (emeOptions, keyMessage, callback) => {
               // Parse the clearkey license request.
               let request = JSON.parse(new TextDecoder().decode(keyMessage));
