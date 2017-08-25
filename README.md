@@ -82,6 +82,54 @@ The default methods are defined as follows:
 * getLicense - POST licenseUri with response type of arraybuffer, header of
 'Content-type': 'application/octet-stream', and body of webKitKeyMessage
 
+### PlayReady for IE11 (Windows 8.1+)
+
+PlayReady for IE11 (Windows 8.1+) only requires `keySystems` from the options passed
+into videojs-contrib-eme, or provided as part of the source object.
+
+There are three choices for options that may be passed:
+
+1) If the value of `true` is provided, then a POST request will be made to the
+`detinationURI` passed by the message from the browser, with the headers and body
+specified in the message.
+
+Example:
+```javascript
+  keySystems: {
+    "com.microsoft.playready": true
+  }
+```
+
+2) If a url is provided, then a POST request will be made to the provided url, with the
+headers and body specified in the message.
+
+Example:
+```javascript
+  keySystems: {
+    "com.microsoft.playready": {
+      "url": "<your url here>"
+    }
+  }
+```
+
+3) If a `getKey` function is provided, then the function will be run with the message
+buffer and destinationURI passed by the browser, and will expect a callback with the key.
+
+Example:
+```javascript
+{
+  keySystems: {
+    "com.microsoft.playready": {
+      getKey: function(emeOptions, destinationURI, buffer, callback) {
+        // request key
+        // if err, callback(err)
+        // if success, callback(null, key), where key is a Uint8Array
+      }
+    }
+  }
+}
+```
+
 ### Other DRM Systems
 
 For DRM systems that use the W3C EME specification as of 5 July 2016, only `keySystems`
