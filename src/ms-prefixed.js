@@ -37,7 +37,8 @@ export const getMessageContents = (message) => {
 export const addKeyToSession = (options, session, event) => {
   const playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
-  if (typeof playreadyOptions.getKey === 'function') {
+  if (typeof playreadyOptions === 'object' &&
+      typeof playreadyOptions.getKey === 'function') {
     playreadyOptions.getKey(
       options, event.destinationURL, event.message.buffer, (err, key) => {
         if (err) {
@@ -50,7 +51,9 @@ export const addKeyToSession = (options, session, event) => {
     return;
   }
 
-  const url = playreadyOptions.url || event.destinationURL;
+  const url = typeof playreadyOptions === 'string' ? playreadyOptions :
+    typeof playreadyOptions === 'object' && playreadyOptions.url ? playreadyOptions.url :
+      event.destinationURL;
   const {headers, message} = getMessageContents(event.message.buffer);
 
   videojs.xhr({
