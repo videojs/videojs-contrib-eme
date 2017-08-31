@@ -16,16 +16,12 @@ QUnit.module('videojs-contrib-eme ms-prefixed', {
     this.origMSMediaKeys = window.MSMediaKeys;
     window.MSMediaKeys = () => {};
 
+    const session = new videojs.EventTarget();
+
+    session.keys = [];
+    session.update = (key) => session.keys.push(key);
+
     // mock the video since the APIs won't be available on non IE11 browsers
-    const session = {
-      listeners: [],
-      keys: [],
-      addEventListener: (type, callback) => session.listeners.push({
-        type,
-        callback
-      }),
-      update: (key) => session.keys.push(key)
-    };
     const video = {
       msSetMediaKeys: () => {
         video.msKeys = {
@@ -114,26 +110,6 @@ QUnit.test('checks for required options', function(assert) {
   videojs.log.error = origErrorLog;
 });
 
-QUnit.test('listens for events on session', function(assert) {
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {
-      keySystems: {
-        'com.microsoft.playready': true
-      }
-    }
-  });
-
-  assert.equal(this.session.listeners.length, 2, 'added two listeners');
-  assert.equal(this.session.listeners[0].type,
-               'mskeymessage',
-               'added mskeymessage listener');
-  assert.equal(this.session.listeners[1].type,
-               'mskeyerror',
-               'added mskeyerror listener');
-});
-
 QUnit.test('logs error when on key error', function(assert) {
   const origErrorLog = videojs.log.error;
   let errorMessage;
@@ -157,7 +133,7 @@ QUnit.test('logs error when on key error', function(assert) {
     systemCode: 9
   };
 
-  this.session.listeners[1].callback();
+  this.session.trigger('mskeyerror');
 
   assert.equal(errorMessage,
                'Unexpected key error from key session with code: 5 and systemCode: 9',
@@ -197,7 +173,8 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
 
   assert.notOk(passedOptions, 'getKey not called');
 
-  this.session.listeners[0].callback({
+  this.session.trigger({
+    type: 'mskeymessage',
     destinationURL: 'url',
     message: {
       buffer: 'buffer'
@@ -222,7 +199,8 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
     callback('an error', 'an errored key');
   };
 
-  this.session.listeners[0].callback({
+  this.session.trigger({
+    type: 'mskeymessage',
     destinationURL: 'url',
     message: {
       buffer: 'buffer'
@@ -252,7 +230,8 @@ QUnit.test('makes request when nothing provided on key message', function(assert
       }
     }
   });
-  this.session.listeners[0].callback({
+  this.session.trigger({
+    type: 'mskeymessage',
     destinationURL: 'destination-url',
     message: {
       buffer: createMessageBuffer()
@@ -322,7 +301,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
       }
     }
   });
-  this.session.listeners[0].callback({
+  this.session.trigger({
+    type: 'mskeymessage',
     destinationURL: 'destination-url',
     message: {
       buffer: createMessageBuffer([{
@@ -338,7 +318,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(xhrCalls.length, 1, 'one xhr request');
   assert.equal(xhrCalls[0].config.uri,
                'provided-url',
-               'made request to destinationURL');
+               'made request to provided-url');
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {

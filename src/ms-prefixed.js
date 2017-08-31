@@ -9,7 +9,7 @@ export const getMessageContents = (message) => {
     String.fromCharCode.apply(null, new Uint16Array(message)),
     'application/xml');
   const headersElement = xml.getElementsByTagName('HttpHeaders')[0];
-  let headers = {};
+  const headers = {};
 
   if (headersElement) {
     const headerNames = headersElement.getElementsByTagName('name');
@@ -50,7 +50,7 @@ export const addKeyToSession = (options, session, event) => {
     return;
   }
 
-  const url = playreadyOptions.url ? playreadyOptions.url : event.destinationURL;
+  const url = playreadyOptions.url || event.destinationURL;
   const {headers, message} = getMessageContents(event.message.buffer);
 
   videojs.xhr({
@@ -85,7 +85,6 @@ export const createSession = (video, initData, options) => {
     videojs.log.error(
       'Unexpected key error from key session with ' +
       `code: ${session.error.code} and systemCode: ${session.error.systemCode}`);
-    return;
   });
 };
 
