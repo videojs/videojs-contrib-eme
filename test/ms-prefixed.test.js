@@ -284,6 +284,50 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   videojs.xhr = origXhr;
 });
 
+QUnit.test('makes request on key message when empty object provided in options',
+function(assert) {
+  const origXhr = videojs.xhr;
+  const xhrCalls = [];
+
+  videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
+
+  msPrefixed({
+    video: this.video,
+    initData: '',
+    options: {
+      keySystems: {
+        'com.microsoft.playready': {}
+      }
+    }
+  });
+  this.session.trigger({
+    type: 'mskeymessage',
+    destinationURL: 'destination-url',
+    message: {
+      buffer: createMessageBuffer()
+    }
+  });
+
+  assert.equal(xhrCalls.length, 1, 'one xhr request');
+  assert.equal(xhrCalls[0].config.uri,
+               'destination-url',
+               'made request to destinationURL');
+  assert.deepEqual(
+    xhrCalls[0].config.headers,
+    {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+    },
+    'uses headers from message');
+  assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
+  assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
+  assert.equal(xhrCalls[0].config.responseType,
+               'arraybuffer',
+               'responseType is an arraybuffer');
+
+  videojs.xhr = origXhr;
+});
+
 QUnit.test('makes request with provided url string on key message', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];

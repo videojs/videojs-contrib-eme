@@ -37,16 +37,6 @@ export const getMessageContents = (message) => {
 export const addKeyToSession = (options, session, event) => {
   let playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
-  if (typeof playreadyOptions === 'string') {
-    playreadyOptions = { url: playreadyOptions };
-  }
-
-  // falsy values were covered prior to this, so anything not a filled object (true,
-  // empty object, etc.) should use the provided destinationURL
-  if (typeof playreadyOptions !== 'object') {
-    playreadyOptions = { url: event.destinationURL };
-  }
-
   if (typeof playreadyOptions.getKey === 'function') {
     playreadyOptions.getKey(
       options, event.destinationURL, event.message.buffer, (err, key) => {
@@ -60,17 +50,22 @@ export const addKeyToSession = (options, session, event) => {
     return;
   }
 
+  if (typeof playreadyOptions === 'string') {
+    playreadyOptions = { url: playreadyOptions };
+  }
+
+  const url = playreadyOptions.url || event.destinationURL;
   const {headers, message} = getMessageContents(event.message.buffer);
 
   videojs.xhr({
-    uri: playreadyOptions.url,
+    uri: url,
     method: 'post',
     headers,
     body: message,
     responseType: 'arraybuffer'
   }, (err, response) => {
     if (err) {
-      videojs.log.error('Unable to request key from url: ' + playreadyOptions.url);
+      videojs.log.error('Unable to request key from url: ' + url);
       return;
     }
 
