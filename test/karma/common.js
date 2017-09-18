@@ -30,10 +30,6 @@ var DEFAULTS = {
     'test/**/*.js': ['browserify']
   },
 
-  captureTimeout: 300000,
-  browserNoActivityTimeout: 300000,
-  browserDisconnectTimeout: 300000,
-  browserDisconnectTolerance: 3,
   reporters: ['dots'],
   port: 9876,
   colors: true,

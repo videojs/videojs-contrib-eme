@@ -22,9 +22,8 @@ env:
   - VJS=5
   - VJS=6
 addons:
-  # TODO: Firefox should be set to latest. It is currently locked to 54 because
-  #       of https://github.com/travis-ci/travis-ci/issues/8242.
-  firefox: "54.0"
+  # TODO: Firefox should be used and set to latest. It is not because it was timing out
+  # randomly.
   apt:
     sources:
     - google-chrome
