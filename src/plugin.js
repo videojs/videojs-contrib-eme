@@ -1,6 +1,7 @@
 import videojs from 'video.js';
 import {standard5July2016} from './eme';
 import fairplay from './fairplay';
+import msPrefixed from './ms-prefixed';
 
 const handleEncryptedEvent = (event, sourceOptions) => {
   standard5July2016({
@@ -13,6 +14,14 @@ const handleEncryptedEvent = (event, sourceOptions) => {
 
 const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
   fairplay({
+    video: event.target,
+    initData: event.initData,
+    options: sourceOptions
+  });
+};
+
+const handleMsNeedKeyEvent = (event, sourceOptions) => {
+  msPrefixed({
     video: event.target,
     initData: event.initData,
     options: sourceOptions
@@ -36,13 +45,19 @@ const onPlayerReady = (player, options) => {
   }
 
   // Support EME 05 July 2016
+  // Chrome 42+, Firefox 47+, Edge
   player.tech_.el_.addEventListener('encrypted', (event) => {
     handleEncryptedEvent(event, videojs.mergeOptions(options, player.currentSource()));
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
   player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-    handleWebKitNeedKeyEvent(event, videojs.mergeOptions(options, player.currentSource()));
+    handleWebKitNeedKeyEvent(event,
+                             videojs.mergeOptions(options, player.currentSource()));
+  });
+  // IE11 Windows 8.1+
+  player.tech_.el_.addEventListener('msneedkey', (event) => {
+    handleMsNeedKeyEvent(event, videojs.mergeOptions(options, player.currentSource()));
   });
 };
 
