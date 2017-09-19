@@ -44,6 +44,130 @@ QUnit.test('does nothing if required options are not provided', function(assert)
   videojs.log.error = origErrorLog;
 });
 
+QUnit.test('accepts a license URL as an option', function(assert) {
+  const done = assert.async();
+  const origXhr = videojs.xhr;
+  const xhrCalls = [];
+  const callbacks = {};
+
+  videojs.xhr = (options) => {
+    xhrCalls.push(options);
+  };
+
+  navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+    return new Promise((resolve, reject) => {
+      callbacks.requestMediaKeySystemAccess = resolve;
+    });
+  };
+
+  standard5July2016({
+    video: {},
+    initDataType: '',
+    initData: '',
+    options: {
+      keySystems: {
+        'com.widevine.alpha': 'some-url'
+      }
+    }
+  });
+
+  const session = new videojs.EventTarget();
+
+  callbacks.requestMediaKeySystemAccess({
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
+  });
+
+  setTimeout(() => {
+    session.trigger({
+      type: 'message',
+      message: 'the-message'
+    });
+
+    assert.equal(xhrCalls.length, 1, 'made one XHR');
+    assert.deepEqual(xhrCalls[0], {
+      uri: 'some-url',
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: 'the-message',
+      headers: {
+        'Content-type': 'application/octet-stream'
+      }
+    }, 'made request with proper options');
+
+    videojs.xhr = origXhr;
+
+    done();
+  });
+});
+
+QUnit.test('accepts a license URL as property', function(assert) {
+  const done = assert.async();
+  const origXhr = videojs.xhr;
+  const xhrCalls = [];
+  const callbacks = {};
+
+  videojs.xhr = (options) => {
+    xhrCalls.push(options);
+  };
+
+  navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+    return new Promise((resolve, reject) => {
+      callbacks.requestMediaKeySystemAccess = resolve;
+    });
+  };
+
+  standard5July2016({
+    video: {},
+    initDataType: '',
+    initData: '',
+    options: {
+      keySystems: {
+        'com.widevine.alpha': {
+          url: 'some-url'
+        }
+      }
+    }
+  });
+
+  const session = new videojs.EventTarget();
+
+  callbacks.requestMediaKeySystemAccess({
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
+  });
+
+  setTimeout(() => {
+    session.trigger({
+      type: 'message',
+      message: 'the-message'
+    });
+
+    assert.equal(xhrCalls.length, 1, 'made one XHR');
+    assert.deepEqual(xhrCalls[0], {
+      uri: 'some-url',
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: 'the-message',
+      headers: {
+        'Content-type': 'application/octet-stream'
+      }
+    }, 'made request with proper options');
+
+    videojs.xhr = origXhr;
+
+    done();
+  });
+});
+
 QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.expect(40);
 

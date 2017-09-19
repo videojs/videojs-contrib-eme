@@ -11,6 +11,12 @@ Maintenance Status: Experimental
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [Using](#using)
+  - [FairPlay](#fairplay)
+  - [Other DRM Systems](#other-drm-systems)
+  - [Source Options](#other-drm-systems)
+  - [emeOptions](#emeOptions)
+  - [Passing methods seems complicated](#passing-methods-seems-complicated)
 - [Getting Started](#getting-started)
   - [Running Tests](#running-tests)
   - [Tag and Release](#tag-and-release)
@@ -137,10 +143,37 @@ Example:
 ### Other DRM Systems
 
 For DRM systems that use the W3C EME specification as of 5 July 2016, only `keySystems`
-is required.
+and a way of obtaining the license are required.
 
-`getLicense` is the only required `keySystems` method. `getCertificate` is also supported
-if your source needs to retrieve a certificate.
+To obtain a license requires one of a couple different options:
+1) You may use a string as the license url, or a url as an entry in the options:
+```javascript
+{
+  keySystems: {
+    'org.w3.clearkey': '<your-license-url>',
+    'com.widevine.alpha': {
+      url: '<your-license-url>'
+    }
+  }
+}
+```
+2) You may pass a `getLicense` function:
+```javascript
+{
+  keySystems: {
+    'org.w3.clearkey': {
+      getLicense: function(emeOptions, keyMessage, callback) {
+        // request license
+        // if err, callback(err)
+        // if success, callback(null, license)
+      }
+    }
+  }
+}
+```
+
+Although the license acquisition related config is the only required configuration,
+`getCertificate` is also supported if your source needs to retrieve a certificate.
 
 The `audioContentType` and `videoContentType` properties for non-FairPlay sources are
 used to determine if the system supports that codec, and to create an appropriate
@@ -149,7 +182,7 @@ used to determine if the system supports that codec, and to create an appropriat
 source due to the browser's inability to use that codec.
 
 Below is an example of videojs-contrib-eme options when only using one of these DRM
-systems:
+systems, and custom `getLicense` and `getCertificate` functions:
 
 ```javascript
 {
@@ -206,7 +239,7 @@ player.src({
 });
 ```
 
-### `emeOptions`
+### emeOptions
 
 `emeOptions` are provided for all methods. This is a reference to the plugin options
 merged with (overwritten by) the source options for the current source. It is available to
@@ -263,17 +296,10 @@ player.src({
 
 ### Passing methods seems complicated
 
-If you're wondering why there are so many methods to implement, and why the options can't
-simply have URLs (except for the default FairPlay case), you're asking good questions.
-
-We wanted to provide as much flexibility as possible. This means that if your server has
-a different structure, you use a different format for FairPlay content IDs, or you want
-to test something in the browser without making a request, we can support that, since you
-control the methods.
-
-In the future we may provide other default implementations and allow passing through the
-minimum amount of details possible. If you have any suggestions on how we should go about
-this, we'd love to hear your ideas!
+While simple URLs are supported for many EME implementations, we wanted to provide as much
+flexibility as possible. This means that if your server has a different structure, you use
+a different format for FairPlay content IDs, or you want to test something in the browser
+without making a request, we can support that, since you can control the methods.
 
 ## Getting Started
 

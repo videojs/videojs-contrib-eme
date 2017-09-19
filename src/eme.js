@@ -26,9 +26,8 @@ const getSupportedKeySystem = ({video, keySystems}) => {
     if (!promise) {
       promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
     } else {
-      promise.catch((e) => {
-        promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
-      });
+      promise = promise.catch(
+        (e) => navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]));
     }
   });
 
@@ -90,6 +89,25 @@ const setMediaKeys = ({video, certificate, createdMediaKeys, options, getLicense
   return video.setMediaKeys(createdMediaKeys);
 };
 
+const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
+  videojs.xhr({
+    uri: url,
+    method: 'POST',
+    responseType: 'arraybuffer',
+    body: keyMessage,
+    headers: {
+      'Content-type': 'application/octet-stream'
+    }
+  }, (err, response, responseBody) => {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    callback(null, responseBody);
+  });
+};
+
 const promisifyGetLicense = (getLicenseFn) => {
   return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
@@ -102,6 +120,22 @@ const promisifyGetLicense = (getLicenseFn) => {
       });
     });
   };
+};
+
+const standardizeKeySystemOptions = (keySystemOptions) => {
+  if (typeof keySystemOptions === 'string') {
+    keySystemOptions = { url: keySystemOptions };
+  }
+
+  if (!keySystemOptions.url && !keySystemOptions.getLicense) {
+    throw new Error('Neither URL nor getLicense function provided to get license');
+  }
+
+  if (keySystemOptions.url && !keySystemOptions.getLicense) {
+    keySystemOptions.getLicense = defaultGetLicense(keySystemOptions.url);
+  }
+
+  return keySystemOptions;
 };
 
 export const standard5July2016 = ({video, initDataType, initData, options}) => {
@@ -134,10 +168,12 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
         // save key system for adding sessions
         video.keySystem = keySystemAccess.keySystem;
 
-        keySystemOptions = options.keySystems[keySystemAccess.keySystem];
+        keySystemOptions = standardizeKeySystemOptions(
+          options.keySystems[keySystemAccess.keySystem]);
 
         if (!keySystemOptions.getCertificate) {
           resolve(keySystemAccess);
+          return;
         }
 
         keySystemOptions.getCertificate(options, (err, cert) => {
@@ -174,7 +210,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
     options,
     // if key system has not been determined then addSession doesn't need getLicense
     getLicense: video.keySystem ?
-      promisifyGetLicense(options.keySystems[video.keySystem].getLicense) :
-      null
+      promisifyGetLicense(standardizeKeySystemOptions(
+        options.keySystems[video.keySystem]).getLicense) : null
   });
 };
