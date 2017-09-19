@@ -8,10 +8,9 @@ module.exports = function(config) {
   if (process.env.TRAVIS) {
 
     config.set(common({
-      browsers: ['travisChrome', 'Firefox'],
+      browsers: ['travisChrome'],
       plugins: [
         'karma-chrome-launcher',
-        'karma-firefox-launcher'
       ]
     }));
   } else {
