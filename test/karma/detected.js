@@ -8,10 +8,10 @@ module.exports = function(config) {
   if (process.env.TRAVIS) {
 
     config.set(common({
-      browsers: ['travisChrome', 'Firefox'],
+      // TODO Firefox should be included. It is not because it was timing out randomly.
+      browsers: ['travisChrome'],
       plugins: [
         'karma-chrome-launcher',
-        'karma-firefox-launcher'
       ]
     }));
   } else {
