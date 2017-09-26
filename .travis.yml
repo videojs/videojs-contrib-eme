@@ -22,10 +22,10 @@ env:
   - VJS=5
   - VJS=6
 addons:
-  # TODO: Firefox should be used and set to latest. It is not because it was timing out
-  # randomly.
   apt:
     sources:
     - google-chrome
+    - firefox
     packages:
     - google-chrome-stable
+    - firefox
