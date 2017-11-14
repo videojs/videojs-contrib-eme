@@ -1,6 +1,14 @@
 import videojs from 'video.js';
 import window from 'global/window';
 
+/**
+ * Parses the EME key message XML to extract HTTP headers and the Challenge element to use
+ * in the PlayReady license request.
+ *
+ * @param {ArrayBuffer} message key message from EME
+ * @return {Object} an object containing headers and the message body to use in the
+ * license request
+ */
 export const getMessageContents = (message) => {
   const xml = (new DOMParser()).parseFromString(
     // TODO do we want to support UTF-8?
