@@ -10,7 +10,8 @@ import {
   setupSessions,
   handleEncryptedEvent,
   handleMsNeedKeyEvent,
-  handleWebKitNeedKeyEvent
+  handleWebKitNeedKeyEvent,
+  getOptions
 } from '../src/plugin';
 
 const Player = videojs.getComponent('Player');
@@ -234,4 +235,55 @@ QUnit.test('setupSessions sets up sessions for new sources', function(assert) {
 
   assert.equal(player.eme.sessions.length, 1, 'sessions array unchanged');
   assert.equal(player.eme.activeSrc, 'other-src', 'activeSrc property unchanged');
+});
+
+QUnit.test('getOptions prioritizes eme options over source options', function(assert) {
+  const player = {
+    eme: {
+      options: {
+        keySystems: {
+          keySystem1: {
+            audioContentType: 'audio-content-type',
+            videoContentType: 'video-content-type'
+          },
+          keySystem3: {
+            licenseUrl: 'license-url-3'
+          }
+        },
+        extraOption: 'extra-option'
+      }
+    },
+    currentSource: () => {
+      return {
+        keySystems: {
+          keySystem1: {
+            licenseUrl: 'license-url-1',
+            videoContentType: 'source-video-content-type'
+          },
+          keySystem2: {
+            licenseUrl: 'license-url-2'
+          }
+        },
+        type: 'application/dash+xml'
+      };
+    }
+  };
+
+  assert.deepEqual(getOptions(player), {
+    keySystems: {
+      keySystem1: {
+        audioContentType: 'audio-content-type',
+        videoContentType: 'video-content-type',
+        licenseUrl: 'license-url-1'
+      },
+      keySystem2: {
+        licenseUrl: 'license-url-2'
+      },
+      keySystem3: {
+        licenseUrl: 'license-url-3'
+      }
+    },
+    type: 'application/dash+xml',
+    extraOption: 'extra-option'
+  }, 'updates source options with eme options');
 });

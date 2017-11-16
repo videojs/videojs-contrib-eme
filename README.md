@@ -14,8 +14,9 @@ Maintenance Status: Experimental
 - [Using](#using)
   - [FairPlay](#fairplay)
   - [Other DRM Systems](#other-drm-systems)
-  - [Source Options](#other-drm-systems)
-  - [emeOptions](#emeOptions)
+  - [Source Options](#source-options)
+  - [Plugin Options](#plugin-options)
+  - [emeOptions](#emeoptions)
   - [Passing methods seems complicated](#passing-methods-seems-complicated)
 - [Getting Started](#getting-started)
   - [Running Tests](#running-tests)
@@ -27,9 +28,9 @@ Maintenance Status: Experimental
 ## Using
 
 By default, videojs-contrib-eme is not able to decrypt any audio/video. In order to
-decrypt audio/video, a user must pass in methods that are specific to a source and its
-combination of key system and codec. These are provided via either videojs-contrib-eme's
-plugin options, or source options.
+decrypt audio/video, a user must pass in either relevant license URIs, or methods specific
+to a source and its combination of key system and codec. These are provided to the plugin
+via either videojs-contrib-eme's plugin options, or source options.
 
 ### FairPlay
 
@@ -239,11 +240,23 @@ player.src({
 });
 ```
 
+### Plugin Options
+
+Plugin options may be provided in one of two ways. Either they are provided in the
+standard plugins configuration when setting up video.js itself, or they may be set by
+assigning to the options property on the eme object itself:
+
+```javascript
+player.eme.options = {
+  // options you want to pass
+};
+```
+
 ### emeOptions
 
-`emeOptions` are provided for all methods. This is a reference to the plugin options
-merged with (overwritten by) the source options for the current source. It is available to
-make it easier to access options so that you don't have to maintain them yourself.
+`emeOptions` are provided for all methods. This is a reference to the source options for
+the current source merged with (overwritten by) the latest plugin options. It is available
+to make it easier to access options so that you don't have to maintain them yourself.
 
 For example. If you need to use a userId for the getCertificate request, you can pass in
 plugin options that have:
