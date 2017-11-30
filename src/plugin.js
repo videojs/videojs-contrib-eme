@@ -55,6 +55,12 @@ const onPlayerReady = (player, options) => {
     handleWebKitNeedKeyEvent(event,
                              videojs.mergeOptions(options, player.currentSource()));
   });
+
+  // EDGE still fires msneedkey, but should use encrypted instead
+  if (videojs.browser.IS_EDGE) {
+    return;
+  }
+
   // IE11 Windows 8.1+
   player.tech_.el_.addEventListener('msneedkey', (event) => {
     handleMsNeedKeyEvent(event, videojs.mergeOptions(options, player.currentSource()));

@@ -1,4 +1,5 @@
 import videojs from 'video.js';
+import { requestPlayreadyLicense } from './playready';
 
 const getSupportedKeySystem = ({video, keySystems}) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
@@ -89,6 +90,17 @@ const setMediaKeys = ({video, certificate, createdMediaKeys, options, getLicense
   return video.setMediaKeys(createdMediaKeys);
 };
 
+const defaultPlayreadyGetLicense = (url) => (emeOptions, keyMessage, callback) => {
+  requestPlayreadyLicense(url, keyMessage, (err, response, responseBody) => {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    callback(null, responseBody);
+  });
+};
+
 const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
   videojs.xhr({
     uri: url,
@@ -122,7 +134,7 @@ const promisifyGetLicense = (getLicenseFn) => {
   };
 };
 
-const standardizeKeySystemOptions = (keySystemOptions) => {
+const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   if (typeof keySystemOptions === 'string') {
     keySystemOptions = { url: keySystemOptions };
   }
@@ -132,7 +144,9 @@ const standardizeKeySystemOptions = (keySystemOptions) => {
   }
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
-    keySystemOptions.getLicense = defaultGetLicense(keySystemOptions.url);
+    keySystemOptions.getLicense = keySystem === 'com.microsoft.playready' ?
+      defaultPlayreadyGetLicense(keySystemOptions.url) :
+      defaultGetLicense(keySystemOptions.url);
   }
 
   return keySystemOptions;
@@ -169,6 +183,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
         video.keySystem = keySystemAccess.keySystem;
 
         keySystemOptions = standardizeKeySystemOptions(
+          keySystemAccess.keySystem,
           options.keySystems[keySystemAccess.keySystem]);
 
         if (!keySystemOptions.getCertificate) {
@@ -211,6 +226,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
     // if key system has not been determined then addSession doesn't need getLicense
     getLicense: video.keySystem ?
       promisifyGetLicense(standardizeKeySystemOptions(
+        video.keySystem,
         options.keySystems[video.keySystem]).getLicense) : null
   });
 };

@@ -5,10 +5,7 @@ import {
   createMessageBuffer,
   challengeElement
 } from './playready-message';
-import {
-  default as msPrefixed,
-  getMessageContents
-} from '../src/ms-prefixed';
+import msPrefixed from '../src/ms-prefixed';
 import utils from './utils';
 
 QUnit.module('videojs-contrib-eme ms-prefixed', {
@@ -478,17 +475,4 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
-});
-
-QUnit.test('getMessageContents parses message contents', function(assert) {
-  const {headers, message} = getMessageContents(createMessageBuffer());
-
-  assert.deepEqual(
-    headers,
-    {
-      'Content-Type': 'text/xml; charset=utf-8',
-      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
-    },
-    'parses headers');
-  assert.deepEqual(message, challengeElement, 'parses challenge element');
 });
