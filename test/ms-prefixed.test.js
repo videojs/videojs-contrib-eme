@@ -35,63 +35,10 @@ QUnit.module('videojs-contrib-eme ms-prefixed', {
   }
 });
 
-QUnit.test('checks for required options', function(assert) {
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
+QUnit.test('overwrites msKeys', function(assert) {
+  const origMsKeys = {};
 
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {}
-  });
-  assert.equal(errorMessage,
-              'PlayReady key system options not provided to decrypt video',
-              'shows correct error message');
-  errorMessage = null;
-
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {
-      keySystems: {}
-    }
-  });
-  assert.equal(errorMessage,
-              'PlayReady key system options not provided to decrypt video',
-              'shows correct error message');
-  errorMessage = null;
-
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {
-      keySystems: {
-        'com.microsoft.notplayready': true
-      }
-    }
-  });
-  assert.equal(errorMessage,
-              'PlayReady key system options not provided to decrypt video',
-              'shows correct error message');
-  errorMessage = null;
-
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {
-      keySystems: {
-        'com.microsoft.notplayready': true
-      }
-    }
-  });
-  assert.equal(errorMessage,
-              'PlayReady key system options not provided to decrypt video',
-              'shows correct error message');
-  errorMessage = null;
+  this.video.msKeys = origMsKeys;
 
   msPrefixed({
     video: this.video,
@@ -102,9 +49,8 @@ QUnit.test('checks for required options', function(assert) {
       }
     }
   });
-  assert.notOk(errorMessage, 'no error message');
 
-  videojs.log.error = origErrorLog;
+  assert.notEqual(this.video.msKeys, origMsKeys, 'overwrote msKeys');
 });
 
 QUnit.test('logs error when on key error', function(assert) {

@@ -153,10 +153,6 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 };
 
 export const standard5July2016 = ({video, initDataType, initData, options}) => {
-  if (!options || !options.keySystems) {
-    return;
-  }
-
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
     video.mediaKeysObject = null;
