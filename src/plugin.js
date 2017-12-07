@@ -1,9 +1,59 @@
 import videojs from 'video.js';
-import {standard5July2016} from './eme';
+import { standard5July2016 } from './eme';
 import fairplay from './fairplay';
-import msPrefixed from './ms-prefixed';
+import {
+  default as msPrefixed,
+  PLAYREADY_KEY_SYSTEM
+} from './ms-prefixed';
+import { arrayBuffersEqual, arrayBufferFrom } from './utils';
 
-const handleEncryptedEvent = (event, sourceOptions) => {
+export const hasSession = (sessions, initData) => {
+  for (let i = 0; i < sessions.length; i++) {
+    // Other types of sessions may be in the sessions array that don't store the initData
+    // (for instance, PlayReady sessions on IE11).
+    if (!sessions[i].initData) {
+      continue;
+    }
+
+    // initData should be an ArrayBuffer by the spec:
+    // eslint-disable-next-line max-len
+    // @see [Media Encrypted Event initData Spec]{@link https://www.w3.org/TR/encrypted-media/#mediaencryptedeventinit}
+    //
+    // However, on some browsers it may come back with a typed array view of the buffer.
+    // This is the case for IE11, however, since IE11 sessions are handled differently
+    // (following the msneedkey PlayReady path), this coversion may not be important. It
+    // is safe though, and might be a good idea to retain in the short term (until we have
+    // catalogued the full range of browsers and their implementations).
+    if (arrayBuffersEqual(arrayBufferFrom(sessions[i].initData),
+                          arrayBufferFrom(initData))) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const handleEncryptedEvent = (event, sourceOptions, sessions) => {
+  if (!sourceOptions || !sourceOptions.keySystems) {
+    // return silently since it may be handled by a different system
+    return;
+  }
+
+  // "Initialization Data must be a fixed value for a given set of stream(s) or media
+  // data. It must only contain information related to the keys required to play a given
+  // set of stream(s) or media data."
+  // eslint-disable-next-line max-len
+  // @see [Initialization Data Spec]{@link https://www.w3.org/TR/encrypted-media/#initialization-data}
+  if (hasSession(sessions, event.initData)) {
+    // TODO convert to videojs.log.debug and add back in
+    // https://github.com/videojs/video.js/pull/4780
+    // videojs.log('eme',
+    //             'Already have a configured session for init data, ignoring event.');
+    return;
+  }
+
+  sessions.push({ initData: event.initData });
+
   standard5July2016({
     video: event.target,
     initDataType: event.initDataType,
@@ -12,7 +62,7 @@ const handleEncryptedEvent = (event, sourceOptions) => {
   });
 };
 
-const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
+export const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
   fairplay({
     video: event.target,
     initData: event.initData,
@@ -20,12 +70,52 @@ const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
   });
 };
 
-const handleMsNeedKeyEvent = (event, sourceOptions) => {
+export const handleMsNeedKeyEvent = (event, sourceOptions, sessions) => {
+  if (!sourceOptions.keySystems || !sourceOptions.keySystems[PLAYREADY_KEY_SYSTEM]) {
+    // return silently since it may be handled by a different system
+    return;
+  }
+
+  // "With PlayReady content protection, your Web app must handle the first needKey event,
+  // but it must then ignore any other needKey event that occurs."
+  // eslint-disable-next-line max-len
+  // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
+  //
+  // Usually (and as per the example in the link above) this is determined by checking for
+  // the existence of video.msKeys. However, since the video element may be reused, it's
+  // easier to directly manage the session.
+  if (sessions.reduce((acc, session) => acc || session.playready, false)) {
+    // TODO convert to videojs.log.debug and add back in
+    // https://github.com/videojs/video.js/pull/4780
+    // videojs.log('eme',
+    //             'An \'msneedkey\' event was receieved earlier, ignoring event.');
+    return;
+  }
+
+  sessions.push({ playready: true });
+
   msPrefixed({
     video: event.target,
     initData: event.initData,
     options: sourceOptions
   });
+};
+
+/**
+ * Configure a persistent sessions array and activeSrc property to ensure we properly
+ * handle each independent source's events. Should be run on any encrypted or needkey
+ * style event to ensure that the sessions reflect the active source.
+ *
+ * @function setupSessions
+ * @param    {Player} player
+ */
+export const setupSessions = (player) => {
+  const src = player.src();
+
+  if (src !== player.eme.activeSrc) {
+    player.eme.activeSrc = src;
+    player.eme.sessions = [];
+  }
 };
 
 /**
@@ -44,14 +134,26 @@ const onPlayerReady = (player, options) => {
     return;
   }
 
+  setupSessions(player);
+
   // Support EME 05 July 2016
   // Chrome 42+, Firefox 47+, Edge
   player.tech_.el_.addEventListener('encrypted', (event) => {
-    handleEncryptedEvent(event, videojs.mergeOptions(options, player.currentSource()));
+    // TODO convert to videojs.log.debug and add back in
+    // https://github.com/videojs/video.js/pull/4780
+    // videojs.log('eme', 'Received an \'encrypted\' event');
+    setupSessions(player);
+    handleEncryptedEvent(event,
+                         videojs.mergeOptions(options, player.currentSource()),
+                         player.eme.sessions);
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
   player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+    // TODO convert to videojs.log.debug and add back in
+    // https://github.com/videojs/video.js/pull/4780
+    // videojs.log('eme', 'Received a \'webkitneedkey\' event');
+    setupSessions(player);
     handleWebKitNeedKeyEvent(event,
                              videojs.mergeOptions(options, player.currentSource()));
   });
@@ -63,7 +165,13 @@ const onPlayerReady = (player, options) => {
 
   // IE11 Windows 8.1+
   player.tech_.el_.addEventListener('msneedkey', (event) => {
-    handleMsNeedKeyEvent(event, videojs.mergeOptions(options, player.currentSource()));
+    // TODO convert to videojs.log.debug and add back in
+    // https://github.com/videojs/video.js/pull/4780
+    // videojs.log('eme', 'Received an \'msneedkey\' event');
+    setupSessions(player);
+    handleMsNeedKeyEvent(event,
+                         videojs.mergeOptions(options, player.currentSource()),
+                         player.eme.sessions);
   });
 };
 

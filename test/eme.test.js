@@ -1,48 +1,8 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
-
 import {standard5July2016} from '../src/eme';
 
 QUnit.module('videojs-contrib-eme eme');
-
-QUnit.test('does nothing if required options are not provided', function(assert) {
-  let origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
-  standard5July2016({
-    video: {},
-    initDataType: '',
-    initData: ''
-  });
-
-  assert.ok(!errorMessage, 'did not error');
-
-  standard5July2016({
-    video: {},
-    initDataType: '',
-    initData: '',
-    options: {}
-  });
-
-  assert.ok(!errorMessage, 'did not error');
-
-  standard5July2016({
-    video: {},
-    initDataType: '',
-    initData: '',
-    options: {
-      keySystems: {}
-    }
-  });
-
-  assert.ok(errorMessage.startsWith('No supported key system found'));
-
-  videojs.log.error = origErrorLog;
-});
 
 QUnit.test('accepts a license URL as an option', function(assert) {
   const done = assert.async();
