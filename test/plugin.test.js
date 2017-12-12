@@ -9,7 +9,8 @@ import {
   hasSession,
   setupSessions,
   handleEncryptedEvent,
-  handleMsNeedKeyEvent
+  handleMsNeedKeyEvent,
+  handleWebKitNeedKeyEvent
 } from '../src/plugin';
 
 const Player = videojs.getComponent('Player');
@@ -152,6 +153,25 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
   handleMsNeedKeyEvent(event, options, sessions);
   assert.equal(sessions.length, 1, 'no new session created');
   assert.equal(sessions[0], createdSession, 'did not replace session');
+});
+
+QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(assert) {
+  const event = {};
+  let options = {};
+
+  assert.notOk(handleWebKitNeedKeyEvent(event, options), 'no return when no options');
+
+  options = { keySystems: {} };
+  assert.notOk(handleWebKitNeedKeyEvent(event, options),
+               'no return when no FairPlay key system');
+
+  options = { keySystems: { 'com.apple.notfps.1_0': {} } };
+  assert.notOk(handleWebKitNeedKeyEvent(event, options),
+               'no return when no proper FairPlay key system');
+
+  options = { keySystems: { 'com.apple.fps.1_0': {} } };
+  assert.ok(handleWebKitNeedKeyEvent(event, options),
+            'valid return when proper FairPlay key system');
 });
 
 QUnit.module('plugin isolated functions');

@@ -2,7 +2,7 @@ import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
 
-const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
+export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   if (typeof id === 'string') {

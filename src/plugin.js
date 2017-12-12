@@ -1,6 +1,9 @@
 import videojs from 'video.js';
 import { standard5July2016 } from './eme';
-import fairplay from './fairplay';
+import {
+  default as fairplay,
+  FAIRPLAY_KEY_SYSTEM
+} from './fairplay';
 import {
   default as msPrefixed,
   PLAYREADY_KEY_SYSTEM
@@ -63,7 +66,16 @@ export const handleEncryptedEvent = (event, sourceOptions, sessions) => {
 };
 
 export const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
-  fairplay({
+  if (!sourceOptions.keySystems || !sourceOptions.keySystems[FAIRPLAY_KEY_SYSTEM]) {
+    // return silently since it may be handled by a different system
+    return;
+  }
+
+  // From Apple's example Safari FairPlay integration code, webkitneedkey is not repeated
+  // for the same content. Unless documentation is found to present the opposite, handle
+  // all webkitneedkey events the same (even if they are repeated).
+
+  return fairplay({
     video: event.target,
     initData: event.initData,
     options: sourceOptions
@@ -153,6 +165,9 @@ const onPlayerReady = (player, options) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received a \'webkitneedkey\' event');
+
+    // TODO it's possible that the video state must be cleared if reusing the same video
+    // element between sources
     setupSessions(player);
     handleWebKitNeedKeyEvent(event,
                              videojs.mergeOptions(options, player.currentSource()));
