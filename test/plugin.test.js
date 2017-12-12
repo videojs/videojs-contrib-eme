@@ -253,7 +253,7 @@ QUnit.test('getOptions prioritizes eme options over source options', function(as
         extraOption: 'extra-option'
       }
     },
-    currentSource: () => {
+    currentSource() {
       return {
         keySystems: {
           keySystem1: {

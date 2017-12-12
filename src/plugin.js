@@ -202,9 +202,7 @@ const onPlayerReady = (player) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options = {}) {
-  this.ready(() => {
-    onPlayerReady(this);
-  });
+  this.ready(() => onPlayerReady(this));
 
   this.eme.options = options;
 };
