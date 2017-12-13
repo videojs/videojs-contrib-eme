@@ -36,8 +36,8 @@ export const hasSession = (sessions, initData) => {
   return false;
 };
 
-export const handleEncryptedEvent = (event, sourceOptions, sessions) => {
-  if (!sourceOptions || !sourceOptions.keySystems) {
+export const handleEncryptedEvent = (event, options, sessions) => {
+  if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return;
   }
@@ -61,12 +61,12 @@ export const handleEncryptedEvent = (event, sourceOptions, sessions) => {
     video: event.target,
     initDataType: event.initDataType,
     initData: event.initData,
-    options: sourceOptions
+    options
   });
 };
 
-export const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
-  if (!sourceOptions.keySystems || !sourceOptions.keySystems[FAIRPLAY_KEY_SYSTEM]) {
+export const handleWebKitNeedKeyEvent = (event, options) => {
+  if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
   }
@@ -78,12 +78,12 @@ export const handleWebKitNeedKeyEvent = (event, sourceOptions) => {
   return fairplay({
     video: event.target,
     initData: event.initData,
-    options: sourceOptions
+    options
   });
 };
 
-export const handleMsNeedKeyEvent = (event, sourceOptions, sessions) => {
-  if (!sourceOptions.keySystems || !sourceOptions.keySystems[PLAYREADY_KEY_SYSTEM]) {
+export const handleMsNeedKeyEvent = (event, options, sessions) => {
+  if (!options.keySystems || !options.keySystems[PLAYREADY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
   }
@@ -109,8 +109,12 @@ export const handleMsNeedKeyEvent = (event, sourceOptions, sessions) => {
   msPrefixed({
     video: event.target,
     initData: event.initData,
-    options: sourceOptions
+    options
   });
+};
+
+export const getOptions = (player) => {
+  return videojs.mergeOptions(player.currentSource(), player.eme.options);
 };
 
 /**
@@ -141,7 +145,7 @@ export const setupSessions = (player) => {
  * @param    {Player} player
  * @param    {Object} [options={}]
  */
-const onPlayerReady = (player, options) => {
+const onPlayerReady = (player) => {
   if (player.$('.vjs-tech').tagName.toLowerCase() !== 'video') {
     return;
   }
@@ -155,9 +159,7 @@ const onPlayerReady = (player, options) => {
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'encrypted\' event');
     setupSessions(player);
-    handleEncryptedEvent(event,
-                         videojs.mergeOptions(options, player.currentSource()),
-                         player.eme.sessions);
+    handleEncryptedEvent(event, getOptions(player), player.eme.sessions);
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
@@ -169,8 +171,7 @@ const onPlayerReady = (player, options) => {
     // TODO it's possible that the video state must be cleared if reusing the same video
     // element between sources
     setupSessions(player);
-    handleWebKitNeedKeyEvent(event,
-                             videojs.mergeOptions(options, player.currentSource()));
+    handleWebKitNeedKeyEvent(event, getOptions(player));
   });
 
   // EDGE still fires msneedkey, but should use encrypted instead
@@ -184,9 +185,7 @@ const onPlayerReady = (player, options) => {
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'msneedkey\' event');
     setupSessions(player);
-    handleMsNeedKeyEvent(event,
-                         videojs.mergeOptions(options, player.currentSource()),
-                         player.eme.sessions);
+    handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions);
   });
 };
 
@@ -203,9 +202,7 @@ const onPlayerReady = (player, options) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options = {}) {
-  this.ready(() => {
-    onPlayerReady(this, videojs.mergeOptions({}, options));
-  });
+  this.ready(() => onPlayerReady(this));
 
   this.eme.options = options;
 };
