@@ -35,7 +35,14 @@ const getSupportedKeySystem = ({video, keySystems}) => {
   return promise;
 };
 
-const makeNewRequest = ({mediaKeys, initDataType, initData, options, getLicense}) => {
+export const makeNewRequest = ({
+  mediaKeys,
+  initDataType,
+  initData,
+  options,
+  getLicense,
+  removeSession
+}) => {
   let keySession = mediaKeys.createSession();
 
   keySession.addEventListener('message', (event) => {
@@ -46,27 +53,77 @@ const makeNewRequest = ({mediaKeys, initDataType, initData, options, getLicense}
       .catch(videojs.log.error.bind(videojs.log.error, 'failed to get and set license'));
   }, false);
 
+  keySession.addEventListener('keystatuseschange', (event) => {
+    let expired = false;
+
+    // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
+    keySession.keyStatuses.forEach((status, keyId) => {
+      switch (status) {
+      case 'expired':
+        // If one key is expired in a session, all keys are expired. From
+        // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-expired, "All other
+        // keys in the session must have this status."
+        expired = true;
+        break;
+      case 'internal-error':
+        // "This value is not actionable by the application."
+        // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-internal-error
+        videojs.log.warn(
+          'Key status reported as "internal-error." Leaving the session open since we ' +
+          'don\'t have enough details to know if this error is fatal.', event);
+        break;
+      }
+    });
+
+    if (expired) {
+      // Close session and remove it from the session list to ensure that a new
+      // session can be created.
+      //
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log.debug('Session expired, closing the session.');
+      keySession.close().then(() => {
+        removeSession(initData);
+      });
+    }
+  }, false);
+
   keySession.generateRequest(initDataType, initData).catch(
     videojs.log.error.bind(videojs.log.error,
                            'Unable to create or initialize key session')
   );
 };
 
-const addSession = ({video, initDataType, initData, options, getLicense}) => {
+const addSession = ({
+  video,
+  initDataType,
+  initData,
+  options,
+  getLicense,
+  removeSession
+}) => {
   if (video.mediaKeysObject) {
     makeNewRequest({
       mediaKeys: video.mediaKeysObject,
       initDataType,
       initData,
       options,
-      getLicense
+      getLicense,
+      removeSession
     });
   } else {
     video.pendingSessionData.push({initDataType, initData});
   }
 };
 
-const setMediaKeys = ({video, certificate, createdMediaKeys, options, getLicense}) => {
+const setMediaKeys = ({
+  video,
+  certificate,
+  createdMediaKeys,
+  options,
+  getLicense,
+  removeSession
+}) => {
   video.mediaKeysObject = createdMediaKeys;
 
   if (certificate) {
@@ -81,7 +138,8 @@ const setMediaKeys = ({video, certificate, createdMediaKeys, options, getLicense
       initDataType: data.initDataType,
       initData: data.initData,
       options,
-      getLicense
+      getLicense,
+      removeSession
     });
   }
 
@@ -152,7 +210,13 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   return keySystemOptions;
 };
 
-export const standard5July2016 = ({video, initDataType, initData, options}) => {
+export const standard5July2016 = ({
+  video,
+  initDataType,
+  initData,
+  options,
+  removeSession
+}) => {
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
     video.mediaKeysObject = null;
@@ -206,7 +270,8 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
         certificate,
         createdMediaKeys,
         options,
-        getLicense: promisifyGetLicense(keySystemOptions.getLicense)
+        getLicense: promisifyGetLicense(keySystemOptions.getLicense),
+        removeSession
       });
     }).catch(
       videojs.log.error.bind(videojs.log.error,
@@ -223,6 +288,7 @@ export const standard5July2016 = ({video, initDataType, initData, options}) => {
     getLicense: video.keySystem ?
       promisifyGetLicense(standardizeKeySystemOptions(
         video.keySystem,
-        options.keySystems[video.keySystem]).getLicense) : null
+        options.keySystems[video.keySystem]).getLicense) : null,
+    removeSession
   });
 };

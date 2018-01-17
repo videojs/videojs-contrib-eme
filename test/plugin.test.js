@@ -11,7 +11,8 @@ import {
   handleEncryptedEvent,
   handleMsNeedKeyEvent,
   handleWebKitNeedKeyEvent,
-  getOptions
+  getOptions,
+  removeSession
 } from '../src/plugin';
 
 const Player = videojs.getComponent('Player');
@@ -286,4 +287,36 @@ QUnit.test('getOptions prioritizes eme options over source options', function(as
     type: 'application/dash+xml',
     extraOption: 'extra-option'
   }, 'updates source options with eme options');
+});
+
+QUnit.test('removeSession removes sessions', function(assert) {
+  const initData1 = new Uint8Array([1, 2, 3]);
+  const initData2 = new Uint8Array([2, 3, 4]);
+  const initData3 = new Uint8Array([3, 4, 5]);
+  const sessions = [{
+    initData: initData1
+  }, {
+    initData: initData2
+  }, {
+    initData: initData3
+  }];
+
+  removeSession(sessions, initData2);
+  assert.deepEqual(sessions,
+                   [{ initData: initData1 }, { initData: initData3 }],
+                   'removed session with initData');
+
+  removeSession(sessions, new Uint8Array([1, 2, 3]));
+  assert.deepEqual(sessions,
+                   [{ initData: initData1 }, { initData: initData3 }],
+                   'did not remove session because initData is not the same reference');
+
+  removeSession(sessions, initData1);
+  assert.deepEqual(sessions,
+                   [{ initData: initData3 }],
+                   'removed session with initData');
+  removeSession(sessions, initData3);
+  assert.deepEqual(sessions, [], 'removed session with initData');
+  removeSession(sessions, initData2);
+  assert.deepEqual(sessions, [], 'does nothing when no sessions');
 });
