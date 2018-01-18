@@ -7,13 +7,14 @@ import {
 
 QUnit.module('videojs-contrib-eme eme');
 
-QUnit.test('keystatuseschange with expired closes session', function(assert) {
+QUnit.test('keystatuseschange with expired key closes session', function(assert) {
   const listeners = [];
   let numCloses = 0;
-  // mock session to make testing easier (so we can trigger events properly)
+  // mock session to make testing easier (so we can trigger events)
   const mockSession = {
     addEventListener: (type, listener) => listeners.push({ type, listener }),
     generateRequest(initDataType, initData) {
+      // noop
       return new Promise((resolve, reject) => resolve());
     },
     keyStatuses: new Map(),
@@ -26,8 +27,9 @@ QUnit.test('keystatuseschange with expired closes session', function(assert) {
     }
   };
   const removeSessionCalls = [];
-  // does not include session since session is bound to the call (it's a custom session
-  // maintained by the plugin, not the native session)
+  // once the eme module gets the removeSession function, the session argument is already
+  // bound to the function (note that it's a custom session maintained by the plugin, not
+  // the native session), so only initData is passed
   const removeSession = (initData) => removeSessionCalls.push(initData);
   const initData = new Uint8Array([1, 2, 3]);
 
@@ -49,16 +51,15 @@ QUnit.test('keystatuseschange with expired closes session', function(assert) {
   assert.equal(numCloses, 0, 'no session close calls');
   assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
 
+  // no key statuses
   listeners[1].listener();
 
-  // no key statuses
   assert.equal(numCloses, 0, 'no session close calls');
   assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
 
   mockSession.keyStatuses.set(1, 'unrecognized');
   listeners[1].listener();
 
-  // unrecognized key status
   assert.equal(numCloses, 0, 'no session close calls');
   assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
 
@@ -66,7 +67,8 @@ QUnit.test('keystatuseschange with expired closes session', function(assert) {
   listeners[1].listener();
 
   assert.equal(numCloses, 1, 'closed session');
-  // close promise is faked, so we can assert removes immediately
+  // close promise is fake and resolves synchronously, so we can assert removes
+  // synchronously
   assert.equal(removeSessionCalls.length, 1, 'called remove session');
   assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
 });
@@ -74,10 +76,11 @@ QUnit.test('keystatuseschange with expired closes session', function(assert) {
 QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {
   const origWarn = videojs.log.warn;
   const listeners = [];
-  // mock session to make testing easier (so we can trigger events properly)
+  // mock session to make testing easier (so we can trigger events)
   const mockSession = {
     addEventListener: (type, listener) => listeners.push({ type, listener }),
     generateRequest(initDataType, initData) {
+      // noop
       return new Promise((resolve, reject) => resolve());
     },
     keyStatuses: new Map()
@@ -103,9 +106,9 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
                'keystatuseschange',
                'added keystatuseschange listener');
 
+  // no key statuses
   listeners[1].listener();
 
-  // no key statuses
   assert.equal(warnCalls.length, 0, 'no warn logs');
 
   mockSession.keyStatuses.set(1, 'internal-error');
