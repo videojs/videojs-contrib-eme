@@ -306,6 +306,16 @@ QUnit.test('removeSession removes sessions', function(assert) {
                    [{ initData: initData1 }, { initData: initData3 }],
                    'removed session with initData');
 
+  removeSession(sessions, null);
+  assert.deepEqual(sessions,
+                   [{ initData: initData1 }, { initData: initData3 }],
+                   'does nothing when passed null');
+
+  removeSession(sessions, new Uint8Array([6, 7, 8]));
+  assert.deepEqual(sessions,
+                   [{ initData: initData1 }, { initData: initData3 }],
+                   'does nothing when passed non-matching initData');
+
   removeSession(sessions, new Uint8Array([1, 2, 3]));
   assert.deepEqual(sessions,
                    [{ initData: initData1 }, { initData: initData3 }],
