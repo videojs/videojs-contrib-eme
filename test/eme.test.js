@@ -1,8 +1,128 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
-import {standard5July2016} from '../src/eme';
+import {
+  standard5July2016,
+  makeNewRequest
+} from '../src/eme';
+
+// mock session to make testing easier (so we can trigger events)
+const getMockSession = () => {
+  const mockSession = {
+    addEventListener: (type, listener) => mockSession.listeners.push({ type, listener }),
+    generateRequest(initDataType, initData) {
+      // noop
+      return new Promise((resolve, reject) => resolve());
+    },
+    keyStatuses: new Map(),
+    close: () => {
+      mockSession.numCloses++;
+      // fake a promise for easy testing
+      return {
+        then: (nextCall) => nextCall()
+      };
+    },
+    numCloses: 0,
+    listeners: []
+  };
+
+  return mockSession;
+};
 
 QUnit.module('videojs-contrib-eme eme');
+
+QUnit.test('keystatuseschange with expired key closes session', function(assert) {
+  const removeSessionCalls = [];
+  // once the eme module gets the removeSession function, the session argument is already
+  // bound to the function (note that it's a custom session maintained by the plugin, not
+  // the native session), so only initData is passed
+  const removeSession = (initData) => removeSessionCalls.push(initData);
+  const initData = new Uint8Array([1, 2, 3]);
+  const mockSession = getMockSession();
+
+  makeNewRequest({
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    initDataType: '',
+    initData,
+    options: {},
+    getLicense() {},
+    removeSession
+  });
+
+  assert.equal(mockSession.listeners.length, 2, 'added listeners');
+  assert.equal(mockSession.listeners[1].type,
+               'keystatuseschange',
+               'added keystatuseschange listener');
+  assert.equal(mockSession.numCloses, 0, 'no session close calls');
+  assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
+
+  // no key statuses
+  mockSession.listeners[1].listener();
+
+  assert.equal(mockSession.numCloses, 0, 'no session close calls');
+  assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
+
+  mockSession.keyStatuses.set(1, 'unrecognized');
+  mockSession.listeners[1].listener();
+
+  assert.equal(mockSession.numCloses, 0, 'no session close calls');
+  assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
+
+  mockSession.keyStatuses.set(2, 'expired');
+  mockSession.listeners[1].listener();
+
+  assert.equal(mockSession.numCloses, 1, 'closed session');
+  // close promise is fake and resolves synchronously, so we can assert removes
+  // synchronously
+  assert.equal(removeSessionCalls.length, 1, 'called remove session');
+  assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
+});
+
+QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {
+  const origWarn = videojs.log.warn;
+  const initData = new Uint8Array([1, 2, 3]);
+  const mockSession = getMockSession();
+  const warnCalls = [];
+
+  videojs.log.warn = (...args) => warnCalls.push(args);
+
+  makeNewRequest({
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    initDataType: '',
+    initData,
+    options: {},
+    getLicense() {},
+    removeSession() {}
+  });
+
+  assert.equal(mockSession.listeners.length, 2, 'added listeners');
+  assert.equal(mockSession.listeners[1].type,
+               'keystatuseschange',
+               'added keystatuseschange listener');
+
+  // no key statuses
+  mockSession.listeners[1].listener();
+
+  assert.equal(warnCalls.length, 0, 'no warn logs');
+
+  mockSession.keyStatuses.set(1, 'internal-error');
+
+  const keyStatusChangeEvent = {};
+
+  mockSession.listeners[1].listener(keyStatusChangeEvent);
+
+  assert.equal(warnCalls.length, 1, 'one warn log');
+  assert.equal(warnCalls[0][0],
+               'Key status reported as "internal-error." Leaving the session open ' +
+               'since we don\'t have enough details to know if this error is fatal.',
+               'logged correct warning');
+  assert.equal(warnCalls[0][1], keyStatusChangeEvent, 'logged event object');
+
+  videojs.log.warn = origWarn;
+});
 
 QUnit.test('accepts a license URL as an option', function(assert) {
   const done = assert.async();

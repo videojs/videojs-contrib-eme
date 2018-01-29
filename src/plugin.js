@@ -36,6 +36,15 @@ export const hasSession = (sessions, initData) => {
   return false;
 };
 
+export const removeSession = (sessions, initData) => {
+  for (let i = 0; i < sessions.length; i++) {
+    if (sessions[i].initData === initData) {
+      sessions.splice(i, 1);
+      return;
+    }
+  }
+};
+
 export const handleEncryptedEvent = (event, options, sessions) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
@@ -61,7 +70,8 @@ export const handleEncryptedEvent = (event, options, sessions) => {
     video: event.target,
     initDataType: event.initDataType,
     initData: event.initData,
-    options
+    options,
+    removeSession: removeSession.bind(null, sessions)
   });
 };
 
