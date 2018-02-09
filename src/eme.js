@@ -178,10 +178,11 @@ const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
   });
 };
 
-const promisifyGetLicense = (getLicenseFn) => {
+const promisifyGetLicense = (getLicenseFn, player) => {
   return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
       getLicenseFn(emeOptions, keyMessage, (err, license) => {
+        player.trigger('licenseRequestAttempted');
         if (err) {
           reject(err);
         }
@@ -215,7 +216,8 @@ export const standard5July2016 = ({
   initDataType,
   initData,
   options,
-  removeSession
+  removeSession,
+  player
 }) => {
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
@@ -270,7 +272,7 @@ export const standard5July2016 = ({
         certificate,
         createdMediaKeys,
         options,
-        getLicense: promisifyGetLicense(keySystemOptions.getLicense),
+        getLicense: promisifyGetLicense(keySystemOptions.getLicense, player),
         removeSession
       });
     }).catch(

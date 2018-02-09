@@ -4,7 +4,7 @@ import { requestPlayreadyLicense } from './playready';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
-export const addKeyToSession = (options, session, event) => {
+export const addKeyToSession = (options, session, event, player) => {
   let playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
   if (typeof playreadyOptions.getKey === 'function') {
@@ -27,6 +27,7 @@ export const addKeyToSession = (options, session, event) => {
   const url = playreadyOptions.url || event.destinationURL;
 
   requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
+    player.trigger('licenseRequestAttempted');
     if (err) {
       videojs.log.error('Unable to request key from url: ' + url);
       return;
@@ -36,7 +37,7 @@ export const addKeyToSession = (options, session, event) => {
   });
 };
 
-export const createSession = (video, initData, options) => {
+export const createSession = (video, initData, options, player) => {
   const session = video.msKeys.createSession('video/mp4', initData);
 
   if (!session) {
@@ -54,7 +55,7 @@ export const createSession = (video, initData, options) => {
   // eslint-disable-next-line max-len
   // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
   session.addEventListener('mskeymessage', (event) => {
-    addKeyToSession(options, session, event);
+    addKeyToSession(options, session, event, player);
   });
 
   session.addEventListener('mskeyerror', (event) => {
@@ -64,7 +65,7 @@ export const createSession = (video, initData, options) => {
   });
 };
 
-export default ({video, initData, options}) => {
+export default ({video, initData, options, player}) => {
   // Although by the standard examples the presence of video.msKeys is checked first to
   // verify that we aren't trying to create a new session when one already exists, here
   // sessions are managed earlier (on the player.eme object), meaning that at this point
@@ -81,5 +82,5 @@ export default ({video, initData, options}) => {
     return;
   }
 
-  createSession(video, initData, options);
+  createSession(video, initData, options, player);
 };
