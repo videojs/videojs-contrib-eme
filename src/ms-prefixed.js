@@ -27,7 +27,7 @@ export const addKeyToSession = (options, session, event, player) => {
   const url = playreadyOptions.url || event.destinationURL;
 
   requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
-    player.trigger('licenseRequestAttempted');
+    player.tech_.trigger('licenseRequestAttempted');
     if (err) {
       videojs.log.error('Unable to request key from url: ' + url);
       return;

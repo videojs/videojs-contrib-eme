@@ -182,7 +182,7 @@ const promisifyGetLicense = (getLicenseFn, player) => {
   return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
       getLicenseFn(emeOptions, keyMessage, (err, license) => {
-        player.trigger('licenseRequestAttempted');
+        player.tech_.trigger('licenseRequestAttempted');
         if (err) {
           reject(err);
         }
