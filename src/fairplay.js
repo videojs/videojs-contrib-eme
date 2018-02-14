@@ -67,7 +67,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, player})
     keySession.addEventListener('webkitkeymessage', (event) => {
       getLicense(options, contentId, event.message, (err, license) => {
         if (player && player.tech_) {
-          player.tech_.trigger('licenseRequestAttempted');
+          player.tech_.trigger('licenserequestattempted');
         }
         if (err) {
           reject(err);
