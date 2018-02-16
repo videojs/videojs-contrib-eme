@@ -1,7 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 
-const getSupportedKeySystem = ({video, keySystems}) => {
+export const getSupportedKeySystem = ({video, keySystems}) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
 

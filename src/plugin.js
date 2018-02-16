@@ -1,5 +1,5 @@
 import videojs from 'video.js';
-import { standard5July2016 } from './eme';
+import { standard5July2016, getSupportedKeySystem } from './eme';
 import {
   default as fairplay,
   FAIRPLAY_KEY_SYSTEM
@@ -51,28 +51,38 @@ export const handleEncryptedEvent = (event, options, sessions, player) => {
     return;
   }
 
-  // "Initialization Data must be a fixed value for a given set of stream(s) or media
-  // data. It must only contain information related to the keys required to play a given
-  // set of stream(s) or media data."
-  // eslint-disable-next-line max-len
-  // @see [Initialization Data Spec]{@link https://www.w3.org/TR/encrypted-media/#initialization-data}
-  if (hasSession(sessions, event.initData)) {
-    // TODO convert to videojs.log.debug and add back in
-    // https://github.com/videojs/video.js/pull/4780
-    // videojs.log('eme',
-    //             'Already have a configured session for init data, ignoring event.');
-    return;
-  }
+  let initData = event.initData;
 
-  sessions.push({ initData: event.initData });
+  getSupportedKeySystem(options).then((keySystemAccess) => {
+    const keySystem = options.keySystems[keySystemAccess.keySystem];
 
-  standard5July2016({
-    video: event.target,
-    initDataType: event.initDataType,
-    initData: event.initData,
-    options,
-    removeSession: removeSession.bind(null, sessions),
-    player
+    if (keySystem && keySystem.pssh) {
+      initData = keySystem.pssh;
+    }
+
+    // "Initialization Data must be a fixed value for a given set of stream(s) or media
+    // data. It must only contain information related to the keys required to play a given
+    // set of stream(s) or media data."
+    // eslint-disable-next-line max-len
+    // @see [Initialization Data Spec]{@link https://www.w3.org/TR/encrypted-media/#initialization-data}
+    if (hasSession(sessions, initData)) {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme',
+      //             'Already have a configured session for init data, ignoring event.');
+      return;
+    }
+
+    sessions.push({ initData });
+
+    standard5July2016({
+      video: event.target,
+      initDataType: event.initDataType,
+      initData,
+      options,
+      removeSession: removeSession.bind(null, sessions),
+      player
+    });
   });
 };
 
@@ -215,9 +225,9 @@ const onPlayerReady = (player) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options = {}) {
-  this.ready(() => onPlayerReady(this));
-
   this.eme.options = options;
+
+  this.ready(() => onPlayerReady(this));
 };
 
 // Register the plugin with video.js.

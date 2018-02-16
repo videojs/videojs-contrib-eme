@@ -119,6 +119,23 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
   assert.equal(sessions[1].initData, initData2, 'retained session init data');
 });
 
+QUnit.test('handleEncryptedEvent checks for existing init data', function(assert) {
+  const initData1 = new Uint8Array([1, 2, 3]).buffer;
+  const initData2 = new Uint8Array([4, 5, 6]).buffer;
+  const event = {
+    // mock video target to prevent errors since it's a pain to mock out the continuation
+    // of functionality on a successful pass through of the guards
+    target: {},
+    initData: initData2
+  };
+  const options = { keySystems: { foo: { pssh: initData1 } } };
+  let sessions = [];
+
+  handleEncryptedEvent(event, options, sessions);
+  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+  assert.equal(sessions[0].initData, initData1, 'captured initData in the session');
+});
+
 QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) {
   const event = {
     // mock video target to prevent errors since it's a pain to mock out the continuation
