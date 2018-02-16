@@ -249,7 +249,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
-  assert.expect(40);
+  assert.expect(45);
 
   let done = assert.async();
   let callbacks = {};
@@ -260,7 +260,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     createSession: 0,
     keySessionGenerateRequest: 0,
     keySessionUpdate: 0,
-    createMediaKeys: 0
+    createMediaKeys: 0,
+    licenseRequestAttempts: 0
   };
 
   navigator.requestMediaKeySystemAccess = (keySystem, options) => {
@@ -291,6 +292,16 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       'org.w3.clearkey': {
         getCertificate,
         getLicense
+      }
+    }
+  };
+
+  const player = {
+    tech_: {
+      trigger: (name) => {
+        if (name === 'licenserequestattempted') {
+          callCounts.licenseRequestAttempts++;
+        }
       }
     }
   };
@@ -326,7 +337,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     video,
     initDataType: '',
     initData: '',
-    options
+    options,
+    player
   });
 
   // Step 1: get key system
@@ -338,6 +350,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.equal(callCounts.keySessionGenerateRequest, 0, 'key session request not made');
   assert.equal(callCounts.getLicense, 0, 'license not requested');
   assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
+  assert.equal(callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered');
 
   callbacks.requestMediaKeySystemAccess(keySystemAccess);
 
@@ -352,6 +366,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     assert.equal(callCounts.keySessionGenerateRequest, 0, 'key session request not made');
     assert.equal(callCounts.getLicense, 0, 'license not requested');
     assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
+    assert.equal(callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered');
 
     callbacks.getCertificate(null, '');
 
@@ -366,6 +382,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
       assert.equal(callCounts.getLicense, 0, 'license not requested');
       assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
+      assert.equal(callCounts.licenseRequestAttempts, 0,
+        'license request event not triggered');
 
       keySessionEventListeners.message({});
 
@@ -378,6 +396,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
       assert.equal(callCounts.getLicense, 1, 'license requested');
       assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
+      assert.equal(callCounts.licenseRequestAttempts, 0,
+        'license request event not triggered');
 
       callbacks.getLicense();
 
@@ -392,6 +412,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
         assert.equal(callCounts.getLicense, 1, 'license requested');
         assert.equal(callCounts.keySessionUpdate, 1, 'key session updated');
+        assert.equal(callCounts.licenseRequestAttempts, 1,
+          'license request event triggered');
 
         done();
       });
