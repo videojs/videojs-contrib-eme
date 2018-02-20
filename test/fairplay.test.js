@@ -5,7 +5,7 @@ import fairplay from '../src/fairplay';
 QUnit.module('videojs-contrib-eme fairplay');
 
 QUnit.test('lifecycle', function(assert) {
-  assert.expect(19);
+  assert.expect(23);
 
   let done = assert.async();
   let initData = new Uint8Array([1, 2, 3, 4]).buffer;
@@ -14,7 +14,8 @@ QUnit.test('lifecycle', function(assert) {
     getCertificate: 0,
     getLicense: 0,
     updateKeySession: 0,
-    createSession: 0
+    createSession: 0,
+    licenseRequestAttempts: 0
   };
 
   let getCertificate = (emeOptions, callback) => {
@@ -33,6 +34,16 @@ QUnit.test('lifecycle', function(assert) {
         getLicense,
         // not needed due to mocking
         getContentId: () => 'some content id'
+      }
+    }
+  };
+
+  const player = {
+    tech_: {
+      trigger: (name) => {
+        if (name === 'licenserequestattempted') {
+          callCounts.licenseRequestAttempts++;
+        }
       }
     }
   };
@@ -70,7 +81,7 @@ QUnit.test('lifecycle', function(assert) {
     }
   };
 
-  fairplay({ video, initData, options })
+  fairplay({ video, initData, options, player })
     .then(() => {
       done();
     });
@@ -80,6 +91,8 @@ QUnit.test('lifecycle', function(assert) {
   assert.equal(callCounts.createSession, 0, 'a key session has not been created');
   assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
   assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
+  assert.equal(callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)');
 
   callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
@@ -89,6 +102,8 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
+    assert.equal(callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)');
 
     assert.ok(keySessionEventListeners.webkitkeymessage,
               'added an event listener for webkitkeymessage');
@@ -104,6 +119,8 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
+    assert.equal(callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)');
 
     callbacks.getLicense(null, []);
 
@@ -112,6 +129,8 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 1, 'updateKeySession has been called');
+    assert.equal(callCounts.licenseRequestAttempts, 1,
+      'license request event triggered');
 
     keySessionEventListeners.webkitkeyadded();
   };

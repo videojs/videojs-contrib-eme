@@ -45,7 +45,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (event, options, sessions) => {
+export const handleEncryptedEvent = (event, options, sessions, player) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return;
@@ -71,11 +71,12 @@ export const handleEncryptedEvent = (event, options, sessions) => {
     initDataType: event.initDataType,
     initData: event.initData,
     options,
-    removeSession: removeSession.bind(null, sessions)
+    removeSession: removeSession.bind(null, sessions),
+    player
   });
 };
 
-export const handleWebKitNeedKeyEvent = (event, options) => {
+export const handleWebKitNeedKeyEvent = (event, options, player) => {
   if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
@@ -88,11 +89,12 @@ export const handleWebKitNeedKeyEvent = (event, options) => {
   return fairplay({
     video: event.target,
     initData: event.initData,
-    options
+    options,
+    player
   });
 };
 
-export const handleMsNeedKeyEvent = (event, options, sessions) => {
+export const handleMsNeedKeyEvent = (event, options, sessions, player) => {
   if (!options.keySystems || !options.keySystems[PLAYREADY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
@@ -119,7 +121,8 @@ export const handleMsNeedKeyEvent = (event, options, sessions) => {
   msPrefixed({
     video: event.target,
     initData: event.initData,
-    options
+    options,
+    player
   });
 };
 
@@ -169,7 +172,7 @@ const onPlayerReady = (player) => {
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'encrypted\' event');
     setupSessions(player);
-    handleEncryptedEvent(event, getOptions(player), player.eme.sessions);
+    handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player);
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
@@ -181,7 +184,7 @@ const onPlayerReady = (player) => {
     // TODO it's possible that the video state must be cleared if reusing the same video
     // element between sources
     setupSessions(player);
-    handleWebKitNeedKeyEvent(event, getOptions(player));
+    handleWebKitNeedKeyEvent(event, getOptions(player), player);
   });
 
   // EDGE still fires msneedkey, but should use encrypted instead

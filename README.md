@@ -314,6 +314,19 @@ flexibility as possible. This means that if your server has a different structur
 a different format for FairPlay content IDs, or you want to test something in the browser
 without making a request, we can support that, since you can control the methods.
 
+### Special Events
+
+There are some events that are specific to this plugin.  Once such event is `licenserequestattempted`.
+This event is triggered on the `tech_` on the callback of every license request.
+
+In order to listen to this event:
+
+```
+player.tech_.on('licenserequestattempted', function(event) {
+  // Act on event
+});
+```
+
 ## Getting Started
 
 1. Clone this repository!

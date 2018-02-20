@@ -349,6 +349,9 @@ QUnit.test('makes request with provided url string on key message', function(ass
 QUnit.test('makes request with provided url on key message', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
+  const callCounts = {
+    licenseRequestAttempts: 0
+  };
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -359,6 +362,15 @@ QUnit.test('makes request with provided url on key message', function(assert) {
       keySystems: {
         'com.microsoft.playready': {
           url: 'provided-url'
+        }
+      }
+    },
+    player: {
+      tech_: {
+        trigger: (event) => {
+          if (event === 'licenserequestattempted') {
+            callCounts.licenseRequestAttempts++;
+          }
         }
       }
     }
@@ -393,6 +405,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(xhrCalls[0].config.responseType,
                'arraybuffer',
                'responseType is an arraybuffer');
+  assert.equal(callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)');
 
   const origErrorLog = videojs.log.error;
   let errorMessage;
@@ -407,6 +421,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   xhrCalls[0].callback('an error', response);
 
+  assert.equal(callCounts.licenseRequestAttempts, 1, 'license request event triggered');
   assert.equal(errorMessage,
                'Unable to request key from url: provided-url',
                'logs error when callback has an error');
@@ -414,6 +429,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   xhrCalls[0].callback(null, response);
 
+  assert.equal(callCounts.licenseRequestAttempts, 2,
+    'second license request event triggered');
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
                    new Uint8Array(response.body),
