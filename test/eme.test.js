@@ -351,7 +351,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.equal(callCounts.getLicense, 0, 'license not requested');
   assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
   assert.equal(callCounts.licenseRequestAttempts, 0,
-    'license request event not triggered');
+    'license request event not triggered (since no callback yet)');
 
   callbacks.requestMediaKeySystemAccess(keySystemAccess);
 
@@ -367,7 +367,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     assert.equal(callCounts.getLicense, 0, 'license not requested');
     assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
     assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered');
+      'license request event not triggered (since no callback yet)');
 
     callbacks.getCertificate(null, '');
 
@@ -383,7 +383,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       assert.equal(callCounts.getLicense, 0, 'license not requested');
       assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
       assert.equal(callCounts.licenseRequestAttempts, 0,
-        'license request event not triggered');
+        'license request event not triggered (since no callback yet)');
 
       keySessionEventListeners.message({});
 
@@ -397,7 +397,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       assert.equal(callCounts.getLicense, 1, 'license requested');
       assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
       assert.equal(callCounts.licenseRequestAttempts, 0,
-        'license request event not triggered');
+        'license request event not triggered (since no callback yet)');
 
       callbacks.getLicense();
 

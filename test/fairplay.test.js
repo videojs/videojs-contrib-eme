@@ -92,7 +92,7 @@ QUnit.test('lifecycle', function(assert) {
   assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
   assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
   assert.equal(callCounts.licenseRequestAttempts, 0,
-    'license request event not triggered');
+    'license request event not triggered (since no callback yet)');
 
   callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
@@ -103,7 +103,7 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
     assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered');
+      'license request event not triggered (since no callback yet)');
 
     assert.ok(keySessionEventListeners.webkitkeymessage,
               'added an event listener for webkitkeymessage');
@@ -120,7 +120,7 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
     assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered');
+      'license request event not triggered (since no callback yet)');
 
     callbacks.getLicense(null, []);
 

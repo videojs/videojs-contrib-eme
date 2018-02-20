@@ -317,7 +317,7 @@ without making a request, we can support that, since you can control the methods
 ### Special Events
 
 There are some events that are specific to this plugin.  Once such event is `licenserequestattempted`.
-This event is triggered on the `tech_` on every license request.
+This event is triggered on the `tech_` on the callback of every license request.
 
 In order to listen to this event:
 

@@ -405,7 +405,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(xhrCalls[0].config.responseType,
                'arraybuffer',
                'responseType is an arraybuffer');
-  assert.equal(callCounts.licenseRequestAttempts, 0, 'license request event not triggered');
+  assert.equal(callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)');
 
   const origErrorLog = videojs.log.error;
   let errorMessage;
