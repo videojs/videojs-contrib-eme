@@ -1,7 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 
-export const getSupportedKeySystem = ({video, keySystems}) => {
+export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
 
@@ -221,6 +221,8 @@ export const standard5July2016 = ({
   removeSession,
   player
 }) => {
+  let keySystemPromise;
+
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
     video.mediaKeysObject = null;
@@ -231,17 +233,14 @@ export const standard5July2016 = ({
     let certificate;
     let keySystemOptions;
 
-    let keySystemPromise = getSupportedKeySystem({
-      video,
-      keySystems: options.keySystems
-    });
+    keySystemPromise = getSupportedKeySystem(options.keySystems);
 
     if (!keySystemPromise) {
       videojs.log.error('No supported key system found');
       return;
     }
 
-    keySystemPromise.then((keySystemAccess) => {
+    keySystemPromise = keySystemPromise.then((keySystemAccess) => {
       return new Promise((resolve, reject) => {
         // save key system for adding sessions
         video.keySystem = keySystemAccess.keySystem;
@@ -279,11 +278,11 @@ export const standard5July2016 = ({
       });
     }).catch(
       videojs.log.error.bind(videojs.log.error,
-                             'Failed to create and initialize a MediaKeys object')
+                            'Failed to create and initialize a MediaKeys object')
     );
   }
 
-  addSession({
+  const addSessionPromise = Promise.resolve(addSession({
     video,
     initDataType,
     initData,
@@ -294,5 +293,9 @@ export const standard5July2016 = ({
         video.keySystem,
         options.keySystems[video.keySystem]).getLicense) : null,
     removeSession
-  });
+  }));
+
+  return keySystemPromise ?
+    keySystemPromise.then(() => addSessionPromise) :
+    addSessionPromise;
 };

@@ -84,7 +84,11 @@ QUnit.test('exposes options', function(assert) {
 QUnit.module('plugin guard functions');
 
 QUnit.test('handleEncryptedEvent checks for required options', function(assert) {
+  const done = assert.async();
+  assert.expect(8);
+
   const initData1 = new Uint8Array([1, 2, 3]).buffer;
+  const initData2 = new Uint8Array([4, 5, 6]).buffer;
   const event = {
     // mock video target to prevent errors since it's a pain to mock out the continuation
     // of functionality on a successful pass through of the guards
@@ -97,43 +101,68 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
   handleEncryptedEvent(event, options, sessions);
   assert.equal(sessions.length, 0, 'did not create a session when no options');
 
-  options = { keySystems: {} };
-  handleEncryptedEvent(event, options, sessions);
-  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-  assert.equal(sessions[0].initData, initData1, 'captured initData in the session');
+  options = {
+    keySystems: {
+      'org.w3.clearkey': {
+        audioContentType: 'audio/mp4;codecs="mp4a.40.2"',
+        videoContentType: 'video/mp4;codecs="avc1.42E01E"'
+      }
+    }
+  };
 
-  const initData2 = new Uint8Array([4, 5, 6]).buffer;
+  handleEncryptedEvent(event, options, sessions).then(() => {
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.equal(sessions[0].initData, initData1, 'captured initData in the session');
+  }).then(() => {
+    event.initData = initData2;
 
-  event.initData = initData2;
+    return handleEncryptedEvent(event, options, sessions);
+  }).then(() => {
+    assert.equal(sessions.length, 2, 'created a new session when new init data');
+    assert.equal(sessions[0].initData, initData1, 'retained session init data');
+    assert.equal(sessions[1].initData, initData2, 'added new session init data');
+  }).then(() => {
+    event.initData = new Uint8Array([1, 2, 3]).buffer;
 
-  handleEncryptedEvent(event, options, sessions);
-  assert.equal(sessions.length, 2, 'created a new session when new init data');
-  assert.equal(sessions[0].initData, initData1, 'retained session init data');
-  assert.equal(sessions[1].initData, initData2, 'added new session init data');
+    return handleEncryptedEvent(event, options, sessions);
+  }).then(() => {
+    assert.equal(sessions.length, 2, 'no new session when same init data');
+    assert.equal(sessions[0].initData, initData1, 'retained session init data');
+    assert.equal(sessions[1].initData, initData2, 'retained session init data');
 
-  event.initData = new Uint8Array([1, 2, 3]).buffer;
-
-  handleEncryptedEvent(event, options, sessions);
-  assert.equal(sessions.length, 2, 'no new session when same init data');
-  assert.equal(sessions[0].initData, initData1, 'retained session init data');
-  assert.equal(sessions[1].initData, initData2, 'retained session init data');
+    done();
+  });
 });
 
 QUnit.test('handleEncryptedEvent checks for existing init data', function(assert) {
-  const initData1 = new Uint8Array([1, 2, 3]).buffer;
-  const initData2 = new Uint8Array([4, 5, 6]).buffer;
+  const done = assert.async();
+  assert.expect(2);
+
+  // const initData1 = new Uint8Array([1, 2, 3]);
+  const initData1 = [1, 2, 3];
+  const initData2 = [4, 5, 6];
   const event = {
     // mock video target to prevent errors since it's a pain to mock out the continuation
     // of functionality on a successful pass through of the guards
     target: {},
     initData: initData2
   };
-  const options = { keySystems: { foo: { pssh: initData1 } } };
+  const options = {
+    keySystems: {
+      'org.w3.clearkey': {
+        audioContentType: 'audio/mp4;codecs="mp4a.40.2"',
+        videoContentType: 'video/mp4;codecs="avc1.42E01E"',
+        pssh: initData1
+      }
+    }
+  };
   let sessions = [];
 
-  handleEncryptedEvent(event, options, sessions);
-  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-  assert.equal(sessions[0].initData, initData1, 'captured initData in the session');
+  handleEncryptedEvent(event, options, sessions).then(() => {
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.deepEqual(sessions[0].initData, initData1, 'captured initData in the session');
+    done();
+  });
 });
 
 QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) {

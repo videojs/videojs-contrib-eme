@@ -53,11 +53,10 @@ export const handleEncryptedEvent = (event, options, sessions, player) => {
 
   let initData = event.initData;
 
-  getSupportedKeySystem(options).then((keySystemAccess) => {
-    const keySystem = options.keySystems[keySystemAccess.keySystem];
-
-    if (keySystem && keySystem.pssh) {
-      initData = keySystem.pssh;
+  return getSupportedKeySystem(options.keySystems).then(({keySystem}) => {
+    if (options.keySystems[keySystem] &&
+        options.keySystems[keySystem].pssh) {
+      initData = options.keySystems[keySystem].pssh;
     }
 
     // "Initialization Data must be a fixed value for a given set of stream(s) or media
@@ -75,7 +74,7 @@ export const handleEncryptedEvent = (event, options, sessions, player) => {
 
     sessions.push({ initData });
 
-    standard5July2016({
+    return standard5July2016({
       video: event.target,
       initDataType: event.initDataType,
       initData,
