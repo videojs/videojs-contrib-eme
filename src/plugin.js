@@ -48,12 +48,13 @@ export const removeSession = (sessions, initData) => {
 export const handleEncryptedEvent = (event, options, sessions, player) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
-    return;
+    return Promise.resolve();
   }
 
   let initData = event.initData;
 
   return getSupportedKeySystem(options.keySystems).then(({keySystem}) => {
+    // Use existing init data from options if provided
     if (options.keySystems[keySystem] &&
         options.keySystems[keySystem].pssh) {
       initData = options.keySystems[keySystem].pssh;

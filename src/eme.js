@@ -221,7 +221,7 @@ export const standard5July2016 = ({
   removeSession,
   player
 }) => {
-  let keySystemPromise;
+  let keySystemPromise = Promise.resolve();
 
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
@@ -237,7 +237,7 @@ export const standard5July2016 = ({
 
     if (!keySystemPromise) {
       videojs.log.error('No supported key system found');
-      return;
+      return Promise.resolve();
     }
 
     keySystemPromise = keySystemPromise.then((keySystemAccess) => {
@@ -282,20 +282,18 @@ export const standard5July2016 = ({
     );
   }
 
-  const addSessionPromise = Promise.resolve(addSession({
-    video,
-    initDataType,
-    initData,
-    options,
-    // if key system has not been determined then addSession doesn't need getLicense
-    getLicense: video.keySystem ?
-      promisifyGetLicense(standardizeKeySystemOptions(
-        video.keySystem,
-        options.keySystems[video.keySystem]).getLicense) : null,
-    removeSession
-  }));
-
-  return keySystemPromise ?
-    keySystemPromise.then(() => addSessionPromise) :
-    addSessionPromise;
+  return keySystemPromise.then(() => {
+    addSession({
+      video,
+      initDataType,
+      initData,
+      options,
+      // if key system has not been determined then addSession doesn't need getLicense
+      getLicense: video.keySystem ?
+        promisifyGetLicense(standardizeKeySystemOptions(
+          video.keySystem,
+          options.keySystems[video.keySystem]).getLicense, player) : null,
+      removeSession
+    });
+  });
 };

@@ -129,6 +129,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const callbacks = {};
+  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -181,6 +182,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
 
     videojs.xhr = origXhr;
 
+    navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
@@ -190,6 +192,8 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const callbacks = {};
+  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+  const session = new videojs.EventTarget();
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -213,8 +217,6 @@ QUnit.test('accepts a license URL as property', function(assert) {
       }
     }
   });
-
-  const session = new videojs.EventTarget();
 
   callbacks.requestMediaKeySystemAccess({
     keySystem: 'com.widevine.alpha',
@@ -244,12 +246,15 @@ QUnit.test('accepts a license URL as property', function(assert) {
 
     videojs.xhr = origXhr;
 
+    navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.expect(45);
+
+  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
 
   let done = assert.async();
   let callbacks = {};
@@ -415,6 +420,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         assert.equal(callCounts.licenseRequestAttempts, 1,
           'license request event triggered');
 
+        navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
         done();
       });
     });
