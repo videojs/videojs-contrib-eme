@@ -85,6 +85,7 @@ QUnit.module('plugin guard functions');
 
 QUnit.test('handleEncryptedEvent checks for required options', function(assert) {
   const done = assert.async();
+
   assert.expect(8);
 
   const initData1 = new Uint8Array([1, 2, 3]).buffer;
@@ -136,9 +137,9 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
 
 QUnit.test('handleEncryptedEvent checks for existing init data', function(assert) {
   const done = assert.async();
+
   assert.expect(2);
 
-  // const initData1 = new Uint8Array([1, 2, 3]);
   const initData1 = [1, 2, 3];
   const initData2 = [4, 5, 6];
   const event = {

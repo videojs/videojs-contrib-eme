@@ -278,7 +278,7 @@ export const standard5July2016 = ({
       });
     }).catch(
       videojs.log.error.bind(videojs.log.error,
-                            'Failed to create and initialize a MediaKeys object')
+                             'Failed to create and initialize a MediaKeys object')
     );
   }
 
