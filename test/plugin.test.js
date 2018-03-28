@@ -135,6 +135,7 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
   const done = assert.async();
   let sessions = [];
 
+  // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions).then(() => {}, () => {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.equal(sessions[0].initData, this.initData1, 'captured initData in the session');
