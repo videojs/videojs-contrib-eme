@@ -35,7 +35,7 @@ var DEFAULTS = {
   colors: true,
   autoWatch: false,
   singleRun: true,
-  concurrency: Infinity,
+  browserNoActivityTimeout: 300000,
 
   browserify: {
     transform: [
