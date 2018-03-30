@@ -136,7 +136,7 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
   let sessions = [];
 
   // testing the rejection path because this isn't a real session
-  handleEncryptedEvent(this.event1, this.options, sessions).then(() => {}, () => {
+  handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.equal(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
@@ -147,13 +147,14 @@ QUnit.test('handleEncryptedEvent creates new session for new init data', functio
   const done = assert.async();
   let sessions = [];
 
-  handleEncryptedEvent(this.event1, this.options, sessions).then(() => {}, () => {
-    return handleEncryptedEvent(this.event2, this.options, sessions);
-  }).then(() => {}, () => {
-    assert.equal(sessions.length, 2, 'created a new session when new init data');
-    assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
-    assert.equal(sessions[1].initData, this.initData2, 'added new session init data');
-    done();
+  // testing the rejection path because this isn't a real session
+  handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
+    return handleEncryptedEvent(this.event2, this.options, sessions).catch(() => {
+      assert.equal(sessions.length, 2, 'created a new session when new init data');
+      assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
+      assert.equal(sessions[1].initData, this.initData2, 'added new session init data');
+      done();
+    });
   });
 });
 
@@ -161,15 +162,16 @@ QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(a
   const done = assert.async();
   let sessions = [];
 
-  handleEncryptedEvent(this.event1, this.options, sessions).then(() => {
-    return handleEncryptedEvent(this.event2, this.options, sessions);
-  }).then(() => {}, () => {
-    return handleEncryptedEvent(this.event2, this.options, sessions);
-  }).then(() => {}, () => {
-    assert.equal(sessions.length, 2, 'no new session when same init data');
-    assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
-    assert.equal(sessions[1].initData, this.initData2, 'retained session init data');
-    done();
+  // testing the rejection path because this isn't a real session
+  handleEncryptedEvent(this.event1, this.options, sessions) .catch(() => {
+    return handleEncryptedEvent(this.event2, this.options, sessions).catch(() => {
+      return handleEncryptedEvent(this.event2, this.options, sessions).then(() => {
+        assert.equal(sessions.length, 2, 'no new session when same init data');
+        assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
+        assert.equal(sessions[1].initData, this.initData2, 'retained session init data');
+        done();
+      });
+    });
   });
 });
 
@@ -184,7 +186,8 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
   };
   let sessions = [];
 
-  handleEncryptedEvent(this.event2, options, sessions).then(() => {}, () => {
+  // testing the rejection path because this isn't a real session
+  handleEncryptedEvent(this.event2, options, sessions).catch(() => {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
