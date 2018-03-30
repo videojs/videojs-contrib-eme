@@ -1,7 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 
-const getSupportedKeySystem = ({video, keySystems}) => {
+export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
 
@@ -221,6 +221,8 @@ export const standard5July2016 = ({
   removeSession,
   player
 }) => {
+  let keySystemPromise = Promise.resolve();
+
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
     video.mediaKeysObject = null;
@@ -231,17 +233,14 @@ export const standard5July2016 = ({
     let certificate;
     let keySystemOptions;
 
-    let keySystemPromise = getSupportedKeySystem({
-      video,
-      keySystems: options.keySystems
-    });
+    keySystemPromise = getSupportedKeySystem(options.keySystems);
 
     if (!keySystemPromise) {
       videojs.log.error('No supported key system found');
-      return;
+      return Promise.resolve();
     }
 
-    keySystemPromise.then((keySystemAccess) => {
+    keySystemPromise = keySystemPromise.then((keySystemAccess) => {
       return new Promise((resolve, reject) => {
         // save key system for adding sessions
         video.keySystem = keySystemAccess.keySystem;
@@ -283,16 +282,18 @@ export const standard5July2016 = ({
     );
   }
 
-  addSession({
-    video,
-    initDataType,
-    initData,
-    options,
-    // if key system has not been determined then addSession doesn't need getLicense
-    getLicense: video.keySystem ?
-      promisifyGetLicense(standardizeKeySystemOptions(
-        video.keySystem,
-        options.keySystems[video.keySystem]).getLicense) : null,
-    removeSession
+  return keySystemPromise.then(() => {
+    addSession({
+      video,
+      initDataType,
+      initData,
+      options,
+      // if key system has not been determined then addSession doesn't need getLicense
+      getLicense: video.keySystem ?
+        promisifyGetLicense(standardizeKeySystemOptions(
+          video.keySystem,
+          options.keySystems[video.keySystem]).getLicense, player) : null,
+      removeSession
+    });
   });
 };

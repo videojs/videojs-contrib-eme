@@ -14,7 +14,7 @@ var DEFAULTS = {
   files: [
     'node_modules/sinon/pkg/sinon.js',
     'node_modules/video.js/dist/video.js',
-    'test/**/*.js'
+    'test/**/*.test.js'
   ],
 
   exclude: [
