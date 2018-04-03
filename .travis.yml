@@ -2,8 +2,10 @@ sudo: false
 dist: trusty
 language: node_js
 node_js:
-  - 'node'
-  - 'lts/argon'
+  - 8
+cache:
+  directories:
+    - node_modules
 before_script:
   # check if the current version is equal to the version for the env
   - 'export IS_INSTALLED="$(npm list video.js | grep "video.js@$VJS")"'
@@ -15,17 +17,9 @@ before_script:
     else
       echo "video.js@$VJS ALREADY INSTALLED";
     fi'
-  - export CHROME_BIN=/usr/bin/google-chrome
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
 env:
   - VJS=5
   - VJS=6
 addons:
-  # TODO: Firefox should be used and set to latest. It is not because it was timing out
-  # randomly.
-  apt:
-    sources:
-    - google-chrome
-    packages:
-    - google-chrome-stable
+  chrome: stable
+  firefox: latest
