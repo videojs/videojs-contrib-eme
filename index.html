@@ -8,14 +8,20 @@
 <body>
   <video id="videojs-contrib-eme-player" class="video-js vjs-default-skin" controls data-setup='{"plugins": {"eme": {}}}'>
   </video>
-  <ul>
-    <li><a href="/test/">Run unit tests in browser.</a></li>
 
+  <ul>
+    <li><a id="test-page">Run unit tests in browser.</a></li>
   </ul>
+
   <script src="/node_modules/video.js/dist/video.js"></script>
   <script src="/dist/videojs-contrib-eme.js"></script>
+
   <script>
     (function(window, videojs) {
+      var testPage = document.getElementById('test-page');
+      testPage.href = window.location.protocol + '//' +
+        window.location.hostname + ':9876/debug.html';
+
       // Example derived from http://www.html5rocks.com/en/tutorials/eme/basics/#clear-key
 
       const KEY = new Uint8Array([
