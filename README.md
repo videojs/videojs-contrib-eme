@@ -18,6 +18,7 @@ Maintenance Status: Experimental
   - [Plugin Options](#plugin-options)
   - [emeOptions](#emeoptions)
   - [Passing methods seems complicated](#passing-methods-seems-complicated)
+  - [Special Events](#special-events)
 - [Getting Started](#getting-started)
   - [Running Tests](#running-tests)
   - [Tag and Release](#tag-and-release)
