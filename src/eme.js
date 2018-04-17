@@ -41,7 +41,8 @@ export const makeNewRequest = ({
   initData,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  player
 }) => {
   let keySession = mediaKeys.createSession();
 
@@ -58,6 +59,15 @@ export const makeNewRequest = ({
 
     // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
     keySession.keyStatuses.forEach((status, keyId) => {
+      // Trigger an event so that other things can take action if appropriate.
+      // For instance, the `output-restricted` status should result in an
+      // error being thrown.
+      player.tech_.trigger({
+        keyId,
+        status,
+        target: keySession,
+        type: 'keystatuschange'
+      });
       switch (status) {
       case 'expired':
         // If one key is expired in a session, all keys are expired. From
@@ -100,7 +110,8 @@ const addSession = ({
   initData,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  player
 }) => {
   if (video.mediaKeysObject) {
     makeNewRequest({
@@ -109,7 +120,8 @@ const addSession = ({
       initData,
       options,
       getLicense,
-      removeSession
+      removeSession,
+      player
     });
   } else {
     video.pendingSessionData.push({initDataType, initData});
@@ -122,7 +134,8 @@ const setMediaKeys = ({
   createdMediaKeys,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  player
 }) => {
   video.mediaKeysObject = createdMediaKeys;
 
@@ -139,7 +152,8 @@ const setMediaKeys = ({
       initData: data.initData,
       options,
       getLicense,
-      removeSession
+      removeSession,
+      player
     });
   }
 
@@ -274,7 +288,8 @@ export const standard5July2016 = ({
         createdMediaKeys,
         options,
         getLicense: promisifyGetLicense(keySystemOptions.getLicense, player),
-        removeSession
+        removeSession,
+        player
       });
     }).catch(
       videojs.log.error.bind(videojs.log.error,
@@ -293,7 +308,8 @@ export const standard5July2016 = ({
         promisifyGetLicense(standardizeKeySystemOptions(
           video.keySystem,
           options.keySystems[video.keySystem]).getLicense, player) : null,
-      removeSession
+      removeSession,
+      player
     });
   });
 };

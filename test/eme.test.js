@@ -30,14 +30,21 @@ const getMockSession = () => {
 
 QUnit.module('videojs-contrib-eme eme');
 
-QUnit.test('keystatuseschange with expired key closes session', function(assert) {
-  const removeSessionCalls = [];
-  // once the eme module gets the removeSession function, the session argument is already
-  // bound to the function (note that it's a custom session maintained by the plugin, not
-  // the native session), so only initData is passed
-  const removeSession = (initData) => removeSessionCalls.push(initData);
+QUnit.test('keystatuseschange triggers keystatuschange on player tech for each key', function(assert) {
+  let callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
+  const player = {
+    tech_: {
+      trigger: (event) => {
+        if (callCount[event.keyId][event.status] === undefined) {
+          callCount[event.keyId][event.status] = 0;
+        }
+        callCount[event.keyId][event.status]++;
+        callCount.total++;
+      }
+    }
+  };
 
   makeNewRequest({
     mediaKeys: {
@@ -47,7 +54,101 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
     initData,
     options: {},
     getLicense() {},
-    removeSession
+    removeSession() {},
+    player
+  });
+
+  assert.equal(mockSession.listeners.length, 2, 'added listeners');
+  assert.equal(mockSession.listeners[1].type,
+               'keystatuseschange',
+               'added keystatuseschange listener');
+
+  // no key statuses
+  mockSession.listeners[1].listener();
+
+  assert.equal(callCount.total, 0, 'no events dispatched yet');
+
+  mockSession.keyStatuses.set(1, 'unrecognized');
+  mockSession.keyStatuses.set(2, 'expired');
+  mockSession.keyStatuses.set(3, 'internal-error');
+  mockSession.keyStatuses.set(4, 'output-restricted');
+  mockSession.keyStatuses.set(5, 'output-restricted');
+
+  mockSession.listeners[1].listener();
+  assert.equal(callCount[1].unrecognized, 1,
+    'dispatched `unrecognized` key status for key 1');
+  assert.equal(callCount[2].expired, 1,
+    'dispatched `expired` key status for key 2');
+  assert.equal(callCount[3]['internal-error'], 1,
+    'dispatched `internal-error` key status for key 3');
+  assert.equal(callCount[4]['output-restricted'], 1,
+    'dispatched `output-restricted` key status for key 4');
+  assert.equal(callCount[5]['output-restricted'], 1,
+    'dispatched `output-restricted` key status for key 5');
+  assert.equal(callCount.total, 5, '5 keystatuschange events received so far');
+
+  // Change a single key and check that it's triggered for all keys
+  mockSession.keyStatuses.set(1, 'usable');
+
+  mockSession.listeners[1].listener();
+  assert.equal(callCount[1].usable, 1,
+    'dispatched `usable` key status for key 1');
+  assert.equal(callCount[2].expired, 2,
+    'dispatched `expired` key status for key 2');
+  assert.equal(callCount[3]['internal-error'], 2,
+    'dispatched `internal-error` key status for key 3');
+  assert.equal(callCount[4]['output-restricted'], 2,
+    'dispatched `output-restricted` key status for key 4');
+  assert.equal(callCount[5]['output-restricted'], 2,
+    'dispatched `output-restricted` key status for key 5');
+  assert.equal(callCount.total, 10, '10 keystatuschange events received so far');
+
+  // Change the key statuses and recheck
+  mockSession.keyStatuses.set(1, 'output-downscaled');
+  mockSession.keyStatuses.set(2, 'released');
+  mockSession.keyStatuses.set(3, 'usable');
+  mockSession.keyStatuses.set(4, 'status-pending');
+  mockSession.keyStatuses.set(5, 'usable');
+
+  mockSession.listeners[1].listener();
+  assert.equal(callCount[1]['output-downscaled'], 1,
+    'dispatched `output-downscaled` key status for key 1');
+  assert.equal(callCount[2].released, 1,
+    'dispatched `released` key status for key 2');
+  assert.equal(callCount[3].usable, 1,
+    'dispatched `usable` key status for key 3');
+  assert.equal(callCount[4]['status-pending'], 1,
+    'dispatched `status-pending` key status for key 4');
+  assert.equal(callCount[5].usable, 1,
+    'dispatched `usable` key status for key 5');
+  assert.equal(callCount.total, 15, '15 keystatuschange events received so far');
+
+});
+
+QUnit.test('keystatuseschange with expired key closes session', function(assert) {
+  const removeSessionCalls = [];
+  // once the eme module gets the removeSession function, the session argument is already
+  // bound to the function (note that it's a custom session maintained by the plugin, not
+  // the native session), so only initData is passed
+  const removeSession = (initData) => removeSessionCalls.push(initData);
+  const initData = new Uint8Array([1, 2, 3]);
+  const mockSession = getMockSession();
+  const player = {
+    tech_: {
+      trigger: (name) => {}
+    }
+  };
+
+  makeNewRequest({
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    initDataType: '',
+    initData,
+    options: {},
+    getLicense() {},
+    removeSession,
+    player
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
@@ -84,6 +185,11 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
   const warnCalls = [];
+  const player = {
+    tech_: {
+      trigger: (name) => {}
+    }
+  };
 
   videojs.log.warn = (...args) => warnCalls.push(args);
 
@@ -95,7 +201,8 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
     initData,
     options: {},
     getLicense() {},
-    removeSession() {}
+    removeSession() {},
+    player
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
