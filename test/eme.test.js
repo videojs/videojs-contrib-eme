@@ -30,19 +30,17 @@ const getMockSession = () => {
 
 QUnit.module('videojs-contrib-eme eme');
 
-QUnit.test('keystatuseschange triggers keystatuschange on player tech for each key', function(assert) {
+QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key', function(assert) {
   let callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
-  const player = {
-    tech_: {
-      trigger: (event) => {
-        if (callCount[event.keyId][event.status] === undefined) {
-          callCount[event.keyId][event.status] = 0;
-        }
-        callCount[event.keyId][event.status]++;
-        callCount.total++;
+  const eventBus = {
+    trigger: (event) => {
+      if (!callCount[event.keyId][event.status]) {
+        callCount[event.keyId][event.status] = 0;
       }
+      callCount[event.keyId][event.status]++;
+      callCount.total++;
     }
   };
 
@@ -55,7 +53,7 @@ QUnit.test('keystatuseschange triggers keystatuschange on player tech for each k
     options: {},
     getLicense() {},
     removeSession() {},
-    player
+    eventBus
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
@@ -133,10 +131,8 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
   const removeSession = (initData) => removeSessionCalls.push(initData);
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
-  const player = {
-    tech_: {
-      trigger: (name) => {}
-    }
+  const eventBus = {
+    trigger: (name) => {}
   };
 
   makeNewRequest({
@@ -148,7 +144,7 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
     options: {},
     getLicense() {},
     removeSession,
-    player
+    eventBus
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
@@ -185,10 +181,8 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
   const warnCalls = [];
-  const player = {
-    tech_: {
-      trigger: (name) => {}
-    }
+  const eventBus = {
+    trigger: (name) => {}
   };
 
   videojs.log.warn = (...args) => warnCalls.push(args);
@@ -202,7 +196,7 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
     options: {},
     getLicense() {},
     removeSession() {},
-    player
+    eventBus
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
@@ -408,12 +402,10 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     }
   };
 
-  const player = {
-    tech_: {
-      trigger: (name) => {
-        if (name === 'licenserequestattempted') {
-          callCounts.licenseRequestAttempts++;
-        }
+  const eventBus = {
+    trigger: (name) => {
+      if (name === 'licenserequestattempted') {
+        callCounts.licenseRequestAttempts++;
       }
     }
   };
@@ -450,7 +442,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     initDataType: '',
     initData: '',
     options,
-    player
+    eventBus
   });
 
   // Step 1: get key system

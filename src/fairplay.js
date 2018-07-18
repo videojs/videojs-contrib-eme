@@ -42,7 +42,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   return new Uint8Array(buffer, 0, buffer.byteLength);
 };
 
-const addKey = ({video, contentId, initData, cert, options, getLicense, player}) => {
+const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
       video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
@@ -66,8 +66,8 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, player})
 
     keySession.addEventListener('webkitkeymessage', (event) => {
       getLicense(options, contentId, event.message, (err, license) => {
-        if (player && player.tech_) {
-          player.tech_.trigger('licenserequestattempted');
+        if (eventBus) {
+          eventBus.trigger('licenserequestattempted');
         }
         if (err) {
           reject(err);
@@ -130,7 +130,7 @@ const defaultGetLicense = (licenseUri) => {
   };
 };
 
-const fairplay = ({video, initData, options, player}) => {
+const fairplay = ({video, initData, options, eventBus}) => {
   let fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
   let getCertificate = fairplayOptions.getCertificate ||
     defaultGetCertificate(fairplayOptions.certificateUri);
@@ -155,7 +155,7 @@ const fairplay = ({video, initData, options, player}) => {
       getLicense,
       options,
       contentId: getContentId(options, initData),
-      player
+      eventBus
     });
   }).catch(videojs.log.error.bind(videojs.log.error));
 };

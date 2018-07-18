@@ -4,7 +4,7 @@ import { requestPlayreadyLicense } from './playready';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
-export const addKeyToSession = (options, session, event, player) => {
+export const addKeyToSession = (options, session, event, eventBus) => {
   let playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
   if (typeof playreadyOptions.getKey === 'function') {
@@ -27,8 +27,8 @@ export const addKeyToSession = (options, session, event, player) => {
   const url = playreadyOptions.url || event.destinationURL;
 
   requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
-    if (player && player.tech_) {
-      player.tech_.trigger('licenserequestattempted');
+    if (eventBus) {
+      eventBus.trigger('licenserequestattempted');
     }
     if (err) {
       videojs.log.error('Unable to request key from url: ' + url);
@@ -39,7 +39,7 @@ export const addKeyToSession = (options, session, event, player) => {
   });
 };
 
-export const createSession = (video, initData, options, player) => {
+export const createSession = (video, initData, options, eventBus) => {
   const session = video.msKeys.createSession('video/mp4', initData);
 
   if (!session) {
@@ -57,7 +57,7 @@ export const createSession = (video, initData, options, player) => {
   // eslint-disable-next-line max-len
   // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
   session.addEventListener('mskeymessage', (event) => {
-    addKeyToSession(options, session, event, player);
+    addKeyToSession(options, session, event, eventBus);
   });
 
   session.addEventListener('mskeyerror', (event) => {
@@ -67,7 +67,7 @@ export const createSession = (video, initData, options, player) => {
   });
 };
 
-export default ({video, initData, options, player}) => {
+export default ({video, initData, options, eventBus}) => {
   // Although by the standard examples the presence of video.msKeys is checked first to
   // verify that we aren't trying to create a new session when one already exists, here
   // sessions are managed earlier (on the player.eme object), meaning that at this point
@@ -84,5 +84,5 @@ export default ({video, initData, options, player}) => {
     return;
   }
 
-  createSession(video, initData, options, player);
+  createSession(video, initData, options, eventBus);
 };
