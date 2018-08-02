@@ -1,3 +1,4 @@
+import window from 'global/window';
 import document from 'global/document';
 
 import QUnit from 'qunit';
@@ -103,9 +104,9 @@ QUnit.module('plugin guard functions', {
       initData: this.initData2
     };
 
-    this.origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+    this.origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
 
-    navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+    window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
       return Promise.resolve({
         keySystem: 'org.w3.clearkey',
         createMediaKeys: () => {
@@ -117,13 +118,13 @@ QUnit.module('plugin guard functions', {
     };
   },
   afterEach() {
-    navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
+    window.navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
   }
 });
 
 QUnit.test('handleEncryptedEvent checks for required options', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   handleEncryptedEvent(this.event1, {}, sessions).then(() => {
     assert.equal(sessions.length, 0, 'did not create a session when no options');
@@ -133,7 +134,7 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
 
 QUnit.test('handleEncryptedEvent creates session', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
@@ -145,7 +146,7 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
 
 QUnit.test('handleEncryptedEvent creates new session for new init data', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
@@ -160,7 +161,7 @@ QUnit.test('handleEncryptedEvent creates new session for new init data', functio
 
 QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions) .catch(() => {
@@ -184,7 +185,7 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
       }
     }
   };
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event2, options, sessions).catch(() => {
@@ -202,7 +203,7 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
     initData: new Uint8Array([1, 2, 3])
   };
   let options = {};
-  let sessions = [];
+  const sessions = [];
 
   handleMsNeedKeyEvent(event, options, sessions);
   assert.equal(sessions.length, 0, 'no session created when no options');

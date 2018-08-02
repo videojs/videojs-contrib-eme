@@ -1,7 +1,8 @@
+import document from 'global/document';
 export const stringToUint16Array = (string) => {
   // 2 bytes for each char
-  let buffer = new ArrayBuffer(string.length * 2);
-  let array = new Uint16Array(buffer);
+  const buffer = new ArrayBuffer(string.length * 2);
+  const array = new Uint16Array(buffer);
 
   for (let i = 0; i < string.length; i++) {
     array[i] = string.charCodeAt(i);
@@ -15,7 +16,7 @@ export const uint8ArrayToString = (array) => {
 };
 
 export const getHostnameFromUri = (uri) => {
-  let link = document.createElement('a');
+  const link = document.createElement('a');
 
   link.href = uri;
   return link.hostname;

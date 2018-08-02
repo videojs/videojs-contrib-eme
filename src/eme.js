@@ -1,5 +1,6 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
+import window from 'global/window';
 
 export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
@@ -9,9 +10,9 @@ export const getSupportedKeySystem = (keySystems) => {
 
   Object.keys(keySystems).forEach((keySystem) => {
     // TODO use initDataTypes when appropriate
-    let systemOptions = {};
-    let audioContentType = keySystems[keySystem].audioContentType;
-    let videoContentType = keySystems[keySystem].videoContentType;
+    const systemOptions = {};
+    const audioContentType = keySystems[keySystem].audioContentType;
+    const videoContentType = keySystems[keySystem].videoContentType;
 
     if (audioContentType) {
       systemOptions.audioCapabilities = [{
@@ -25,10 +26,10 @@ export const getSupportedKeySystem = (keySystems) => {
     }
 
     if (!promise) {
-      promise = navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
+      promise = window.navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
     } else {
       promise = promise.catch(
-        (e) => navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]));
+        (e) => window.navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]));
     }
   });
 
@@ -43,7 +44,7 @@ export const makeNewRequest = ({
   getLicense,
   removeSession
 }) => {
-  let keySession = mediaKeys.createSession();
+  const keySession = mediaKeys.createSession();
 
   keySession.addEventListener('message', (event) => {
     getLicense(options, event.message)
@@ -131,7 +132,7 @@ const setMediaKeys = ({
   }
 
   for (let i = 0; i < video.pendingSessionData.length; i++) {
-    let data = video.pendingSessionData[i];
+    const data = video.pendingSessionData[i];
 
     makeNewRequest({
       mediaKeys: video.mediaKeysObject,
