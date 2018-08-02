@@ -7,10 +7,10 @@ QUnit.module('videojs-contrib-eme fairplay');
 QUnit.test('lifecycle', function(assert) {
   assert.expect(23);
 
-  let done = assert.async();
-  let initData = new Uint8Array([1, 2, 3, 4]).buffer;
-  let callbacks = {};
-  let callCounts = {
+  const done = assert.async();
+  const initData = new Uint8Array([1, 2, 3, 4]).buffer;
+  const callbacks = {};
+  const callCounts = {
     getCertificate: 0,
     getLicense: 0,
     updateKeySession: 0,
@@ -18,16 +18,16 @@ QUnit.test('lifecycle', function(assert) {
     licenseRequestAttempts: 0
   };
 
-  let getCertificate = (emeOptions, callback) => {
+  const getCertificate = (emeOptions, callback) => {
     callCounts.getCertificate++;
     callbacks.getCertificate = callback;
   };
-  let getLicense = (emeOptions, contentId, keyMessage, callback) => {
+  const getLicense = (emeOptions, contentId, keyMessage, callback) => {
     callCounts.getLicense++;
     callbacks.getLicense = callback;
   };
 
-  let options = {
+  const options = {
     keySystems: {
       'com.apple.fps.1_0': {
         getCertificate,
@@ -49,15 +49,15 @@ QUnit.test('lifecycle', function(assert) {
   };
 
   // trap event listeners
-  let keySessionEventListeners = {};
+  const keySessionEventListeners = {};
 
-  let updateKeySession = (key) => {
+  const updateKeySession = (key) => {
     callCounts.updateKeySession++;
   };
 
   let onKeySessionCreated;
 
-  let createSession = (type, concatenatedData) => {
+  const createSession = (type, concatenatedData) => {
     callCounts.createSession++;
     return {
       addEventListener: (name, callback) => {
@@ -75,7 +75,7 @@ QUnit.test('lifecycle', function(assert) {
   };
 
   // mock webkitKeys to avoid browser specific calls and enable us to verify ordering
-  let video = {
+  const video = {
     webkitKeys: {
       createSession
     }

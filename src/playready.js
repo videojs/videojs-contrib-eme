@@ -10,7 +10,7 @@ import window from 'global/window';
  * license request
  */
 export const getMessageContents = (message) => {
-  const xml = (new DOMParser()).parseFromString(
+  const xml = (new window.DOMParser()).parseFromString(
     // TODO do we want to support UTF-8?
     String.fromCharCode.apply(null, new Uint16Array(message)),
     'application/xml');
