@@ -2,24 +2,20 @@ sudo: false
 dist: trusty
 language: node_js
 node_js:
-  - 8
-cache:
-  directories:
-    - node_modules
+  - 'lts/*'
+before_install:
+- npm install -g greenkeeper-lockfile@1
 before_script:
-  # check if the current version is equal to the version for the env
-  - 'export IS_INSTALLED="$(npm list video.js | grep "video.js@$VJS")"'
-  # we have to add semi colons to the end of each line in the if
-  # as travis runs this all on one line
-  - 'if [ -z "$IS_INSTALLED" ]; then
-      echo "INSTALLING video.js@>=$VJS.0.0-RC.0 <$(($VJS+1)).0.0";
-      npm i "video.js@>=$VJS.0.0-RC.0 <\$(($VJS+1)).0.0";
-    else
-      echo "video.js@$VJS ALREADY INSTALLED";
-    fi'
-env:
-  - VJS=5
-  - VJS=6
+  - export CHROME_BIN=/usr/bin/google-chrome
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - greenkeeper-lockfile-update
+after_script: greenkeeper-lockfile-upload
 addons:
-  chrome: stable
   firefox: latest
+  apt:
+    sources:
+    - google-chrome
+    packages:
+    - google-chrome-stable
+
