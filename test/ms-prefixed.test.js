@@ -365,12 +365,10 @@ QUnit.test('makes request with provided url on key message', function(assert) {
         }
       }
     },
-    player: {
-      tech_: {
-        trigger: (event) => {
-          if (event === 'licenserequestattempted') {
-            callCounts.licenseRequestAttempts++;
-          }
+    eventBus: {
+      trigger: (event) => {
+        if (event === 'licenserequestattempted') {
+          callCounts.licenseRequestAttempts++;
         }
       }
     }

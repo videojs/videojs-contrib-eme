@@ -38,12 +38,10 @@ QUnit.test('lifecycle', function(assert) {
     }
   };
 
-  const player = {
-    tech_: {
-      trigger: (name) => {
-        if (name === 'licenserequestattempted') {
-          callCounts.licenseRequestAttempts++;
-        }
+  const eventBus = {
+    trigger: (name) => {
+      if (name === 'licenserequestattempted') {
+        callCounts.licenseRequestAttempts++;
       }
     }
   };
@@ -81,7 +79,7 @@ QUnit.test('lifecycle', function(assert) {
     }
   };
 
-  fairplay({ video, initData, options, player })
+  fairplay({ video, initData, options, eventBus })
     .then(() => {
       done();
     });

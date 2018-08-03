@@ -18,6 +18,7 @@ Maintenance Status: Experimental
   - [Plugin Options](#plugin-options)
   - [emeOptions](#emeoptions)
   - [Passing methods seems complicated](#passing-methods-seems-complicated)
+  - [Special Events](#special-events)
 - [Getting Started](#getting-started)
   - [Running Tests](#running-tests)
   - [Tag and Release](#tag-and-release)
@@ -326,6 +327,24 @@ player.tech_.on('licenserequestattempted', function(event) {
   // Act on event
 });
 ```
+
+Additionally, when the status of a key changes, an event of type `keystatuschange` will
+be triggered on the `tech_`. This helps you handle feedback to the user for situations
+like trying to play DRM-protected media on restricted devices.
+
+Just like the above, you can listen to the event like so:
+
+```
+player.tech_.on('keystatuschange', function(event) {
+  // Event data:
+  // keyId
+  // status: usable, output-restricted, etc
+  // target: the MediaKeySession object that caused this event
+});
+```
+
+It is triggered directly from the underlying `keystatuseschange` event, so the statuses
+should correspond to [those listed in the spec](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
 
 ## Getting Started
 

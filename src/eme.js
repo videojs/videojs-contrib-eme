@@ -41,7 +41,8 @@ export const makeNewRequest = ({
   initData,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  eventBus
 }) => {
   let keySession = mediaKeys.createSession();
 
@@ -58,6 +59,15 @@ export const makeNewRequest = ({
 
     // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
     keySession.keyStatuses.forEach((status, keyId) => {
+      // Trigger an event so that outside listeners can take action if appropriate.
+      // For instance, the `output-restricted` status should result in an
+      // error being thrown.
+      eventBus.trigger({
+        keyId,
+        status,
+        target: keySession,
+        type: 'keystatuschange'
+      });
       switch (status) {
       case 'expired':
         // If one key is expired in a session, all keys are expired. From
@@ -100,7 +110,8 @@ const addSession = ({
   initData,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  eventBus
 }) => {
   if (video.mediaKeysObject) {
     makeNewRequest({
@@ -109,7 +120,8 @@ const addSession = ({
       initData,
       options,
       getLicense,
-      removeSession
+      removeSession,
+      eventBus
     });
   } else {
     video.pendingSessionData.push({initDataType, initData});
@@ -122,7 +134,8 @@ const setMediaKeys = ({
   createdMediaKeys,
   options,
   getLicense,
-  removeSession
+  removeSession,
+  eventBus
 }) => {
   video.mediaKeysObject = createdMediaKeys;
 
@@ -139,7 +152,8 @@ const setMediaKeys = ({
       initData: data.initData,
       options,
       getLicense,
-      removeSession
+      removeSession,
+      eventBus
     });
   }
 
@@ -178,12 +192,12 @@ const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
   });
 };
 
-const promisifyGetLicense = (getLicenseFn, player) => {
+const promisifyGetLicense = (getLicenseFn, eventBus) => {
   return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
       getLicenseFn(emeOptions, keyMessage, (err, license) => {
-        if (player && player.tech_) {
-          player.tech_.trigger('licenserequestattempted');
+        if (eventBus) {
+          eventBus.trigger('licenserequestattempted');
         }
         if (err) {
           reject(err);
@@ -219,7 +233,7 @@ export const standard5July2016 = ({
   initData,
   options,
   removeSession,
-  player
+  eventBus
 }) => {
   let keySystemPromise = Promise.resolve();
 
@@ -273,8 +287,9 @@ export const standard5July2016 = ({
         certificate,
         createdMediaKeys,
         options,
-        getLicense: promisifyGetLicense(keySystemOptions.getLicense, player),
-        removeSession
+        getLicense: promisifyGetLicense(keySystemOptions.getLicense, eventBus),
+        removeSession,
+        eventBus
       });
     }).catch(
       videojs.log.error.bind(videojs.log.error,
@@ -292,8 +307,9 @@ export const standard5July2016 = ({
       getLicense: video.keySystem ?
         promisifyGetLicense(standardizeKeySystemOptions(
           video.keySystem,
-          options.keySystems[video.keySystem]).getLicense, player) : null,
-      removeSession
+          options.keySystems[video.keySystem]).getLicense, eventBus) : null,
+      removeSession,
+      eventBus
     });
   });
 };
