@@ -318,12 +318,12 @@ without making a request, we can support that, since you can control the methods
 ### Special Events
 
 There are some events that are specific to this plugin.  Once such event is `licenserequestattempted`.
-This event is triggered on the `tech_` on the callback of every license request.
+This event is triggered on the tech on the callback of every license request.
 
 In order to listen to this event:
 
 ```
-player.tech_.on('licenserequestattempted', function(event) {
+player.tech().on('licenserequestattempted', function(event) {
   // Act on event
 });
 ```
@@ -335,7 +335,7 @@ like trying to play DRM-protected media on restricted devices.
 Just like the above, you can listen to the event like so:
 
 ```
-player.tech_.on('keystatuschange', function(event) {
+player.tech().on('keystatuschange', function(event) {
   // Event data:
   // keyId
   // status: usable, output-restricted, etc
