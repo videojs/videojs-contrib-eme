@@ -1,4 +1,3 @@
-import videojs from 'video.js';
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
 
@@ -11,7 +10,10 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     playreadyOptions.getKey(
       options, event.destinationURL, event.message.buffer, (err, key) => {
         if (err) {
-          videojs.log.error('Unable to get key: ' + err);
+          eventBus.trigger({
+            message: 'Unable to get key: ' + err,
+            type: 'mskeyerror'
+          });
           return;
         }
 
@@ -31,7 +33,10 @@ export const addKeyToSession = (options, session, event, eventBus) => {
       eventBus.trigger('licenserequestattempted');
     }
     if (err) {
-      videojs.log.error('Unable to request key from url: ' + url);
+      eventBus.trigger({
+        message: 'Unable to request key from url: ' + url,
+        type: 'mskeyerror'
+      });
       return;
     }
 
@@ -40,11 +45,21 @@ export const addKeyToSession = (options, session, event, eventBus) => {
 };
 
 export const createSession = (video, initData, options, eventBus) => {
-  const session = video.msKeys.createSession('video/mp4', initData);
+  let session;
+
+  try {
+    // Note: invalid mime type passed here throws a NotSupportedError
+    session = video.msKeys.createSession('video/mp4', initData);
+  } catch (error) {
+    if (error.description === 'Invalid argument.') {
+      throw new Error('Invalid initData');
+    } else {
+      throw error;
+    }
+  }
 
   if (!session) {
-    videojs.log.error('Could not create key session.');
-    return;
+    throw new Error('Could not create key session.');
   }
 
   // Note that mskeymessage may not always be called for PlayReady:
@@ -61,10 +76,13 @@ export const createSession = (video, initData, options, eventBus) => {
   });
 
   session.addEventListener('mskeyerror', (event) => {
-    videojs.log.error(
-      'Unexpected key error from key session with ' +
-      `code: ${session.error.code} and systemCode: ${session.error.systemCode}`);
+    eventBus.trigger({
+      message: 'Unexpected key error from key session with ' +
+      `code: ${session.error.code} and systemCode: ${session.error.systemCode}`,
+      type: 'mskeyerror'
+    });
   });
+
 };
 
 export default ({video, initData, options, eventBus}) => {
@@ -72,6 +90,7 @@ export default ({video, initData, options, eventBus}) => {
   // verify that we aren't trying to create a new session when one already exists, here
   // sessions are managed earlier (on the player.eme object), meaning that at this point
   // any existing keys should be cleaned up.
+  // TODO: Will this break rotation? Is it safe?
   if (video.msKeys) {
     delete video.msKeys;
   }
@@ -79,9 +98,8 @@ export default ({video, initData, options, eventBus}) => {
   try {
     video.msSetMediaKeys(new window.MSMediaKeys(PLAYREADY_KEY_SYSTEM));
   } catch (e) {
-    videojs.log.error(
-      'Unable to create media keys for PlayReady key system. Error: ' + e.message);
-    return;
+    throw new Error('Unable to create media keys for PlayReady key system. ' +
+      'Error: ' + e.message);
   }
 
   createSession(video, initData, options, eventBus);

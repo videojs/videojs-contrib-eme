@@ -157,7 +157,7 @@ const fairplay = ({video, initData, options, eventBus}) => {
       contentId: getContentId(options, initData),
       eventBus
     });
-  }).catch(videojs.log.error.bind(videojs.log.error));
+  });
 };
 
 export default fairplay;

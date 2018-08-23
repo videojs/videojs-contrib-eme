@@ -55,7 +55,9 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
 
   let initData = event.initData;
 
-  return getSupportedKeySystem(options.keySystems).then(({keySystem}) => {
+  return getSupportedKeySystem(options.keySystems).then((keySystemAccess) => {
+    const keySystem = keySystemAccess.keySystem;
+
     // Use existing init data from options if provided
     if (options.keySystems[keySystem] &&
         options.keySystems[keySystem].pssh) {
@@ -81,6 +83,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
       video: event.target,
       initDataType: event.initDataType,
       initData,
+      keySystemAccess,
       options,
       removeSession: removeSession.bind(null, sessions),
       eventBus
@@ -109,6 +112,9 @@ export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
 export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
   if (!options.keySystems || !options.keySystems[PLAYREADY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
+    return;
+  }
+  if (event.initData === null) {
     return;
   }
 
@@ -172,6 +178,25 @@ export const setupSessions = (player) => {
 };
 
 /**
+ * Construct a simple function that can be used to dispatch EME errors on the
+ * player directly, such as providing it to a `.catch()`.
+ *
+ * @function makeErrorHandler
+ * @param    {Player} player
+ * @return   {Function}
+ */
+export const makeErrorHandler = (player) => {
+  return (objOrErr) => {
+    const message = objOrErr ? objOrErr.message || objOrErr : undefined;
+
+    player.error({
+      code: 5,
+      message
+    });
+  };
+};
+
+/**
  * Function to invoke when the player is ready.
  *
  * This is a great place for your plugin to initialize itself. When this
@@ -187,6 +212,8 @@ const onPlayerReady = (player) => {
     return;
   }
 
+  const emeError = makeErrorHandler(player);
+
   setupSessions(player);
 
   // Support EME 05 July 2016
@@ -195,8 +222,8 @@ const onPlayerReady = (player) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'encrypted\' event');
-    setupSessions(player);
-    handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+    handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+      .catch(emeError);
   });
   // Support Safari EME with FairPlay
   // (also used in early Chrome or Chrome with EME disabled flag)
@@ -207,8 +234,8 @@ const onPlayerReady = (player) => {
 
     // TODO it's possible that the video state must be cleared if reusing the same video
     // element between sources
-    setupSessions(player);
-    handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_);
+    handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
+      .catch(emeError);
   });
 
   // EDGE still fires msneedkey, but should use encrypted instead
@@ -221,8 +248,15 @@ const onPlayerReady = (player) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'msneedkey\' event');
-    setupSessions(player);
-    handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+    try {
+      handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+    } catch (error) {
+      emeError(error);
+    }
+  });
+  player.tech_.on('mskeyerror', emeError);
+  player.on('dispose', () => {
+    player.tech_.off('mskeyerror', emeError);
   });
 };
 
@@ -266,7 +300,7 @@ const eme = function(options = {}) {
       // fake an encrypted event for handleEncryptedEvent
       const mockEncryptedEvent = {
         initDataType: 'cenc',
-        initData: null,
+        initData: new Uint8Array(),
         target: player.tech_.el_
       };
 

@@ -2,9 +2,9 @@ import QUnit from 'qunit';
 import videojs from 'video.js';
 import {
   standard5July2016,
-  makeNewRequest
+  makeNewRequest,
+  getSupportedKeySystem
 } from '../src/eme';
-import window from 'global/window';
 
 // mock session to make testing easier (so we can trigger events)
 const getMockSession = () => {
@@ -27,6 +27,16 @@ const getMockSession = () => {
   };
 
   return mockSession;
+};
+
+const resolveReject = (rejectVariable, rejectMessage) => {
+  return new Promise((resolve, reject) => {
+    if (rejectVariable) {
+      reject(rejectMessage);
+      return;
+    }
+    resolve();
+  });
 };
 
 QUnit.module('videojs-contrib-eme eme');
@@ -230,21 +240,26 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   const done = assert.async();
   const origXhr = videojs.xhr;
   const xhrCalls = [];
-  const callbacks = {};
-  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+  const session = new videojs.EventTarget();
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
   };
 
-  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
-    return new Promise((resolve, reject) => {
-      callbacks.requestMediaKeySystemAccess = resolve;
-    });
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
   };
 
   standard5July2016({
-    video: {},
+    keySystemAccess,
+    video: {
+      setMediaKeys: (createdMediaKeys) => Promise.resolve(createdMediaKeys)
+    },
     initDataType: '',
     initData: '',
     options: {
@@ -253,17 +268,6 @@ QUnit.test('accepts a license URL as an option', function(assert) {
       }
     }
   }).catch((e) => {});
-
-  const session = new videojs.EventTarget();
-
-  callbacks.requestMediaKeySystemAccess({
-    keySystem: 'com.widevine.alpha',
-    createMediaKeys: () => {
-      return {
-        createSession: () => session
-      };
-    }
-  });
 
   setTimeout(() => {
     session.trigger({
@@ -284,7 +288,6 @@ QUnit.test('accepts a license URL as an option', function(assert) {
 
     videojs.xhr = origXhr;
 
-    window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
@@ -293,22 +296,25 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const done = assert.async();
   const origXhr = videojs.xhr;
   const xhrCalls = [];
-  const callbacks = {};
-  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
   const session = new videojs.EventTarget();
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
   };
 
-  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
-    return new Promise((resolve, reject) => {
-      callbacks.requestMediaKeySystemAccess = resolve;
-    });
-  };
-
   standard5July2016({
-    video: {},
+    keySystemAccess,
+    video: {
+      setMediaKeys: (createdMediaKeys) => Promise.resolve(createdMediaKeys)
+    },
     initDataType: '',
     initData: '',
     options: {
@@ -320,15 +326,6 @@ QUnit.test('accepts a license URL as property', function(assert) {
     }
   }).catch((e) => {});
 
-  callbacks.requestMediaKeySystemAccess({
-    keySystem: 'com.widevine.alpha',
-    createMediaKeys: () => {
-      return {
-        createSession: () => session
-      };
-    }
-  });
-
   setTimeout(() => {
     session.trigger({
       type: 'message',
@@ -348,20 +345,16 @@ QUnit.test('accepts a license URL as property', function(assert) {
 
     videojs.xhr = origXhr;
 
-    window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
-  assert.expect(45);
-
-  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+  assert.expect(32);
 
   const done = assert.async();
   const callbacks = {};
   const callCounts = {
-    requestMediaKeySystemAccess: 0,
     getCertificate: 0,
     getLicense: 0,
     createSession: 0,
@@ -369,13 +362,6 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     keySessionUpdate: 0,
     createMediaKeys: 0,
     licenseRequestAttempts: 0
-  };
-
-  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
-    callCounts.requestMediaKeySystemAccess++;
-    return new Promise((resolve, reject) => {
-      callbacks.requestMediaKeySystemAccess = resolve;
-    });
   };
 
   const getCertificate = (emeOptions, callback) => {
@@ -442,13 +428,13 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     video,
     initDataType: '',
     initData: '',
+    keySystemAccess,
     options,
     eventBus
   }).catch((e) => {});
 
-  // Step 1: get key system
-  assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
-  assert.equal(callCounts.getCertificate, 0, 'certificate not requested');
+  // Step 1: get certificate
+  assert.equal(callCounts.getCertificate, 1, 'certificate requested');
   assert.equal(callCounts.createMediaKeys, 0, 'media keys not created');
   assert.notEqual(mediaKeys, setMediaKeys, 'media keys not yet set');
   assert.equal(callCounts.createSession, 0, 'key session not created');
@@ -458,71 +444,321 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.equal(callCounts.licenseRequestAttempts, 0,
     'license request event not triggered (since no callback yet)');
 
-  callbacks.requestMediaKeySystemAccess(keySystemAccess);
+  callbacks.getCertificate(null, '');
 
-  // requestMediaKeySystemAccess promise resolution
+  // getCertificate promise resolution
   setTimeout(() => {
-    // Step 2: get certificate
-    assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+    // Step 2: create media keys, set them, and generate key session request
     assert.equal(callCounts.getCertificate, 1, 'certificate requested');
-    assert.equal(callCounts.createMediaKeys, 0, 'media keys not created');
-    assert.notEqual(mediaKeys, setMediaKeys, 'media keys not yet set');
-    assert.equal(callCounts.createSession, 0, 'key session not created');
-    assert.equal(callCounts.keySessionGenerateRequest, 0, 'key session request not made');
+    assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
+    assert.equal(mediaKeys, setMediaKeys, 'media keys set');
+    assert.equal(callCounts.createSession, 1, 'key session created');
+    assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
     assert.equal(callCounts.getLicense, 0, 'license not requested');
     assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
     assert.equal(callCounts.licenseRequestAttempts, 0,
       'license request event not triggered (since no callback yet)');
 
-    callbacks.getCertificate(null, '');
+    keySessionEventListeners.message({});
 
-    // getCertificate promise resolution
+    // Step 3: get license
+    assert.equal(callCounts.getCertificate, 1, 'certificate requested');
+    assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
+    assert.equal(mediaKeys, setMediaKeys, 'media keys set');
+    assert.equal(callCounts.createSession, 1, 'key session created');
+    assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
+    assert.equal(callCounts.getLicense, 1, 'license requested');
+    assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
+    assert.equal(callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)');
+
+    callbacks.getLicense();
+
+    // getLicense promise resolution
     setTimeout(() => {
-      // Step 3: create media keys, set them, and generate key session request
-      assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
-      assert.equal(callCounts.getCertificate, 1, 'certificate requested');
-      assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
-      assert.equal(mediaKeys, setMediaKeys, 'media keys set');
-      assert.equal(callCounts.createSession, 1, 'key session created');
-      assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
-      assert.equal(callCounts.getLicense, 0, 'license not requested');
-      assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
-      assert.equal(callCounts.licenseRequestAttempts, 0,
-        'license request event not triggered (since no callback yet)');
-
-      keySessionEventListeners.message({});
-
-      // Step 4: get license
-      assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
+      // Step 4: update key session
       assert.equal(callCounts.getCertificate, 1, 'certificate requested');
       assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
       assert.equal(mediaKeys, setMediaKeys, 'media keys set');
       assert.equal(callCounts.createSession, 1, 'key session created');
       assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
       assert.equal(callCounts.getLicense, 1, 'license requested');
-      assert.equal(callCounts.keySessionUpdate, 0, 'key session not updated');
-      assert.equal(callCounts.licenseRequestAttempts, 0,
-        'license request event not triggered (since no callback yet)');
+      assert.equal(callCounts.keySessionUpdate, 1, 'key session updated');
+      assert.equal(callCounts.licenseRequestAttempts, 1,
+        'license request event triggered');
 
-      callbacks.getLicense();
-
-      // getLicense promise resolution
-      setTimeout(() => {
-        // Step 5: update key session
-        assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
-        assert.equal(callCounts.getCertificate, 1, 'certificate requested');
-        assert.equal(callCounts.createMediaKeys, 1, 'media keys created');
-        assert.equal(mediaKeys, setMediaKeys, 'media keys set');
-        assert.equal(callCounts.createSession, 1, 'key session created');
-        assert.equal(callCounts.keySessionGenerateRequest, 1, 'key session request made');
-        assert.equal(callCounts.getLicense, 1, 'license requested');
-        assert.equal(callCounts.keySessionUpdate, 1, 'key session updated');
-        assert.equal(callCounts.licenseRequestAttempts, 1,
-          'license request event triggered');
-
-        window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
-        done();
-      });
+      done();
     });
   });
+});
+
+QUnit.test('getSupportedKeySystem error', function(assert) {
+  const done = assert.async(1);
+
+  getSupportedKeySystem({'un.supported.keysystem': {}}).catch((err) => {
+    assert.equal(err.name, 'NotSupportedError', 'keysystem access request fails');
+    done();
+  });
+
+});
+
+QUnit.test('errors when neither url nor getLicense is given', function(assert) {
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {}
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha'
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video: {},
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(
+      err,
+      'Error: Neither URL nor getLicense function provided to get license',
+      'correct error message'
+    );
+    done();
+  });
+});
+
+QUnit.test('rejects promise when getCertificate throws error', function(assert) {
+  const getCertificate = (options, callback) => {
+    callback('error fetching certificate');
+  };
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getCertificate
+      }
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha'
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video: {},
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(err, 'error fetching certificate', 'correct error message');
+    done();
+  });
+});
+
+QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': 'some-url'
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.reject();
+    }
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video: {},
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(err, 'Failed to create and initialize a MediaKeys object',
+      'uses generic message');
+    done();
+  });
+
+});
+
+QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': 'some-url'
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.reject('failed creating mediaKeys');
+    }
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video: {},
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(err, 'failed creating mediaKeys', 'uses specific error when given');
+    done();
+  });
+
+});
+
+QUnit.test('rejects promise when setMediaKeys rejects', function(assert) {
+  let rejectSetServerCertificate = true;
+  const rejectGenerateRequest = true;
+  let rejectSetMediaKeys = true;
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getCertificate: (emeOptions, callback) => {
+          callback(null, 'some certificate');
+        }
+      }
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.resolve({
+        setServerCertificate: () => resolveReject(rejectSetServerCertificate,
+          'setServerCertificate failed'),
+        createSession: () => {
+          return {
+            addEventListener: () => {},
+            generateRequest: () => resolveReject(rejectGenerateRequest,
+              'generateRequest failed')
+          };
+        }
+      });
+    }
+  };
+  const video = {
+    setMediaKeys: () => resolveReject(rejectSetMediaKeys, 'setMediaKeys failed')
+  };
+  const done = assert.async(3);
+  const callbacks = [];
+  const test = (errMessage, testDescription) => {
+    video.mediaKeysObject = undefined;
+    standard5July2016({
+      video,
+      keySystemAccess,
+      options
+    }).catch((err) => {
+      assert.equal(err, errMessage, testDescription);
+      done();
+      if (callbacks[0]) {
+        callbacks.shift()();
+      }
+    });
+  };
+
+  callbacks.push(() => {
+    rejectSetServerCertificate = false;
+    test('setMediaKeys failed', 'second promise fails');
+  });
+  callbacks.push(() => {
+    rejectSetMediaKeys = false;
+    test('Unable to create or initialize key session', 'third promise fails');
+  });
+
+  test('setServerCertificate failed', 'first promise fails');
+
+});
+
+// For some reason this test does not work
+QUnit.skip('getLicense promise rejection', function(assert) {
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getLicense() {
+          return Promise.reject();
+        }
+      }
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.resolve({
+        setServerCertificate: () => Promise.resolve(),
+        createSession: () => {
+          return {
+            addEventListener: (event, callback) => {
+              setTimeout(() => {
+                callback(options, {message: 'whatever'});
+              });
+            },
+            keyStatuses: [],
+            generateRequest: () => Promise.resolve()
+          };
+        }
+      });
+    }
+  };
+  const video = {
+    setMediaKeys: () => Promise.resolve()
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video,
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(err, 'test', 'test');
+    done();
+  });
+
+});
+
+// For some reason this test does not work
+QUnit.skip('keySession.update promise rejection', function(assert) {
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getLicense() {
+          return Promise.resolve();
+        }
+      }
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.resolve({
+        setServerCertificate: () => Promise.resolve(),
+        createSession: () => {
+          return {
+            addEventListener: (event, callback) => {
+              setTimeout(() => {
+                callback({message: 'whatever'});
+              });
+            },
+            keyStatuses: [],
+            generateRequest: () => Promise.resolve(),
+            update: () => Promise.reject()
+          };
+        }
+      });
+    }
+  };
+  const video = {
+    setMediaKeys: () => Promise.resolve()
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video,
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(err, 'test', 'test');
+    done();
+  });
+
 });

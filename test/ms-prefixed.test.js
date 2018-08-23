@@ -53,13 +53,91 @@ QUnit.test('overwrites msKeys', function(assert) {
   assert.notEqual(this.video.msKeys, origMsKeys, 'overwrote msKeys');
 });
 
-QUnit.test('logs error when on key error', function(assert) {
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
+QUnit.test('error thrown when creating keys bubbles up', function(assert) {
+  window.MSMediaKeys = () => {
+    throw new Error('error');
   };
+
+  const fn = () => {
+    msPrefixed({video: this.video});
+  };
+
+  assert.throws(
+    fn,
+    new Error('Unable to create media keys for PlayReady key system. Error: error'),
+    'error is thrown with proper message'
+  );
+});
+
+QUnit.test('invalid initData given to createSession throws error', function(assert) {
+  const video = {
+    msSetMediaKeys: () => {
+      video.msKeys = {
+        createSession: () => {
+          const error = new Error('Invalid argument.');
+
+          error.description = 'Invalid argument.';
+          throw error;
+        }
+      };
+    }
+  };
+
+  const fn = () => {
+    msPrefixed({video});
+  };
+
+  assert.throws(
+    fn,
+    new Error('Invalid initData'),
+    'error is thrown with proper message'
+  );
+});
+
+QUnit.test('createSession throws unknown error', function(assert) {
+  const video = {
+    msSetMediaKeys: () => {
+      video.msKeys = {
+        createSession: () => {
+          throw new Error('whatever');
+        }
+      };
+    }
+  };
+
+  const fn = () => {
+    msPrefixed({video});
+  };
+
+  assert.throws(
+    fn,
+    new Error('whatever'),
+    'error is thrown with proper message'
+  );
+});
+
+QUnit.test('throws error if session was not created', function(assert) {
+  const video = {
+    msSetMediaKeys: () => {
+      video.msKeys = {
+        createSession: () => null
+      };
+    }
+  };
+
+  const fn = () => {
+    msPrefixed({video});
+  };
+
+  assert.throws(
+    fn,
+    new Error('Could not create key session.'),
+    'error is thrown with proper message'
+  );
+});
+
+QUnit.test('throws error on keysession mskeyerror event', function(assert) {
+  let errorMessage;
 
   msPrefixed({
     video: this.video,
@@ -67,6 +145,11 @@ QUnit.test('logs error when on key error', function(assert) {
     options: {
       keySystems: {
         'com.microsoft.playready': true
+      }
+    },
+    eventBus: {
+      trigger: (event) => {
+        errorMessage = event.message;
       }
     }
   });
@@ -78,11 +161,11 @@ QUnit.test('logs error when on key error', function(assert) {
 
   this.session.trigger('mskeyerror');
 
-  assert.equal(errorMessage,
+  assert.equal(
+    errorMessage,
     'Unexpected key error from key session with code: 5 and systemCode: 9',
-    'logged error message');
-
-  videojs.log.error = origErrorLog;
+    'error is thrown with proper message'
+  );
 });
 
 QUnit.test('calls getKey when provided on key message', function(assert) {
@@ -93,6 +176,7 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   let getKeyCallback = (callback) => {
     callback(null, 'a key');
   };
+  let errorMessage;
 
   const emeOptions = {
     keySystems: {
@@ -111,7 +195,12 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   msPrefixed({
     video: this.video,
     initData: '',
-    options: emeOptions
+    options: emeOptions,
+    eventBus: {
+      trigger: (event) => {
+        errorMessage = event.message;
+      }
+    }
   });
 
   assert.notOk(passedOptions, 'getKey not called');
@@ -131,13 +220,6 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   assert.equal(this.session.keys.length, 1, 'added key to session');
   assert.equal(this.session.keys[0], 'a key', 'added correct key to session');
 
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
   getKeyCallback = (callback) => {
     callback('an error', 'an errored key');
   };
@@ -152,15 +234,14 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
 
   assert.equal(errorMessage,
     'Unable to get key: an error',
-    'logs error when callback has an error');
+    'fires mskeyerror on eventBus when callback has an error');
   assert.equal(this.session.keys.length, 1, 'did not add a new key');
-
-  videojs.log.error = origErrorLog;
 });
 
 QUnit.test('makes request when nothing provided on key message', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
+  let errorMessage;
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -170,6 +251,13 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     options: {
       keySystems: {
         'com.microsoft.playready': true
+      }
+    },
+    eventBus: {
+      trigger: (event) => {
+        if (event.type === 'mskeyerror') {
+          errorMessage = event.message;
+        }
       }
     }
   });
@@ -198,13 +286,6 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     'arraybuffer',
     'responseType is an arraybuffer');
 
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
   const response = {
     body: utils.stringToArrayBuffer('key value')
   };
@@ -213,7 +294,7 @@ QUnit.test('makes request when nothing provided on key message', function(assert
 
   assert.equal(errorMessage,
     'Unable to request key from url: destination-url',
-    'logs error when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
@@ -223,7 +304,6 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     new Uint8Array(response.body),
     'correct key added to session');
 
-  videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
 });
 
@@ -274,6 +354,7 @@ QUnit.test('makes request on key message when empty object provided in options',
 QUnit.test('makes request with provided url string on key message', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
+  let errorMessage;
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -283,6 +364,13 @@ QUnit.test('makes request with provided url string on key message', function(ass
     options: {
       keySystems: {
         'com.microsoft.playready': 'provided-url'
+      }
+    },
+    eventBus: {
+      trigger: (event) => {
+        if (event.type === 'mskeyerror') {
+          errorMessage = event.message;
+        }
       }
     }
   });
@@ -317,13 +405,6 @@ QUnit.test('makes request with provided url string on key message', function(ass
     'arraybuffer',
     'responseType is an arraybuffer');
 
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
   const response = {
     body: utils.stringToArrayBuffer('key value')
   };
@@ -332,7 +413,7 @@ QUnit.test('makes request with provided url string on key message', function(ass
 
   assert.equal(errorMessage,
     'Unable to request key from url: provided-url',
-    'logs error when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
@@ -342,7 +423,6 @@ QUnit.test('makes request with provided url string on key message', function(ass
     new Uint8Array(response.body),
     'correct key added to session');
 
-  videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
 });
 
@@ -352,6 +432,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   const callCounts = {
     licenseRequestAttempts: 0
   };
+  let errorMessage;
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -369,6 +450,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
       trigger: (event) => {
         if (event === 'licenserequestattempted') {
           callCounts.licenseRequestAttempts++;
+        } else if (event.type === 'mskeyerror') {
+          errorMessage = event.message;
         }
       }
     }
@@ -406,13 +489,6 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(callCounts.licenseRequestAttempts, 0,
     'license request event not triggered (since no callback yet)');
 
-  const origErrorLog = videojs.log.error;
-  let errorMessage;
-
-  videojs.log.error = (message) => {
-    errorMessage = message;
-  };
-
   const response = {
     body: utils.stringToArrayBuffer('key value')
   };
@@ -422,7 +498,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(callCounts.licenseRequestAttempts, 1, 'license request event triggered');
   assert.equal(errorMessage,
     'Unable to request key from url: provided-url',
-    'logs error when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
@@ -434,6 +510,5 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     new Uint8Array(response.body),
     'correct key added to session');
 
-  videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
 });
