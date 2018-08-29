@@ -12,7 +12,9 @@ Maintenance Status: Experimental
 
 
 - [Using](#using)
+  - [Initialization](#initialization)
   - [FairPlay](#fairplay)
+  - [PlayReady for IE11 (Windows 8.1+)](#playready-for-ie11-windows-81)
   - [Other DRM Systems](#other-drm-systems)
   - [Source Options](#source-options)
   - [Plugin Options](#plugin-options)
@@ -32,6 +34,20 @@ By default, videojs-contrib-eme is not able to decrypt any audio/video. In order
 decrypt audio/video, a user must pass in either relevant license URIs, or methods specific
 to a source and its combination of key system and codec. These are provided to the plugin
 via either videojs-contrib-eme's plugin options, or source options.
+
+### Initialization
+The videojs-contrib-eme plugin must be initialized before a source is loaded into the player:
+
+```javascript
+player.eme();
+player.src({
+  src: '<your url here>',
+  type: 'application/dash+xml',
+  keySystems: {
+    'com.widevine.alpha': '<your url here>'
+  }
+});
+```
 
 ### FairPlay
 
