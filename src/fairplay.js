@@ -16,10 +16,10 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   //   [4 byte:certLength]
   //   [certLength byte: cert]
   let offset = 0;
-  let buffer = new ArrayBuffer(
+  const buffer = new ArrayBuffer(
     initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength);
-  let dataView = new DataView(buffer);
-  let initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
+  const dataView = new DataView(buffer);
+  const initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
 
   initDataArray.set(initData);
   offset += initData.byteLength;
@@ -27,7 +27,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   dataView.setUint32(offset, id.byteLength, true);
   offset += 4;
 
-  let idArray = new Uint16Array(buffer, offset, id.length);
+  const idArray = new Uint16Array(buffer, offset, id.length);
 
   idArray.set(id);
   offset += idArray.byteLength;
@@ -35,7 +35,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   dataView.setUint32(offset, cert.byteLength, true);
   offset += 4;
 
-  let certArray = new Uint8Array(buffer, offset, cert.byteLength);
+  const certArray = new Uint8Array(buffer, offset, cert.byteLength);
 
   certArray.set(cert);
 
@@ -53,7 +53,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       return;
     }
 
-    let keySession = video.webkitKeys.createSession(
+    const keySession = video.webkitKeys.createSession(
       'video/mp4',
       concatInitDataIdAndCertificate({id: contentId, initData, cert}));
 
@@ -131,11 +131,11 @@ const defaultGetLicense = (licenseUri) => {
 };
 
 const fairplay = ({video, initData, options, eventBus}) => {
-  let fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
-  let getCertificate = fairplayOptions.getCertificate ||
+  const fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
+  const getCertificate = fairplayOptions.getCertificate ||
     defaultGetCertificate(fairplayOptions.certificateUri);
-  let getContentId = fairplayOptions.getContentId || defaultGetContentId;
-  let getLicense = fairplayOptions.getLicense ||
+  const getContentId = fairplayOptions.getContentId || defaultGetContentId;
+  const getLicense = fairplayOptions.getLicense ||
     defaultGetLicense(fairplayOptions.licenseUri);
 
   return new Promise((resolve, reject) => {

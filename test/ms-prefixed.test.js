@@ -79,8 +79,8 @@ QUnit.test('logs error when on key error', function(assert) {
   this.session.trigger('mskeyerror');
 
   assert.equal(errorMessage,
-               'Unexpected key error from key session with code: 5 and systemCode: 9',
-               'logged error message');
+    'Unexpected key error from key session with code: 5 and systemCode: 9',
+    'logged error message');
 
   videojs.log.error = origErrorLog;
 });
@@ -151,8 +151,8 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   });
 
   assert.equal(errorMessage,
-               'Unable to get key: an error',
-               'logs error when callback has an error');
+    'Unable to get key: an error',
+    'logs error when callback has an error');
   assert.equal(this.session.keys.length, 1, 'did not add a new key');
 
   videojs.log.error = origErrorLog;
@@ -183,8 +183,8 @@ QUnit.test('makes request when nothing provided on key message', function(assert
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
   assert.equal(xhrCalls[0].config.uri,
-               'destination-url',
-               'made request to destinationURL');
+    'destination-url',
+    'made request to destinationURL');
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
@@ -195,8 +195,8 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
   assert.equal(xhrCalls[0].config.responseType,
-               'arraybuffer',
-               'responseType is an arraybuffer');
+    'arraybuffer',
+    'responseType is an arraybuffer');
 
   const origErrorLog = videojs.log.error;
   let errorMessage;
@@ -212,64 +212,64 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   xhrCalls[0].callback('an error', response);
 
   assert.equal(errorMessage,
-               'Unable to request key from url: destination-url',
-               'logs error when callback has an error');
+    'Unable to request key from url: destination-url',
+    'logs error when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
-                   new Uint8Array(response.body),
-                   'correct key added to session');
+    new Uint8Array(response.body),
+    'correct key added to session');
 
   videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
 });
 
 QUnit.test('makes request on key message when empty object provided in options',
-function(assert) {
-  const origXhr = videojs.xhr;
-  const xhrCalls = [];
+  function(assert) {
+    const origXhr = videojs.xhr;
+    const xhrCalls = [];
 
-  videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
+    videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
-  msPrefixed({
-    video: this.video,
-    initData: '',
-    options: {
-      keySystems: {
-        'com.microsoft.playready': {}
+    msPrefixed({
+      video: this.video,
+      initData: '',
+      options: {
+        keySystems: {
+          'com.microsoft.playready': {}
+        }
       }
-    }
-  });
-  this.session.trigger({
-    type: 'mskeymessage',
-    destinationURL: 'destination-url',
-    message: {
-      buffer: createMessageBuffer()
-    }
-  });
+    });
+    this.session.trigger({
+      type: 'mskeymessage',
+      destinationURL: 'destination-url',
+      message: {
+        buffer: createMessageBuffer()
+      }
+    });
 
-  assert.equal(xhrCalls.length, 1, 'one xhr request');
-  assert.equal(xhrCalls[0].config.uri,
-               'destination-url',
-               'made request to destinationURL');
-  assert.deepEqual(
-    xhrCalls[0].config.headers,
-    {
-      'Content-Type': 'text/xml; charset=utf-8',
-      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
-    },
-    'uses headers from message');
-  assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
-  assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
-  assert.equal(xhrCalls[0].config.responseType,
-               'arraybuffer',
-               'responseType is an arraybuffer');
+    assert.equal(xhrCalls.length, 1, 'one xhr request');
+    assert.equal(xhrCalls[0].config.uri,
+      'destination-url',
+      'made request to destinationURL');
+    assert.deepEqual(
+      xhrCalls[0].config.headers,
+      {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+      },
+      'uses headers from message');
+    assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
+    assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
+    assert.equal(xhrCalls[0].config.responseType,
+      'arraybuffer',
+      'responseType is an arraybuffer');
 
-  videojs.xhr = origXhr;
-});
+    videojs.xhr = origXhr;
+  });
 
 QUnit.test('makes request with provided url string on key message', function(assert) {
   const origXhr = videojs.xhr;
@@ -302,8 +302,8 @@ QUnit.test('makes request with provided url string on key message', function(ass
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
   assert.equal(xhrCalls[0].config.uri,
-               'provided-url',
-               'made request to provided-url');
+    'provided-url',
+    'made request to provided-url');
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
@@ -314,8 +314,8 @@ QUnit.test('makes request with provided url string on key message', function(ass
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
   assert.equal(xhrCalls[0].config.responseType,
-               'arraybuffer',
-               'responseType is an arraybuffer');
+    'arraybuffer',
+    'responseType is an arraybuffer');
 
   const origErrorLog = videojs.log.error;
   let errorMessage;
@@ -331,16 +331,16 @@ QUnit.test('makes request with provided url string on key message', function(ass
   xhrCalls[0].callback('an error', response);
 
   assert.equal(errorMessage,
-               'Unable to request key from url: provided-url',
-               'logs error when callback has an error');
+    'Unable to request key from url: provided-url',
+    'logs error when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
-                   new Uint8Array(response.body),
-                   'correct key added to session');
+    new Uint8Array(response.body),
+    'correct key added to session');
 
   videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;
@@ -389,8 +389,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
   assert.equal(xhrCalls[0].config.uri,
-               'provided-url',
-               'made request to provided-url');
+    'provided-url',
+    'made request to provided-url');
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
@@ -401,8 +401,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
   assert.equal(xhrCalls[0].config.responseType,
-               'arraybuffer',
-               'responseType is an arraybuffer');
+    'arraybuffer',
+    'responseType is an arraybuffer');
   assert.equal(callCounts.licenseRequestAttempts, 0,
     'license request event not triggered (since no callback yet)');
 
@@ -421,8 +421,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   assert.equal(callCounts.licenseRequestAttempts, 1, 'license request event triggered');
   assert.equal(errorMessage,
-               'Unable to request key from url: provided-url',
-               'logs error when callback has an error');
+    'Unable to request key from url: provided-url',
+    'logs error when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response);
@@ -431,8 +431,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     'second license request event triggered');
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
-                   new Uint8Array(response.body),
-                   'correct key added to session');
+    new Uint8Array(response.body),
+    'correct key added to session');
 
   videojs.log.error = origErrorLog;
   videojs.xhr = origXhr;

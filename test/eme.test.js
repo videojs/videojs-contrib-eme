@@ -4,6 +4,7 @@ import {
   standard5July2016,
   makeNewRequest
 } from '../src/eme';
+import window from 'global/window';
 
 // mock session to make testing easier (so we can trigger events)
 const getMockSession = () => {
@@ -31,7 +32,7 @@ const getMockSession = () => {
 QUnit.module('videojs-contrib-eme eme');
 
 QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key', function(assert) {
-  let callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
+  const callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
   const eventBus = {
@@ -58,8 +59,8 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
   assert.equal(mockSession.listeners[1].type,
-               'keystatuseschange',
-               'added keystatuseschange listener');
+    'keystatuseschange',
+    'added keystatuseschange listener');
 
   // no key statuses
   mockSession.listeners[1].listener();
@@ -149,8 +150,8 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
   assert.equal(mockSession.listeners[1].type,
-               'keystatuseschange',
-               'added keystatuseschange listener');
+    'keystatuseschange',
+    'added keystatuseschange listener');
   assert.equal(mockSession.numCloses, 0, 'no session close calls');
   assert.equal(removeSessionCalls.length, 0, 'no removeSession calls');
 
@@ -201,8 +202,8 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
   assert.equal(mockSession.listeners[1].type,
-               'keystatuseschange',
-               'added keystatuseschange listener');
+    'keystatuseschange',
+    'added keystatuseschange listener');
 
   // no key statuses
   mockSession.listeners[1].listener();
@@ -217,9 +218,9 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
 
   assert.equal(warnCalls.length, 1, 'one warn log');
   assert.equal(warnCalls[0][0],
-               'Key status reported as "internal-error." Leaving the session open ' +
+    'Key status reported as "internal-error." Leaving the session open ' +
                'since we don\'t have enough details to know if this error is fatal.',
-               'logged correct warning');
+    'logged correct warning');
   assert.equal(warnCalls[0][1], keyStatusChangeEvent, 'logged event object');
 
   videojs.log.warn = origWarn;
@@ -230,13 +231,13 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const callbacks = {};
-  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
   };
 
-  navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
     return new Promise((resolve, reject) => {
       callbacks.requestMediaKeySystemAccess = resolve;
     });
@@ -283,7 +284,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
 
     videojs.xhr = origXhr;
 
-    navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
+    window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
@@ -293,14 +294,14 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const callbacks = {};
-  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
   const session = new videojs.EventTarget();
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
   };
 
-  navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
     return new Promise((resolve, reject) => {
       callbacks.requestMediaKeySystemAccess = resolve;
     });
@@ -347,7 +348,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
 
     videojs.xhr = origXhr;
 
-    navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
+    window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
     done();
   });
 });
@@ -355,11 +356,11 @@ QUnit.test('accepts a license URL as property', function(assert) {
 QUnit.test('5 July 2016 lifecycle', function(assert) {
   assert.expect(45);
 
-  const origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
 
-  let done = assert.async();
-  let callbacks = {};
-  let callCounts = {
+  const done = assert.async();
+  const callbacks = {};
+  const callCounts = {
     requestMediaKeySystemAccess: 0,
     getCertificate: 0,
     getLicense: 0,
@@ -370,30 +371,30 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     licenseRequestAttempts: 0
   };
 
-  navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
     callCounts.requestMediaKeySystemAccess++;
     return new Promise((resolve, reject) => {
       callbacks.requestMediaKeySystemAccess = resolve;
     });
   };
 
-  let getCertificate = (emeOptions, callback) => {
+  const getCertificate = (emeOptions, callback) => {
     callCounts.getCertificate++;
     callbacks.getCertificate = callback;
   };
-  let getLicense = (emeOptions, keyMessage, callback) => {
+  const getLicense = (emeOptions, keyMessage, callback) => {
     callCounts.getLicense++;
     callbacks.getLicense = callback;
   };
 
   let setMediaKeys;
-  let video = {
+  const video = {
     setMediaKeys: (mediaKeys) => {
       setMediaKeys = mediaKeys;
     }
   };
 
-  let options = {
+  const options = {
     keySystems: {
       'org.w3.clearkey': {
         getCertificate,
@@ -410,8 +411,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     }
   };
 
-  let keySessionEventListeners = {};
-  let mediaKeys = {
+  const keySessionEventListeners = {};
+  const mediaKeys = {
     createSession: () => {
       callCounts.createSession++;
       return {
@@ -429,7 +430,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     }
   };
 
-  let keySystemAccess = {
+  const keySystemAccess = {
     keySystem: 'org.w3.clearkey',
     createMediaKeys: () => {
       callCounts.createMediaKeys++;
@@ -519,7 +520,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         assert.equal(callCounts.licenseRequestAttempts, 1,
           'license request event triggered');
 
-        navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
+        window.navigator.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
         done();
       });
     });

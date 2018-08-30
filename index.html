@@ -10,7 +10,7 @@
   </video>
 
   <ul>
-    <li><a id="test-page">Run unit tests in browser.</a></li>
+    <li><a href="/test/debug.html">Run unit tests in browser.</a></li>
   </ul>
 
   <script src="/node_modules/video.js/dist/video.js"></script>
@@ -18,10 +18,6 @@
 
   <script>
     (function(window, videojs) {
-      var testPage = document.getElementById('test-page');
-      testPage.href = window.location.protocol + '//' +
-        window.location.hostname + ':9876/debug.html';
-
       // Example derived from http://www.html5rocks.com/en/tutorials/eme/basics/#clear-key
 
       const KEY = new Uint8Array([

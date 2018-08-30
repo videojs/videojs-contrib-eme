@@ -28,7 +28,7 @@ export const hasSession = (sessions, initData) => {
     // is safe though, and might be a good idea to retain in the short term (until we have
     // catalogued the full range of browsers and their implementations).
     if (arrayBuffersEqual(arrayBufferFrom(sessions[i].initData),
-                          arrayBufferFrom(initData))) {
+      arrayBufferFrom(initData))) {
       return true;
     }
   }

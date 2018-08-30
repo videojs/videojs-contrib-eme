@@ -3,6 +3,7 @@ import document from 'global/document';
 import QUnit from 'qunit';
 import sinon from 'sinon';
 import videojs from 'video.js';
+import window from 'global/window';
 
 import {
   default as plugin,
@@ -57,8 +58,8 @@ QUnit.test('exposes options', function(assert) {
 
   this.player.eme();
   assert.deepEqual(this.player.eme.options,
-                   {},
-                   'options defaults to empty object once initialized');
+    {},
+    'options defaults to empty object once initialized');
 
   this.video = document.createElement('video');
   this.video.setAttribute('data-setup', JSON.stringify({
@@ -74,11 +75,11 @@ QUnit.test('exposes options', function(assert) {
 
   assert.ok(this.player.eme.options, 'exposes options');
   assert.strictEqual(this.player.eme.options.applicationId,
-                     'application-id',
-                     'exposes applicationId');
+    'application-id',
+    'exposes applicationId');
   assert.strictEqual(this.player.eme.options.publisherId,
-                     'publisher-id',
-                     'exposes publisherId');
+    'publisher-id',
+    'exposes publisherId');
 });
 
 QUnit.module('plugin guard functions', {
@@ -103,9 +104,9 @@ QUnit.module('plugin guard functions', {
       initData: this.initData2
     };
 
-    this.origRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+    this.origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
 
-    navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+    window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
       return Promise.resolve({
         keySystem: 'org.w3.clearkey',
         createMediaKeys: () => {
@@ -117,13 +118,13 @@ QUnit.module('plugin guard functions', {
     };
   },
   afterEach() {
-    navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
+    window.navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
   }
 });
 
 QUnit.test('handleEncryptedEvent checks for required options', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   handleEncryptedEvent(this.event1, {}, sessions).then(() => {
     assert.equal(sessions.length, 0, 'did not create a session when no options');
@@ -133,7 +134,7 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
 
 QUnit.test('handleEncryptedEvent creates session', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
@@ -145,7 +146,7 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
 
 QUnit.test('handleEncryptedEvent creates new session for new init data', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
@@ -160,7 +161,7 @@ QUnit.test('handleEncryptedEvent creates new session for new init data', functio
 
 QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(assert) {
   const done = assert.async();
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event1, this.options, sessions) .catch(() => {
@@ -184,7 +185,7 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
       }
     }
   };
-  let sessions = [];
+  const sessions = [];
 
   // testing the rejection path because this isn't a real session
   handleEncryptedEvent(this.event2, options, sessions).catch(() => {
@@ -202,7 +203,7 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
     initData: new Uint8Array([1, 2, 3])
   };
   let options = {};
-  let sessions = [];
+  const sessions = [];
 
   handleMsNeedKeyEvent(event, options, sessions);
   assert.equal(sessions.length, 0, 'no session created when no options');
@@ -214,8 +215,8 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
   options = { keySystems: { 'com.microsoft.notplayready': true } };
   handleMsNeedKeyEvent(event, options, sessions);
   assert.equal(sessions.length,
-               0,
-               'no session created when no proper PlayReady key system');
+    0,
+    'no session created when no proper PlayReady key system');
 
   options = { keySystems: { 'com.microsoft.playready': true } };
   handleMsNeedKeyEvent(event, options, sessions);
@@ -240,15 +241,15 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
 
   options = { keySystems: {} };
   assert.notOk(handleWebKitNeedKeyEvent(event, options),
-               'no return when no FairPlay key system');
+    'no return when no FairPlay key system');
 
   options = { keySystems: { 'com.apple.notfps.1_0': {} } };
   assert.notOk(handleWebKitNeedKeyEvent(event, options),
-               'no return when no proper FairPlay key system');
+    'no return when no proper FairPlay key system');
 
   options = { keySystems: { 'com.apple.fps.1_0': {} } };
   assert.ok(handleWebKitNeedKeyEvent(event, options),
-            'valid return when proper FairPlay key system');
+    'valid return when proper FairPlay key system');
 });
 
 QUnit.module('plugin isolated functions');
@@ -259,7 +260,7 @@ QUnit.test('hasSession determines if a session exists', function(assert) {
 
   assert.notOk(hasSession([], initData), 'false when no sessions');
   assert.ok(hasSession([{ initData }], initData),
-            'true when initData is present in a session');
+    'true when initData is present in a session');
   assert.ok(
     hasSession([
       {},
@@ -267,7 +268,7 @@ QUnit.test('hasSession determines if a session exists', function(assert) {
     ], initData),
     'true when same initData contents present in a session');
   assert.notOk(hasSession([{ initData: new Uint8Array([1, 2]).buffer }], initData),
-               'false when initData contents not present in a session');
+    'false when initData contents not present in a session');
 
   // cases outside of spec (where initData is not always an ArrayBuffer)
   assert.ok(
@@ -275,7 +276,7 @@ QUnit.test('hasSession determines if a session exists', function(assert) {
     'true even if session initData is a typed array and initData is an ArrayBuffer');
   assert.ok(
     hasSession([{ initData: new Uint8Array([1, 2, 3]).buffer }],
-               new Uint8Array([1, 2, 3])),
+      new Uint8Array([1, 2, 3])),
     'true even if session initData is an ArrayBuffer and initData is a typed array');
   assert.ok(
     hasSession([{ initData: new Uint8Array([1, 2, 3]) }], new Uint8Array([1, 2, 3])),
@@ -290,7 +291,7 @@ QUnit.test('setupSessions sets up sessions for new sources', function(assert) {
   setupSessions(player);
 
   assert.ok(Array.isArray(player.eme.sessions),
-            'creates a sessions array when none exist');
+    'creates a sessions array when none exist');
   assert.equal(player.eme.sessions.length, 0, 'sessions array is empty');
   assert.equal(player.eme.activeSrc, 'some-src', 'set activeSrc property');
 
@@ -378,28 +379,28 @@ QUnit.test('removeSession removes sessions', function(assert) {
 
   removeSession(sessions, initData2);
   assert.deepEqual(sessions,
-                   [{ initData: initData1 }, { initData: initData3 }],
-                   'removed session with initData');
+    [{ initData: initData1 }, { initData: initData3 }],
+    'removed session with initData');
 
   removeSession(sessions, null);
   assert.deepEqual(sessions,
-                   [{ initData: initData1 }, { initData: initData3 }],
-                   'does nothing when passed null');
+    [{ initData: initData1 }, { initData: initData3 }],
+    'does nothing when passed null');
 
   removeSession(sessions, new Uint8Array([6, 7, 8]));
   assert.deepEqual(sessions,
-                   [{ initData: initData1 }, { initData: initData3 }],
-                   'does nothing when passed non-matching initData');
+    [{ initData: initData1 }, { initData: initData3 }],
+    'does nothing when passed non-matching initData');
 
   removeSession(sessions, new Uint8Array([1, 2, 3]));
   assert.deepEqual(sessions,
-                   [{ initData: initData1 }, { initData: initData3 }],
-                   'did not remove session because initData is not the same reference');
+    [{ initData: initData1 }, { initData: initData3 }],
+    'did not remove session because initData is not the same reference');
 
   removeSession(sessions, initData1);
   assert.deepEqual(sessions,
-                   [{ initData: initData3 }],
-                   'removed session with initData');
+    [{ initData: initData3 }],
+    'removed session with initData');
   removeSession(sessions, initData3);
   assert.deepEqual(sessions, [], 'removed session with initData');
   removeSession(sessions, initData2);
