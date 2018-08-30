@@ -252,7 +252,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
         'com.widevine.alpha': 'some-url'
       }
     }
-  });
+  }).catch((e) => {});
 
   const session = new videojs.EventTarget();
 
@@ -318,7 +318,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
         }
       }
     }
-  });
+  }).catch((e) => {});
 
   callbacks.requestMediaKeySystemAccess({
     keySystem: 'com.widevine.alpha',
@@ -444,7 +444,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     initData: '',
     options,
     eventBus
-  });
+  }).catch((e) => {});
 
   // Step 1: get key system
   assert.equal(callCounts.requestMediaKeySystemAccess, 1, 'access requested');
