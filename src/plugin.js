@@ -27,8 +27,10 @@ export const hasSession = (sessions, initData) => {
     // (following the msneedkey PlayReady path), this coversion may not be important. It
     // is safe though, and might be a good idea to retain in the short term (until we have
     // catalogued the full range of browsers and their implementations).
-    if (arrayBuffersEqual(arrayBufferFrom(sessions[i].initData),
-      arrayBufferFrom(initData))) {
+    const sessionBuffer = arrayBufferFrom(sessions[i].initData);
+    const initDataBuffer = arrayBufferFrom(initData);
+
+    if (arrayBuffersEqual(sessionBuffer, initDataBuffer)) {
       return true;
     }
   }
