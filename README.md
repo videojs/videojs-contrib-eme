@@ -1,11 +1,16 @@
-# videojs-contrib-eme [![Build Status](https://travis-ci.org/videojs/videojs-contrib-eme.svg?branch=master)](https://travis-ci.org/videojs/videojs-contrib-eme)
+# videojs-contrib-eme
+
+
+[![Build Status](https://travis-ci.org/videojs/videojs-contrib-eme.svg?branch=master)](https://travis-ci.org/videojs/videojs-contrib-eme)
+[![Greenkeeper badge](https://badges.greenkeeper.io/videojs/videojs-contrib-eme.svg)](https://greenkeeper.io/)
+[![Slack Status](http://slack.videojs.com/badge.svg)](http://slack.videojs.com)
+
+[![NPM](https://nodei.co/npm/videojs-contrib-eme.png?downloads=true&downloadRank=true)](https://nodei.co/npm/videojs-contrib-eme/)
 
 Supports Encrypted Media Extensions for playback of encrypted content in Video.js
 
 Lead Maintainer: Garrett Singer [@gesinger](https://github.com/gesinger)
 Maintenance Status: Experimental
-
-### Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
