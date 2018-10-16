@@ -237,6 +237,20 @@ const onPlayerReady = (player) => {
 const eme = function(options = {}) {
   this.eme.options = options;
 
+  this.eme.init = (config) => {
+    const e = {
+      initDataType: '',
+      initData: null,
+      target: this.tech_.el_
+    };
+
+    if (this.tech_.el_.setMediaKeys) {
+      handleEncryptedEvent(e, config, this.eme.sessions, this.tech_);
+    } else if (this.tech_.el_.msSetMediaKeys) {
+      handleMsNeedKeyEvent(e, config, this.eme.sessions, this.tech_);
+    }
+  };
+
   this.ready(() => onPlayerReady(this));
 };
 
