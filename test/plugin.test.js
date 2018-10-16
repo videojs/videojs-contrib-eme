@@ -109,7 +109,7 @@ QUnit.test('initializeMediaKeys standard', function(assert) {
         pssh: initData1
       }
     }
-  }).then(() => {
+  }).catch(() => {
     const sessions = this.player.eme.sessions;
 
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');

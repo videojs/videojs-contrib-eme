@@ -223,6 +223,35 @@ const onPlayerReady = (player) => {
 };
 
 /**
+ * Sets up MediaKeys on demand
+ *
+ * @function initializeMediaKeys
+ * @param    {Object} [player]
+ *           A player object.
+ * @param    {Object} [emeOptions={}]
+ *           An object of eme plugin options.
+ */
+const initializeMediaKeys = (player, emeOptions = {}) => {
+  // TODO: this should be refactored
+  // fake an encrypted event for handleEncryptedEvent
+  const mockEncryptedEvent = {
+    initDataType: 'cenc',
+    initData: null,
+    target: player.tech_.el_
+  };
+
+  setupSessions(player);
+
+  // TODO: this should be refactored and renamed to be less tied
+  // to encrypted events
+  if (player.tech_.el_.setMediaKeys) {
+    return handleEncryptedEvent(mockEncryptedEvent, emeOptions, player.eme.sessions, player.tech_);
+  } else if (player.tech_.el_.msSetMediaKeys) {
+    handleMsNeedKeyEvent(mockEncryptedEvent, emeOptions, player.eme.sessions, player.tech_);
+  }
+};
+
+/**
  * A video.js plugin.
  *
  * In the plugin function, the value of `this` is a video.js `Player`
@@ -232,37 +261,25 @@ const onPlayerReady = (player) => {
  *
  * @function eme
  * @param    {Object} [player]
- *           A playerobject.
+ *           A player object.
  * @param    {Object} [options={}]
  *           An object of options left to the plugin author to define.
  */
 const eme = function(player, options = {}) {
-  const initializeMediaKeys = (emeOptions = {}) => {
-    const e = {
-      initDataType: 'cenc',
-      initData: null,
-      target: player.tech_.el_
-    };
-    const mergedEmeOptions = videojs.mergeOptions(
-      player.currentSource(),
-      options,
-      emeOptions
-    );
-
-    setupSessions(player);
-
-    // TODO: this should be refactored and renamed to be less tied
-    // to encrypted events
-    if (player.tech_.el_.setMediaKeys) {
-      return handleEncryptedEvent(e, mergedEmeOptions, player.eme.sessions, player.tech_);
-    } else if (player.tech_.el_.msSetMediaKeys) {
-      handleMsNeedKeyEvent(e, mergedEmeOptions, player.eme.sessions, player.tech_);
-    }
-  };
-
   player.ready(() => onPlayerReady(player));
 
-  player.eme = { initializeMediaKeys, options };
+  player.eme = {
+    initializeMediaKeys(emeOptions = {}) {
+      const mergedEmeOptions = videojs.mergeOptions(
+        player.currentSource(),
+        options,
+        emeOptions
+      );
+
+      return initializeMediaKeys(player, mergedEmeOptions);
+    },
+    options
+  };
 };
 
 // Register the plugin with video.js.
