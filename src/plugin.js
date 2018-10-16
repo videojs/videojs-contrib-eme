@@ -231,39 +231,45 @@ const onPlayerReady = (player) => {
  * to you; if not, remove the wait for "ready"!
  *
  * @function eme
+ * @param    {Object} [player]
+ *           A playerobject.
  * @param    {Object} [options={}]
  *           An object of options left to the plugin author to define.
  */
-const eme = function(options = {}) {
-  this.eme.options = options;
-
-  this.eme.initializeMediaKeys = (emeOptions = {}) => {
+const eme = function(player, options = {}) {
+  const initializeMediaKeys = (emeOptions = {}) => {
     const e = {
       initDataType: '',
       initData: null,
-      target: this.tech_.el_
+      target: player.tech_.el_
     };
     const mergedEmeOptions = videojs.mergeOptions(
-      this.currentSource(),
+      player.currentSource(),
       options,
       emeOptions
     );
 
+    setupSessions(player);
+
     // TODO: this should be refactored and renamed to be less tied
     // to encrypted events
-    if (this.tech_.el_.setMediaKeys) {
-      handleEncryptedEvent(e, mergedEmeOptions, this.eme.sessions, this.tech_);
-    } else if (this.tech_.el_.msSetMediaKeys) {
-      handleMsNeedKeyEvent(e, mergedEmeOptions, this.eme.sessions, this.tech_);
+    if (player.tech_.el_.setMediaKeys) {
+      return handleEncryptedEvent(e, mergedEmeOptions, player.eme.sessions, player.tech_);
+    } else if (player.tech_.el_.msSetMediaKeys) {
+      handleMsNeedKeyEvent(e, mergedEmeOptions, player.eme.sessions, player.tech_);
     }
   };
 
-  this.ready(() => onPlayerReady(this));
+  player.ready(() => onPlayerReady(player));
+
+  player.eme = { initializeMediaKeys, options };
 };
 
 // Register the plugin with video.js.
 const registerPlugin = videojs.registerPlugin || videojs.plugin;
 
-registerPlugin('eme', eme);
+registerPlugin('eme', function(options) {
+  eme(this, options);
+});
 
 export default eme;

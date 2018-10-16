@@ -82,6 +82,73 @@ QUnit.test('exposes options', function(assert) {
     'exposes publisherId');
 });
 
+QUnit.test('initializeMediaKeys standard', function(assert) {
+  const done = assert.async();
+  const initData1 = new Uint8Array([1, 2, 3]).buffer;
+
+  // mock requestMediaKeySystemAccess
+  const oldRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+
+  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+    return Promise.resolve({
+      keySystem: 'org.w3.clearkey',
+      createMediaKeys: () => {
+        return {
+          createSession: () => new videojs.EventTarget()
+        };
+      }
+    });
+  };
+
+  this.player.eme();
+
+  // testing the rejection path because this isn't a real session
+  this.player.eme.initializeMediaKeys({
+    keySystems: {
+      'org.w3.clearkey': {
+        pssh: initData1
+      }
+    }
+  }).then(() => {
+    const sessions = this.player.eme.sessions;
+
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.deepEqual(sessions[0].initData, initData1, 'captured initData in the session');
+    done();
+  });
+
+  // restore requestMediaKeySystemAccess
+  window.navigator.requestMediaKeySystemAccess = oldRequestMediaKeySystemAccess;
+});
+
+QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
+  // stub setMediaKeys
+  const setMediaKeys = this.player.tech_.el_.setMediaKeys;
+
+  this.player.tech_.el_.setMediaKeys = null;
+  this.player.tech_.el_.msSetMediaKeys = () => {};
+
+  const initData1 = new Uint8Array([1, 2, 3]).buffer;
+
+  this.player.eme();
+
+  this.player.eme.initializeMediaKeys({
+    keySystems: {
+      'com.microsoft.playready': {
+        pssh: initData1
+      }
+    }
+  });
+
+  const sessions = this.player.eme.sessions;
+
+  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+  assert.deepEqual(sessions[0].initData, initData1, 'captured initData in the session');
+
+  this.player.tech_.el_.msSetMediaKeys = null;
+  this.player.tech_.el_.setMediaKeys = setMediaKeys;
+});
+
 QUnit.module('plugin guard functions', {
   beforeEach() {
     this.options = {
