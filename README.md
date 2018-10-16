@@ -338,8 +338,7 @@ Type: `function`
 // additional plugin options
 var emeOptions = {
   keySystems: {
-    'org.w3.clearkey': {...},
-    }
+    'org.w3.clearkey': {...}
   }
 };
 
