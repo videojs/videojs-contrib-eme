@@ -237,17 +237,24 @@ const onPlayerReady = (player) => {
 const eme = function(options = {}) {
   this.eme.options = options;
 
-  this.eme.init = (config) => {
+  this.eme.initializeMediaKeys = (emeOptions = {}) => {
     const e = {
       initDataType: '',
       initData: null,
       target: this.tech_.el_
     };
+    const mergedEmeOptions = videojs.mergeOptions(
+      this.currentSource(),
+      options,
+      emeOptions
+    );
 
+    // TODO: this should be refactored and renamed to be less tied
+    // to encrypted events
     if (this.tech_.el_.setMediaKeys) {
-      handleEncryptedEvent(e, config, this.eme.sessions, this.tech_);
+      handleEncryptedEvent(e, mergedEmeOptions, this.eme.sessions, this.tech_);
     } else if (this.tech_.el_.msSetMediaKeys) {
-      handleMsNeedKeyEvent(e, config, this.eme.sessions, this.tech_);
+      handleMsNeedKeyEvent(e, mergedEmeOptions, this.eme.sessions, this.tech_);
     }
   };
 
