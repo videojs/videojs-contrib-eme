@@ -128,11 +128,19 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
     return;
   }
 
-  sessions.push({ playready: true });
+  let initData = event.initData;
+
+  // Use existing init data from options if provided
+  if (options.keySystems[PLAYREADY_KEY_SYSTEM] &&
+      options.keySystems[PLAYREADY_KEY_SYSTEM].pssh) {
+    initData = options.keySystems[PLAYREADY_KEY_SYSTEM].pssh;
+  }
+
+  sessions.push({ playready: true, initData });
 
   msPrefixed({
     video: event.target,
-    initData: event.initData,
+    initData,
     options,
     eventBus
   });

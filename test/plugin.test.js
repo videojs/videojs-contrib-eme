@@ -195,6 +195,21 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
   });
 });
 
+QUnit.test('handleMsNeedKeyEvent uses predefined init data', function(assert) {
+  const options = {
+    keySystems: {
+      'com.microsoft.playready': {
+        pssh: this.initData1
+      }
+    }
+  };
+  const sessions = [];
+
+  handleMsNeedKeyEvent(this.event2, options, sessions);
+  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+  assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
+});
+
 QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) {
   const event = {
     // mock video target to prevent errors since it's a pain to mock out the continuation
