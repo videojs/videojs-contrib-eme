@@ -239,7 +239,7 @@ const onPlayerReady = (player) => {
 const eme = function(player, options = {}) {
   const initializeMediaKeys = (emeOptions = {}) => {
     const e = {
-      initDataType: '',
+      initDataType: 'cenc',
       initData: null,
       target: player.tech_.el_
     };
