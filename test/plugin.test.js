@@ -37,9 +37,23 @@ QUnit.module('videojs-contrib-eme', {
     this.video = document.createElement('video');
     this.fixture.appendChild(this.video);
     this.player = videojs(this.video);
+
+    this.origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+
+    window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+      return Promise.resolve({
+        keySystem: 'org.w3.clearkey',
+        createMediaKeys: () => {
+          return {
+            createSession: () => new videojs.EventTarget()
+          };
+        }
+      });
+    };
   },
 
   afterEach() {
+    window.navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
     this.player.dispose();
     this.clock.restore();
   }
@@ -84,21 +98,7 @@ QUnit.test('exposes options', function(assert) {
 
 QUnit.test('initializeMediaKeys standard', function(assert) {
   const done = assert.async();
-  const initData1 = new Uint8Array([1, 2, 3]).buffer;
-
-  // mock requestMediaKeySystemAccess
-  const oldRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
-
-  window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
-    return Promise.resolve({
-      keySystem: 'org.w3.clearkey',
-      createMediaKeys: () => {
-        return {
-          createSession: () => new videojs.EventTarget()
-        };
-      }
-    });
-  };
+  const initData = new Uint8Array([1, 2, 3]).buffer;
 
   this.player.eme();
 
@@ -106,19 +106,16 @@ QUnit.test('initializeMediaKeys standard', function(assert) {
   this.player.eme.initializeMediaKeys({
     keySystems: {
       'org.w3.clearkey': {
-        pssh: initData1
+        pssh: initData
       }
     }
   }).catch(() => {
     const sessions = this.player.eme.sessions;
 
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-    assert.deepEqual(sessions[0].initData, initData1, 'captured initData in the session');
+    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
     done();
   });
-
-  // restore requestMediaKeySystemAccess
-  window.navigator.requestMediaKeySystemAccess = oldRequestMediaKeySystemAccess;
 });
 
 QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
@@ -128,14 +125,14 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   this.player.tech_.el_.setMediaKeys = null;
   this.player.tech_.el_.msSetMediaKeys = () => {};
 
-  const initData1 = new Uint8Array([1, 2, 3]).buffer;
+  const initData = new Uint8Array([1, 2, 3]).buffer;
 
   this.player.eme();
 
   this.player.eme.initializeMediaKeys({
     keySystems: {
       'com.microsoft.playready': {
-        pssh: initData1
+        pssh: initData
       }
     }
   });
@@ -143,7 +140,7 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   const sessions = this.player.eme.sessions;
 
   assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-  assert.deepEqual(sessions[0].initData, initData1, 'captured initData in the session');
+  assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;
