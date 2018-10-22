@@ -224,6 +224,7 @@ const onPlayerReady = (player) => {
 
 /**
  * Sets up MediaKeys on demand
+ * Works around https://bugs.chromium.org/p/chromium/issues/detail?id=895449
  *
  * @function initializeMediaKeys
  * @param    {Object} [player]
