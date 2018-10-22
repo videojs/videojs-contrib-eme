@@ -232,7 +232,9 @@ const onPlayerReady = (player) => {
  *           An object of eme plugin options.
  */
 const initializeMediaKeys = (player, emeOptions = {}) => {
-  // TODO: this should be refactored
+  // TODO: this should be refactored and renamed to be less tied
+  // to encrypted events
+
   // fake an encrypted event for handleEncryptedEvent
   const mockEncryptedEvent = {
     initDataType: 'cenc',
@@ -242,8 +244,6 @@ const initializeMediaKeys = (player, emeOptions = {}) => {
 
   setupSessions(player);
 
-  // TODO: this should be refactored and renamed to be less tied
-  // to encrypted events
   if (player.tech_.el_.setMediaKeys) {
     return handleEncryptedEvent(mockEncryptedEvent, emeOptions, player.eme.sessions, player.tech_);
   } else if (player.tech_.el_.msSetMediaKeys) {
