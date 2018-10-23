@@ -342,7 +342,13 @@ var emeOptions = {
   }
 };
 
-player.eme.initializeMediaKeys(emeOptions);
+player.eme.initializeMediaKeys(emeOptions, function(error) {
+  if (error) {
+    // do something with error
+  }
+
+  // do something else
+});
 ```
 
 ### Passing methods seems complicated

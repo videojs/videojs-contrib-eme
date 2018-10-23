@@ -111,7 +111,7 @@ if (!window.WebKitMediaKeys) {
           pssh: initData
         }
       }
-    }).catch(() => {
+    }, () => {
       const sessions = this.player.eme.sessions;
 
       assert.equal(sessions.length, 1, 'created a session when keySystems in options');
@@ -122,6 +122,7 @@ if (!window.WebKitMediaKeys) {
 }
 
 QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
+  const done = assert.async();
   // stub setMediaKeys
   const setMediaKeys = this.player.tech_.el_.setMediaKeys;
 
@@ -138,12 +139,14 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
         pssh: initData
       }
     }
+  }, () => {
+    const sessions = this.player.eme.sessions;
+
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+
+    done();
   });
-
-  const sessions = this.player.eme.sessions;
-
-  assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-  assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;

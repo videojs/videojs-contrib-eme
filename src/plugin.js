@@ -223,36 +223,6 @@ const onPlayerReady = (player) => {
 };
 
 /**
- * Sets up MediaKeys on demand
- * Works around https://bugs.chromium.org/p/chromium/issues/detail?id=895449
- *
- * @function initializeMediaKeys
- * @param    {Object} [player]
- *           A player object.
- * @param    {Object} [emeOptions={}]
- *           An object of eme plugin options.
- */
-const initializeMediaKeys = (player, emeOptions = {}) => {
-  // TODO: this should be refactored and renamed to be less tied
-  // to encrypted events
-
-  // fake an encrypted event for handleEncryptedEvent
-  const mockEncryptedEvent = {
-    initDataType: 'cenc',
-    initData: null,
-    target: player.tech_.el_
-  };
-
-  setupSessions(player);
-
-  if (player.tech_.el_.setMediaKeys) {
-    return handleEncryptedEvent(mockEncryptedEvent, emeOptions, player.eme.sessions, player.tech_);
-  } else if (player.tech_.el_.msSetMediaKeys) {
-    handleMsNeedKeyEvent(mockEncryptedEvent, emeOptions, player.eme.sessions, player.tech_);
-  }
-};
-
-/**
  * A video.js plugin.
  *
  * In the plugin function, the value of `this` is a video.js `Player`
@@ -269,15 +239,43 @@ const eme = function(options = {}) {
 
   player.ready(() => onPlayerReady(player));
 
+  // Plugin API
   player.eme = {
-    initializeMediaKeys(emeOptions = {}) {
+    /**
+    * Sets up MediaKeys on demand
+    * Works around https://bugs.chromium.org/p/chromium/issues/detail?id=895449
+    *
+    * @function initializeMediaKeys
+    * @param    {Object} [emeOptions={}]
+    *           An object of eme plugin options.
+    * @param    {Function} [callback=function(){}]
+    */
+    initializeMediaKeys(emeOptions = {}, callback = function() {}) {
+      // TODO: this should be refactored and renamed to be less tied
+      // to encrypted events
       const mergedEmeOptions = videojs.mergeOptions(
         player.currentSource(),
         options,
         emeOptions
       );
 
-      return initializeMediaKeys(player, mergedEmeOptions);
+      // fake an encrypted event for handleEncryptedEvent
+      const mockEncryptedEvent = {
+        initDataType: 'cenc',
+        initData: null,
+        target: player.tech_.el_
+      };
+
+      setupSessions(player);
+
+      if (player.tech_.el_.setMediaKeys) {
+        handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+          .then(() => callback())
+          .catch((error) => callback(error));
+      } else if (player.tech_.el_.msSetMediaKeys) {
+        handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
+        callback();
+      }
     },
     options
   };
