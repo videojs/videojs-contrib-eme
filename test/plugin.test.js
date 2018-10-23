@@ -96,27 +96,30 @@ QUnit.test('exposes options', function(assert) {
     'exposes publisherId');
 });
 
-QUnit.test('initializeMediaKeys standard', function(assert) {
-  const done = assert.async();
-  const initData = new Uint8Array([1, 2, 3]).buffer;
+// skip test for Safari
+if (!window.WebKitMediaKeys) {
+  QUnit.test('initializeMediaKeys standard', function(assert) {
+    const done = assert.async();
+    const initData = new Uint8Array([1, 2, 3]).buffer;
 
-  this.player.eme();
+    this.player.eme();
 
-  // testing the rejection path because this isn't a real session
-  this.player.eme.initializeMediaKeys({
-    keySystems: {
-      'org.w3.clearkey': {
-        pssh: initData
+    // testing the rejection path because this isn't a real session
+    this.player.eme.initializeMediaKeys({
+      keySystems: {
+        'org.w3.clearkey': {
+          pssh: initData
+        }
       }
-    }
-  }).catch(() => {
-    const sessions = this.player.eme.sessions;
+    }).catch(() => {
+      const sessions = this.player.eme.sessions;
 
-    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
-    done();
+      assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+      assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+      done();
+    });
   });
-});
+}
 
 QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   // stub setMediaKeys
