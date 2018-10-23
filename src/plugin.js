@@ -261,12 +261,12 @@ const initializeMediaKeys = (player, emeOptions = {}) => {
  * to you; if not, remove the wait for "ready"!
  *
  * @function eme
- * @param    {Object} [player]
- *           A player object.
  * @param    {Object} [options={}]
  *           An object of options left to the plugin author to define.
  */
-const eme = function(player, options = {}) {
+const eme = function(options = {}) {
+  const player = this;
+
   player.ready(() => onPlayerReady(player));
 
   player.eme = {
@@ -286,8 +286,6 @@ const eme = function(player, options = {}) {
 // Register the plugin with video.js.
 const registerPlugin = videojs.registerPlugin || videojs.plugin;
 
-registerPlugin('eme', function(options) {
-  eme(this, options);
-});
+registerPlugin('eme', eme);
 
 export default eme;
