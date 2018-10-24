@@ -67,7 +67,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
     // set of stream(s) or media data."
     // eslint-disable-next-line max-len
     // @see [Initialization Data Spec]{@link https://www.w3.org/TR/encrypted-media/#initialization-data}
-    if (hasSession(sessions, initData)) {
+    if (hasSession(sessions, initData) || !initData) {
       // TODO convert to videojs.log.debug and add back in
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme',
@@ -89,7 +89,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
 };
 
 export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
-  if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM]) {
+  if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
     return;
   }
@@ -134,6 +134,10 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
   if (options.keySystems[PLAYREADY_KEY_SYSTEM] &&
       options.keySystems[PLAYREADY_KEY_SYSTEM].pssh) {
     initData = options.keySystems[PLAYREADY_KEY_SYSTEM].pssh;
+  }
+
+  if (!initData) {
+    return;
   }
 
   sessions.push({ playready: true, initData });
