@@ -23,6 +23,7 @@ Maintenance Status: Stable
   - [Source Options](#source-options)
   - [Plugin Options](#plugin-options)
   - [emeOptions](#emeoptions)
+  - [initializeMediaKeys](#initializemediakeys)
   - [Passing methods seems complicated](#passing-methods-seems-complicated)
   - [Special Events](#special-events)
 - [Getting Started](#getting-started)
@@ -325,6 +326,28 @@ player.src({
   src: '<URL>',
   type: 'video/webm',
   userId: 'source-specific-user-id'
+});
+```
+
+### initializeMediaKeys
+Type: `function`
+
+`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful for setting up the video element for DRM before loading any content. Otherwise the video element is set up for DRM on `encrypted` events. This is not supported in Safari.
+
+```javascript
+// additional plugin options
+var emeOptions = {
+  keySystems: {
+    'org.w3.clearkey': {...}
+  }
+};
+
+player.eme.initializeMediaKeys(emeOptions, function(error) {
+  if (error) {
+    // do something with error
+  }
+
+  // do something else
 });
 ```
 

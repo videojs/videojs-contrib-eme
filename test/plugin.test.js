@@ -37,9 +37,23 @@ QUnit.module('videojs-contrib-eme', {
     this.video = document.createElement('video');
     this.fixture.appendChild(this.video);
     this.player = videojs(this.video);
+
+    this.origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+
+    window.navigator.requestMediaKeySystemAccess = (keySystem, options) => {
+      return Promise.resolve({
+        keySystem: 'org.w3.clearkey',
+        createMediaKeys: () => {
+          return {
+            createSession: () => new videojs.EventTarget()
+          };
+        }
+      });
+    };
   },
 
   afterEach() {
+    window.navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
     this.player.dispose();
     this.clock.restore();
   }
@@ -80,6 +94,61 @@ QUnit.test('exposes options', function(assert) {
   assert.strictEqual(this.player.eme.options.publisherId,
     'publisher-id',
     'exposes publisherId');
+});
+
+// skip test for Safari
+if (!window.WebKitMediaKeys) {
+  QUnit.test('initializeMediaKeys standard', function(assert) {
+    const done = assert.async();
+    const initData = new Uint8Array([1, 2, 3]).buffer;
+
+    this.player.eme();
+
+    this.player.eme.initializeMediaKeys({
+      keySystems: {
+        'org.w3.clearkey': {
+          pssh: initData
+        }
+      }
+    }, () => {
+      const sessions = this.player.eme.sessions;
+
+      assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+      assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+      done();
+    });
+  });
+}
+
+QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
+  const done = assert.async();
+  // stub setMediaKeys
+  const setMediaKeys = this.player.tech_.el_.setMediaKeys;
+
+  this.player.tech_.el_.setMediaKeys = null;
+  this.player.tech_.el_.msSetMediaKeys = () => {};
+
+  const initData = new Uint8Array([1, 2, 3]).buffer;
+
+  this.player.eme();
+
+  this.player.eme.initializeMediaKeys({
+    keySystems: {
+      'com.microsoft.playready': {
+        pssh: initData
+      }
+    }
+  }, () => {
+    const sessions = this.player.eme.sessions;
+
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+
+    done();
+  });
+
+  this.player.tech_.el_.msSetMediaKeys = null;
+  this.player.tech_.el_.setMediaKeys = setMediaKeys;
 });
 
 QUnit.module('plugin guard functions', {

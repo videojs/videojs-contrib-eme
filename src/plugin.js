@@ -235,9 +235,50 @@ const onPlayerReady = (player) => {
  *           An object of options left to the plugin author to define.
  */
 const eme = function(options = {}) {
-  this.eme.options = options;
+  const player = this;
 
-  this.ready(() => onPlayerReady(this));
+  player.ready(() => onPlayerReady(player));
+
+  // Plugin API
+  player.eme = {
+    /**
+    * Sets up MediaKeys on demand
+    * Works around https://bugs.chromium.org/p/chromium/issues/detail?id=895449
+    *
+    * @function initializeMediaKeys
+    * @param    {Object} [emeOptions={}]
+    *           An object of eme plugin options.
+    * @param    {Function} [callback=function(){}]
+    */
+    initializeMediaKeys(emeOptions = {}, callback = function() {}) {
+      // TODO: this should be refactored and renamed to be less tied
+      // to encrypted events
+      const mergedEmeOptions = videojs.mergeOptions(
+        player.currentSource(),
+        options,
+        emeOptions
+      );
+
+      // fake an encrypted event for handleEncryptedEvent
+      const mockEncryptedEvent = {
+        initDataType: 'cenc',
+        initData: null,
+        target: player.tech_.el_
+      };
+
+      setupSessions(player);
+
+      if (player.tech_.el_.setMediaKeys) {
+        handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+          .then(() => callback())
+          .catch((error) => callback(error));
+      } else if (player.tech_.el_.msSetMediaKeys) {
+        handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
+        callback();
+      }
+    },
+    options
+  };
 };
 
 // Register the plugin with video.js.
