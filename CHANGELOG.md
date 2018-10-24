@@ -1,3 +1,10 @@
+<a name="3.4.1"></a>
+## [3.4.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.4.0...v3.4.1) (2018-10-24)
+
+### Bug Fixes
+
+* check for init data (#62) ([d966e5b](https://github.com/videojs/videojs-contrib-eme/commit/d966e5b)), closes [#62](https://github.com/videojs/videojs-contrib-eme/issues/62)
+
 <a name="3.4.0"></a>
 # [3.4.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.3.0...v3.4.0) (2018-10-24)
 
