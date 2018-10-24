@@ -201,6 +201,16 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
   });
 });
 
+QUnit.test('handleEncryptedEvent checks for required init data', function(assert) {
+  const done = assert.async();
+  const sessions = [];
+
+  handleEncryptedEvent({ target: {}, initData: null }, this.options, sessions).then(() => {
+    assert.equal(sessions.length, 0, 'did not create a session when no init data');
+    done();
+  });
+});
+
 QUnit.test('handleEncryptedEvent creates session', function(assert) {
   const done = assert.async();
   const sessions = [];
@@ -317,8 +327,24 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
   assert.equal(sessions[0], createdSession, 'did not replace session');
 });
 
+QUnit.test('handleMsNeedKeyEvent checks for required init data', function(assert) {
+  const event = {
+    // mock video target to prevent errors since it's a pain to mock out the continuation
+    // of functionality on a successful pass through of the guards
+    target: {},
+    initData: null
+  };
+  const options = { keySystems: { 'com.microsoft.playready': true } };
+  const sessions = [];
+
+  handleMsNeedKeyEvent(event, options, sessions);
+  assert.equal(sessions.length, 0, 'no session created when no init data');
+});
+
 QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(assert) {
-  const event = {};
+  const event = {
+    initData: new Uint8Array([1, 2, 3])
+  };
   let options = {};
 
   assert.notOk(handleWebKitNeedKeyEvent(event, options), 'no return when no options');
@@ -334,6 +360,15 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
   options = { keySystems: { 'com.apple.fps.1_0': {} } };
   assert.ok(handleWebKitNeedKeyEvent(event, options),
     'valid return when proper FairPlay key system');
+});
+
+QUnit.test('handleWebKitNeedKeyEvent checks for required init data', function(assert) {
+  const event = {
+    initData: null
+  };
+  const options = { keySystems: { 'com.apple.fps.1_0': {} } };
+
+  assert.notOk(handleWebKitNeedKeyEvent(event, options), 'no return when no init data');
 });
 
 QUnit.module('plugin isolated functions');
