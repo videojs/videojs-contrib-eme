@@ -104,7 +104,6 @@ if (!window.WebKitMediaKeys) {
 
     this.player.eme();
 
-    // testing the rejection path because this isn't a real session
     this.player.eme.initializeMediaKeys({
       keySystems: {
         'org.w3.clearkey': {
