@@ -52,7 +52,7 @@ export const makeNewRequest = ({
     keySession.addEventListener('message', (event) => {
       getLicense(options, event.message)
         .then((license) => {
-          return keySession.update(license);
+          resolve(keySession.update(license));
         })
         .catch((err) => {
           reject(err);

@@ -350,8 +350,9 @@ QUnit.test('accepts a license URL as property', function(assert) {
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
-  assert.expect(32);
+  assert.expect(33);
 
+  let errors = 0;
   const done = assert.async();
   const callbacks = {};
   const callCounts = {
@@ -411,6 +412,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         },
         update: () => {
           callCounts.keySessionUpdate++;
+          return Promise.resolve();
         }
       };
     }
@@ -431,7 +433,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     keySystemAccess,
     options,
     eventBus
-  }).catch((e) => {});
+  }).then(() => done()).catch(() => errors++);
 
   // Step 1: get certificate
   assert.equal(callCounts.getCertificate, 1, 'certificate requested');
@@ -486,8 +488,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       assert.equal(callCounts.keySessionUpdate, 1, 'key session updated');
       assert.equal(callCounts.licenseRequestAttempts, 1,
         'license request event triggered');
-
-      done();
+      assert.equal(errors, 0, 'no errors occurred');
     });
   });
 });
