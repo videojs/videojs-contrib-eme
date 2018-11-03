@@ -1,3 +1,6 @@
+/**
+ * @see https://www.w3.org/TR/2014/WD-encrypted-media-20140218
+ */
 import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
@@ -45,21 +48,21 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
 const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
-      video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      try {
+        video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      } catch (error) {
+        reject('Could not create MediaKeys');
+      }
     }
 
-    if (!video.webkitKeys) {
-      reject('Could not create MediaKeys');
-      return;
-    }
+    let keySession;
 
-    const keySession = video.webkitKeys.createSession(
-      'video/mp4',
-      concatInitDataIdAndCertificate({id: contentId, initData, cert}));
-
-    if (!keySession) {
-      reject('Could not create key session');
-      return;
+    try {
+      keySession = video.webkitKeys.createSession(
+        'video/mp4',
+        concatInitDataIdAndCertificate({id: contentId, initData, cert}));
+    } catch (error) {
+      reject('Could not create key session: invalid mimeType or initData');
     }
 
     keySession.contentId = contentId;
@@ -71,20 +74,21 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         }
         if (err) {
           reject(err);
-          return;
         }
 
         keySession.update(new Uint8Array(license));
       });
     });
 
-    keySession.addEventListener('webkitkeyadded', (event) => {
-      resolve(event);
+    keySession.addEventListener('webkitkeyadded', () => {
+      resolve();
     });
 
     // for testing purposes, adding webkitkeyerror must be the last item in this method
-    keySession.addEventListener('webkitkeyerror', (event) => {
-      reject(event);
+    keySession.addEventListener('webkitkeyerror', () => {
+      const error = keySession.error;
+
+      reject(`KeySession error: code ${error.code}, systemCode ${error.systemCode}`);
     });
   });
 };

@@ -1,3 +1,6 @@
+/**
+ * @see https://www.w3.org/TR/2014/WD-encrypted-media-20140218
+ */
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
 

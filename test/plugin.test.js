@@ -435,7 +435,8 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
   const promise = handleWebKitNeedKeyEvent(event, options);
 
   promise.catch((err) => {
-    assert.equal(err, 'Could not create MediaKeys', 'expected error message');
+    assert.equal(err, 'Could not create key session: invalid mimeType or initData',
+      'expected error message');
     done();
   });
   assert.ok(promise, 'returns promise when proper FairPlay key system');

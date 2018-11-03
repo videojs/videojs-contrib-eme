@@ -151,12 +151,35 @@ QUnit.test('error in getCertificate rejects promise', function(assert) {
 
 });
 
-QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
+QUnit.test('error in WebKitMediaKeys rejects promise', function(assert) {
   const keySystems = {};
   const done = assert.async(1);
   const initData = new Uint8Array([1, 2, 3, 4]).buffer;
   const video = {
     webkitSetMediaKeys: () => {}
+  };
+
+  window.WebKitMediaKeys = () => {
+    throw new Error('unsupported keySystem');
+  };
+
+  keySystems[FAIRPLAY_KEY_SYSTEM] = {};
+
+  fairplay({video, initData, options: {keySystems}}).catch(err => {
+    assert.equal(err, 'Could not create MediaKeys', 'message is good');
+    done();
+  });
+
+});
+
+QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
+  const keySystems = {};
+  const done = assert.async(1);
+  const initData = new Uint8Array([1, 2, 3, 4]).buffer;
+  const video = {
+    webkitSetMediaKeys: () => {
+      throw new Error('MediaKeys unusable');
+    }
   };
 
   window.WebKitMediaKeys = () => {};
@@ -177,7 +200,9 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
   const video = {
     webkitSetMediaKeys: () => {
       video.webkitKeys = {
-        createSession: () => null
+        createSession: () => {
+          throw new Error('invalid mimeType or initData');
+        }
       };
     }
   };
@@ -187,7 +212,8 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
   fairplay({video, initData, options: {keySystems}}).catch(err => {
-    assert.equal(err, 'Could not create key session', 'message is good');
+    assert.equal(err, 'Could not create key session: invalid mimeType or initData',
+      'message is good');
     done();
   });
 
@@ -242,6 +268,10 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
               if (event === 'webkitkeyerror') {
                 callback('webkitkeyerror');
               }
+            },
+            error: {
+              code: 0,
+              systemCode: 1
             }
           };
         }
@@ -254,15 +284,12 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
       callback(null);
-      keySession.trigger({
-        message: 'test',
-        type: 'webkitkeyerror'
-      });
+      keySession.trigger('webkitkeyerror');
     }
   };
 
   fairplay({video, initData, options: {keySystems}}).catch(err => {
-    assert.equal(err, 'webkitkeyerror', 'message is good');
+    assert.equal(err, 'KeySession error: code 0, systemCode 1', 'message is good');
     done();
   });
 
