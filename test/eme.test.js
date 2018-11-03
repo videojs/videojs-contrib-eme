@@ -669,14 +669,13 @@ QUnit.test('rejects promise when setMediaKeys rejects', function(assert) {
 
 });
 
-// For some reason this test does not work
-QUnit.skip('getLicense promise rejection', function(assert) {
+QUnit.test('getLicense promise rejection', function(assert) {
   const options = {
     keySystems: {
       'com.widevine.alpha': {
         url: 'some-url',
-        getLicense() {
-          return Promise.reject();
+        getLicense(emeOptions, keyMessage, callback) {
+          callback('error getting license');
         }
       }
     }
@@ -710,20 +709,19 @@ QUnit.skip('getLicense promise rejection', function(assert) {
     keySystemAccess,
     options
   }).catch((err) => {
-    assert.equal(err, 'test', 'test');
+    assert.equal(err, 'error getting license', 'correct error message');
     done();
   });
 
 });
 
-// For some reason this test does not work
-QUnit.skip('keySession.update promise rejection', function(assert) {
+QUnit.test('keySession.update promise rejection', function(assert) {
   const options = {
     keySystems: {
       'com.widevine.alpha': {
         url: 'some-url',
-        getLicense() {
-          return Promise.resolve();
+        getLicense(emeOptions, keyMessage, callback) {
+          callback(null, 'license');
         }
       }
     }
@@ -742,7 +740,7 @@ QUnit.skip('keySession.update promise rejection', function(assert) {
             },
             keyStatuses: [],
             generateRequest: () => Promise.resolve(),
-            update: () => Promise.reject()
+            update: () => Promise.reject('keySession update failed')
           };
         }
       });
@@ -758,7 +756,7 @@ QUnit.skip('keySession.update promise rejection', function(assert) {
     keySystemAccess,
     options
   }).catch((err) => {
-    assert.equal(err, 'test', 'test');
+    assert.equal(err, 'keySession update failed', 'correct error message');
     done();
   });
 
