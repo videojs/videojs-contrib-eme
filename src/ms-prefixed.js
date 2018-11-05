@@ -89,6 +89,12 @@ export const createSession = (video, initData, options, eventBus) => {
     });
   });
 
+  session.addEventListener('mskeyadded', () => {
+    eventBus.trigger({
+      target: session,
+      type: 'mskeyadded'
+    });
+  });
 };
 
 export default ({video, initData, options, eventBus}) => {

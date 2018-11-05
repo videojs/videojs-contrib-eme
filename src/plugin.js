@@ -311,8 +311,25 @@ const eme = function(options = {}) {
           .then(() => callback())
           .catch((error) => callback(error));
       } else if (player.tech_.el_.msSetMediaKeys) {
-        handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
-        callback();
+        const msKeyHandler = (event) => {
+          player.tech_.off('mskeyadded', msKeyHandler);
+          player.tech_.off('mskeyerror', msKeyHandler);
+          if (event.type === 'mskeyerror') {
+            callback(event.target.error);
+          } else {
+            callback();
+          }
+        };
+
+        player.tech_.one('mskeyadded', msKeyHandler);
+        player.tech_.one('mskeyerror', msKeyHandler);
+        try {
+          handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
+        } catch (error) {
+          player.tech_.off('mskeyadded', msKeyHandler);
+          player.tech_.off('mskeyerror', msKeyHandler);
+          callback(error);
+        }
       }
     },
     options

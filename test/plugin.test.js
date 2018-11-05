@@ -114,11 +114,16 @@ if (!window.WebKitMediaKeys) {
           pssh: initData
         }
       }
-    }, () => {
+    }, (error) => {
       const sessions = this.player.eme.sessions;
 
       assert.equal(sessions.length, 1, 'created a session when keySystems in options');
       assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+      assert.equal(
+        error,
+        'Error: Neither URL nor getLicense function provided to get license',
+        'callback receives error'
+      );
       done();
     });
     this.player.dispose();
@@ -129,6 +134,7 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   const done = assert.async();
   // stub setMediaKeys
   const setMediaKeys = this.player.tech_.el_.setMediaKeys;
+  let keySession;
 
   if (!window.MSMediaKeys) {
     window.MSMediaKeys = () => {};
@@ -138,7 +144,10 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   if (!this.player.tech_.el_.msSetMediaKeys) {
     this.player.tech_.el_.msSetMediaKeys = () => {
       this.player.tech_.el_.msKeys = {
-        createSession: () => new videojs.EventTarget()
+        createSession: () => {
+          keySession = new videojs.EventTarget();
+          return keySession;
+        }
       };
     };
   }
@@ -153,14 +162,24 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
         pssh: initData
       }
     }
-  }, () => {
+  }, (error) => {
     const sessions = this.player.eme.sessions;
 
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+    assert.equal(error, 'some keySession error', 'callback receives error');
 
     done();
   });
+
+  setTimeout(() => {
+    keySession.error = 'some keySession error';
+    keySession.trigger({
+      target: keySession,
+      type: 'mskeyerror'
+    });
+  });
+  this.clock.tick(1);
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;
