@@ -167,19 +167,22 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
 
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
-    assert.equal(error, 'some keySession error', 'callback receives error');
+    assert.notEqual(error, undefined, 'callback receives error');
 
     done();
   });
 
-  setTimeout(() => {
-    keySession.error = 'some keySession error';
-    keySession.trigger({
-      target: keySession,
-      type: 'mskeyerror'
+  if (keySession) {
+    // we stubbed the keySession
+    setTimeout(() => {
+      keySession.error = 'some keySession error';
+      keySession.trigger({
+        target: keySession,
+        type: 'mskeyerror'
+      });
     });
-  });
-  this.clock.tick(1);
+    this.clock.tick(1);
+  }
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;
