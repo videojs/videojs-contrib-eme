@@ -15,6 +15,7 @@ export const addKeyToSession = (options, session, event, eventBus) => {
         if (err) {
           eventBus.trigger({
             message: 'Unable to get key: ' + err,
+            target: session,
             type: 'mskeyerror'
           });
           return;
@@ -38,6 +39,7 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     if (err) {
       eventBus.trigger({
         message: 'Unable to request key from url: ' + url,
+        target: session,
         type: 'mskeyerror'
       });
       return;
@@ -82,6 +84,7 @@ export const createSession = (video, initData, options, eventBus) => {
     eventBus.trigger({
       message: 'Unexpected key error from key session with ' +
       `code: ${session.error.code} and systemCode: ${session.error.systemCode}`,
+      target: session,
       type: 'mskeyerror'
     });
   });
