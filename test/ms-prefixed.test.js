@@ -69,31 +69,6 @@ QUnit.test('error thrown when creating keys bubbles up', function(assert) {
   );
 });
 
-QUnit.test('invalid initData given to createSession throws error', function(assert) {
-  const video = {
-    msSetMediaKeys: () => {
-      video.msKeys = {
-        createSession: () => {
-          const error = new Error('Invalid argument.');
-
-          error.description = 'Invalid argument.';
-          throw error;
-        }
-      };
-    }
-  };
-
-  const fn = () => {
-    msPrefixed({video});
-  };
-
-  assert.throws(
-    fn,
-    new Error('Invalid initData'),
-    'error is thrown with proper message'
-  );
-});
-
 QUnit.test('createSession throws unknown error', function(assert) {
   const video = {
     msSetMediaKeys: () => {

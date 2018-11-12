@@ -56,16 +56,8 @@ export const addKeyToSession = (options, session, event, eventBus) => {
 export const createSession = (video, initData, options, eventBus) => {
   let session;
 
-  try {
-    // Note: invalid mime type passed here throws a NotSupportedError
-    session = video.msKeys.createSession('video/mp4', initData);
-  } catch (error) {
-    if (error.description === 'Invalid argument.') {
-      throw new Error('Invalid initData');
-    } else {
-      throw error;
-    }
-  }
+  // Note: invalid mime type passed here throws a NotSupportedError
+  session = video.msKeys.createSession('video/mp4', new Uint8Array([1,2,3,4,5,5]));
 
   if (!session) {
     throw new Error('Could not create key session.');
