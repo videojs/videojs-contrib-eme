@@ -210,6 +210,7 @@ const promisifyGetLicense = (getLicenseFn, eventBus) => {
         }
         if (err) {
           reject(err);
+          return;
         }
 
         resolve(license);

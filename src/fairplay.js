@@ -55,6 +55,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
       } catch (error) {
         reject('Could not create MediaKeys');
+        return;
       }
     }
 
@@ -66,6 +67,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         concatInitDataIdAndCertificate({id: contentId, initData, cert}));
     } catch (error) {
       reject('Could not create key session: invalid mimeType or initData');
+      return;
     }
 
     keySession.contentId = contentId;
@@ -77,6 +79,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         }
         if (err) {
           reject(err);
+          return;
         }
 
         keySession.update(new Uint8Array(license));
