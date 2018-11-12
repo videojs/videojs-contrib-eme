@@ -222,6 +222,7 @@ const onPlayerReady = (player) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'encrypted\' event');
+    setupSessions(player);
     handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
       .catch(emeError);
   });
@@ -234,6 +235,7 @@ const onPlayerReady = (player) => {
 
     // TODO it's possible that the video state must be cleared if reusing the same video
     // element between sources
+    setupSessions(player);
     handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
       .catch(emeError);
   });
@@ -248,6 +250,7 @@ const onPlayerReady = (player) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
     // videojs.log('eme', 'Received an \'msneedkey\' event');
+    setupSessions(player);
     try {
       handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
     } catch (error) {
