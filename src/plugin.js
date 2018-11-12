@@ -303,7 +303,7 @@ const eme = function(options = {}) {
       // fake an encrypted event for handleEncryptedEvent
       const mockEncryptedEvent = {
         initDataType: 'cenc',
-        initData: new Uint8Array(),
+        initData: null,
         target: player.tech_.el_
       };
 
