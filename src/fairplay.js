@@ -1,5 +1,8 @@
 /**
- * @see https://www.w3.org/TR/2014/WD-encrypted-media-20140218
+ * The W3C Working Draft of 22 October 2013 seems to be the best match for
+ * the ms-prefixed API. However, it should only be used as a guide; it is
+ * doubtful the spec is 100% implemented as described.
+ * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
  */
 import videojs from 'video.js';
 import window from 'global/window';
