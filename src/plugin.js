@@ -181,11 +181,11 @@ export const setupSessions = (player) => {
  * Construct a simple function that can be used to dispatch EME errors on the
  * player directly, such as providing it to a `.catch()`.
  *
- * @function makeErrorHandler
+ * @function emeErrorHandler
  * @param    {Player} player
  * @return   {Function}
  */
-export const makeErrorHandler = (player) => {
+export const emeErrorHandler = (player) => {
   return (objOrErr) => {
     const message = objOrErr ? objOrErr.message || objOrErr : undefined;
 
@@ -212,7 +212,7 @@ const onPlayerReady = (player) => {
     return;
   }
 
-  const emeError = makeErrorHandler(player);
+  const emeError = emeErrorHandler(player);
 
   setupSessions(player);
 

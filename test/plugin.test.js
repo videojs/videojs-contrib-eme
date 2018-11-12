@@ -14,7 +14,7 @@ import {
   handleWebKitNeedKeyEvent,
   getOptions,
   removeSession,
-  makeErrorHandler
+  emeErrorHandler
 } from '../src/plugin';
 
 const Player = videojs.getComponent('Player');
@@ -638,7 +638,7 @@ QUnit.test('emeError properly handles various parameter types', function(assert)
       errorObj = obj;
     }
   };
-  const emeError = makeErrorHandler(player);
+  const emeError = emeErrorHandler(player);
 
   emeError(undefined);
   assert.equal(errorObj.message, undefined, 'undefined error message');
