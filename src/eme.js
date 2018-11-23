@@ -12,17 +12,26 @@ export const getSupportedKeySystem = (keySystems) => {
     // TODO use initDataTypes when appropriate
     const systemOptions = {};
     const audioContentType = keySystems[keySystem].audioContentType;
+    const audioRobustness = keySystems[keySystem].audioRobustness;
     const videoContentType = keySystems[keySystem].videoContentType;
+    const videoRobustness = keySystems[keySystem].videoRobustness;
 
-    if (audioContentType) {
-      systemOptions.audioCapabilities = [{
-        contentType: audioContentType
-      }];
+    if (audioContentType || audioRobustness) {
+      systemOptions.audioCapabilities = [
+        Object.assign({},
+          (audioContentType ? { contentType: audioContentType } : {}),
+          (audioRobustness ? { robustness: audioRobustness } : {})
+        )
+      ];
     }
-    if (videoContentType) {
-      systemOptions.videoCapabilities = [{
-        contentType: videoContentType
-      }];
+
+    if (videoContentType || videoRobustness) {
+      systemOptions.videoCapabilities = [
+        Object.assign({},
+          (videoContentType ? { contentType: videoContentType } : {}),
+          (videoRobustness ? { robustness: videoRobustness } : {})
+        )
+      ];
     }
 
     if (!promise) {
