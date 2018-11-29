@@ -114,9 +114,6 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
     // return silently since it may be handled by a different system
     return;
   }
-  if (event.initData === null) {
-    return;
-  }
 
   // "With PlayReady content protection, your Web app must handle the first needKey event,
   // but it must then ignore any other needKey event that occurs."
