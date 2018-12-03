@@ -66,7 +66,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         'video/mp4',
         concatInitDataIdAndCertificate({id: contentId, initData, cert}));
     } catch (error) {
-      reject('Could not create key session: invalid mimeType or initData');
+      reject('Could not create key session');
       return;
     }
 

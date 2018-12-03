@@ -457,7 +457,7 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
   const promise = handleWebKitNeedKeyEvent(event, options);
 
   promise.catch((err) => {
-    assert.equal(err, 'Could not create key session: invalid mimeType or initData',
+    assert.equal(err, 'Could not create key session',
       'expected error message');
     done();
   });

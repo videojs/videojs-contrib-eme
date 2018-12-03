@@ -212,7 +212,7 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
   fairplay({video, initData, options: {keySystems}}).catch(err => {
-    assert.equal(err, 'Could not create key session: invalid mimeType or initData',
+    assert.equal(err, 'Could not create key session',
       'message is good');
     done();
   });
