@@ -500,7 +500,6 @@ QUnit.test('getSupportedKeySystem error', function(assert) {
     assert.equal(err.name, 'NotSupportedError', 'keysystem access request fails');
     done();
   });
-
 });
 
 QUnit.test('errors when neither url nor getLicense is given', function(assert) {

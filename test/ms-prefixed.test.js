@@ -58,12 +58,8 @@ QUnit.test('error thrown when creating keys bubbles up', function(assert) {
     throw new Error('error');
   };
 
-  const fn = () => {
-    msPrefixed({video: this.video});
-  };
-
   assert.throws(
-    fn,
+    () => msPrefixed({video: this.video}),
     new Error('Unable to create media keys for PlayReady key system. Error: error'),
     'error is thrown with proper message'
   );
@@ -80,12 +76,8 @@ QUnit.test('createSession throws unknown error', function(assert) {
     }
   };
 
-  const fn = () => {
-    msPrefixed({video});
-  };
-
   assert.throws(
-    fn,
+    () => msPrefixed({video}),
     new Error('whatever'),
     'error is thrown with proper message'
   );
@@ -100,12 +92,8 @@ QUnit.test('throws error if session was not created', function(assert) {
     }
   };
 
-  const fn = () => {
-    msPrefixed({video});
-  };
-
   assert.throws(
-    fn,
+    () => msPrefixed({video}),
     new Error('Could not create key session.'),
     'error is thrown with proper message'
   );

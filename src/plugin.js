@@ -187,6 +187,7 @@ export const emeErrorHandler = (player) => {
     const message = objOrErr ? objOrErr.message || objOrErr : undefined;
 
     player.error({
+      // MEDIA_ERR_ENCRYPTED is code 5
       code: 5,
       message
     });

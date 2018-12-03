@@ -641,7 +641,7 @@ QUnit.test('emeError properly handles various parameter types', function(assert)
   const emeError = emeErrorHandler(player);
 
   emeError(undefined);
-  assert.equal(errorObj.message, undefined, 'undefined error message');
+  assert.equal(typeof errorObj.message, 'undefined', 'undefined error message');
 
   emeError(new Error('some error'));
   assert.equal(errorObj.message, 'some error', 'use error text when error');
