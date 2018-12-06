@@ -74,7 +74,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme',
       //             'Already have a configured session for init data, ignoring event.');
-      return;
+      return Promise.resolve();
     }
 
     sessions.push({ initData });
@@ -94,7 +94,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
 export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
   if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
-    return;
+    return Promise.resolve();
   }
 
   // From Apple's example Safari FairPlay integration code, webkitneedkey is not repeated
@@ -203,14 +203,12 @@ export const emeErrorHandler = (player) => {
  *
  * @function onPlayerReady
  * @param    {Player} player
- * @param    {Object} [options={}]
+ * @param    {Function} emeError
  */
-const onPlayerReady = (player) => {
+const onPlayerReady = (player, emeError) => {
   if (player.$('.vjs-tech').tagName.toLowerCase() !== 'video') {
     return;
   }
-
-  const emeError = emeErrorHandler(player);
 
   setupSessions(player);
 
@@ -277,7 +275,9 @@ const onPlayerReady = (player) => {
 const eme = function(options = {}) {
   const player = this;
 
-  player.ready(() => onPlayerReady(player));
+  const emeError = emeErrorHandler(player);
+
+  player.ready(() => onPlayerReady(player, emeError));
 
   // Plugin API
   player.eme = {
@@ -302,7 +302,7 @@ const eme = function(options = {}) {
       // fake an encrypted event for handleEncryptedEvent
       const mockEncryptedEvent = {
         initDataType: 'cenc',
-        initData: new Uint8Array(),
+        initData: null,
         target: player.tech_.el_
       };
 
@@ -311,13 +311,19 @@ const eme = function(options = {}) {
       if (player.tech_.el_.setMediaKeys) {
         handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
-          .catch((error) => callback(error));
+          .catch((error) => {
+            if (callback(error) !== false) {
+              emeError(error);
+            }
+          });
       } else if (player.tech_.el_.msSetMediaKeys) {
         const msKeyHandler = (event) => {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
           if (event.type === 'mskeyerror') {
-            callback(event.target.error);
+            if (callback(event.target.error) !== false) {
+              emeError(event.target.error);
+            }
           } else {
             callback();
           }
@@ -330,7 +336,9 @@ const eme = function(options = {}) {
         } catch (error) {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
-          callback(error);
+          if (callback(error) !== false) {
+            emeError(error);
+          }
         }
       }
     },

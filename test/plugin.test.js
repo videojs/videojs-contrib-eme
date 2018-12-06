@@ -67,7 +67,6 @@ QUnit.test('registers itself with video.js', function(assert) {
     'function',
     'videojs-contrib-eme plugin was registered'
   );
-  this.player.dispose();
 });
 
 QUnit.test('exposes options', function(assert) {
@@ -97,7 +96,6 @@ QUnit.test('exposes options', function(assert) {
   assert.strictEqual(this.player.eme.options.publisherId,
     'publisher-id',
     'exposes publisherId');
-  this.player.dispose();
 });
 
 // skip test for Safari
@@ -124,9 +122,51 @@ if (!window.WebKitMediaKeys) {
         'Error: Neither URL nor getLicense function provided to get license',
         'callback receives error'
       );
-      done();
+      this.player.on('error', () => {
+        assert.equal(
+          this.player.error().message,
+          'Neither URL nor getLicense function provided to get license',
+          'error is called on player'
+        );
+        done();
+      });
     });
-    this.player.dispose();
+  });
+
+  QUnit.test('initializeMediaKeys standard - no error when callback return false', function(assert) {
+    const done = assert.async();
+    const initData = new Uint8Array([1, 2, 3]).buffer;
+    let errors = 0;
+
+    assert.timeout(30000);
+    this.player.eme();
+
+    this.player.on('error', () => errors++);
+
+    this.player.eme.initializeMediaKeys({
+      keySystems: {
+        'org.w3.clearkey': {
+          pssh: initData
+        }
+      }
+    }, (error) => {
+      const sessions = this.player.eme.sessions;
+
+      assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+      assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+      assert.equal(
+        error,
+        'Error: Neither URL nor getLicense function provided to get license',
+        'callback receives error'
+      );
+      setTimeout(() => {
+        assert.equal(errors, 0, 'error not called on player');
+        assert.equal(this.player.error(), null, 'error not called on player');
+        done();
+      });
+      this.clock.tick(1);
+      return false;
+    });
   });
 }
 
@@ -168,7 +208,10 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
     assert.notEqual(error, undefined, 'callback receives error');
+  });
 
+  this.player.on('error', () => {
+    assert.equal(this.player.error().message, 'some keySession error', 'receives error');
     done();
   });
 
@@ -186,7 +229,69 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;
-  this.player.dispose();
+});
+
+QUnit.test('initializeMediaKeys ms-prefix - no error when callback return false', function(assert) {
+  const done = assert.async();
+  // stub setMediaKeys
+  const setMediaKeys = this.player.tech_.el_.setMediaKeys;
+  let keySession;
+
+  if (!window.MSMediaKeys) {
+    window.MSMediaKeys = () => {};
+  }
+
+  this.player.tech_.el_.setMediaKeys = null;
+  if (!this.player.tech_.el_.msSetMediaKeys) {
+    this.player.tech_.el_.msSetMediaKeys = () => {
+      this.player.tech_.el_.msKeys = {
+        createSession: () => {
+          keySession = new videojs.EventTarget();
+          return keySession;
+        }
+      };
+    };
+  }
+
+  const initData = new Uint8Array([1, 2, 3]).buffer;
+
+  this.player.eme();
+
+  this.player.eme.initializeMediaKeys({
+    keySystems: {
+      'com.microsoft.playready': {
+        pssh: initData
+      }
+    }
+  }, (error) => {
+    const sessions = this.player.eme.sessions;
+
+    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
+    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
+    assert.notEqual(error, undefined, 'callback receives error');
+    return false;
+  });
+
+  if (keySession) {
+    // we stubbed the keySession
+    setTimeout(() => {
+      keySession.error = 'some keySession error';
+      keySession.on('mskeyerror', () => {
+        setTimeout(() => {
+          assert.equal(this.player.error(), null, 'error not called on player');
+          done();
+        });
+      });
+      keySession.trigger({
+        target: keySession,
+        type: 'mskeyerror'
+      });
+    });
+    this.clock.tick(1);
+  }
+
+  this.player.tech_.el_.msSetMediaKeys = null;
+  this.player.tech_.el_.setMediaKeys = setMediaKeys;
 });
 
 QUnit.test('tech error listener is removed on dispose', function(assert) {
@@ -439,18 +544,27 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
     initData: new Uint8Array([1, 2, 3, 4]),
     target: {webkitSetMediaKeys: noop}
   };
-  const done = assert.async(1);
+  const done = assert.async(4);
   let options = {};
 
-  assert.notOk(handleWebKitNeedKeyEvent(event, options), 'no return when no options');
+  handleWebKitNeedKeyEvent(event, options).then((val) => {
+    assert.equal(val, undefined, 'resolves an empty promise when no options');
+    done();
+  });
 
   options = { keySystems: {} };
-  assert.notOk(handleWebKitNeedKeyEvent(event, options),
-    'no return when no FairPlay key system');
+  handleWebKitNeedKeyEvent(event, options).then((val) => {
+    assert.equal(val, undefined,
+      'resolves an empty promise when no FairPlay key system');
+    done();
+  });
 
   options = { keySystems: { 'com.apple.notfps.1_0': {} } };
-  assert.notOk(handleWebKitNeedKeyEvent(event, options),
-    'no return when no proper FairPlay key system');
+  handleWebKitNeedKeyEvent(event, options).then((val) => {
+    assert.equal(val, undefined,
+      'resolves an empty promise when no proper FairPlay key system');
+    done();
+  });
 
   options = { keySystems: { 'com.apple.fps.1_0': {} } };
 
@@ -465,12 +579,16 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
 });
 
 QUnit.test('handleWebKitNeedKeyEvent checks for required init data', function(assert) {
+  const done = assert.async();
   const event = {
     initData: null
   };
   const options = { keySystems: { 'com.apple.fps.1_0': {} } };
 
-  assert.notOk(handleWebKitNeedKeyEvent(event, options), 'no return when no init data');
+  handleWebKitNeedKeyEvent(event, options).then((val) => {
+    assert.equal(val, undefined, 'resolves an empty promise when no init data');
+    done();
+  });
 });
 
 QUnit.module('plugin isolated functions');
