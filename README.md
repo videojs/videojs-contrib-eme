@@ -332,7 +332,9 @@ player.src({
 ### initializeMediaKeys
 Type: `function`
 
-`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful for setting up the video element for DRM before loading any content. Otherwise the video element is set up for DRM on `encrypted` events. This is not supported in Safari.
+`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful
+for setting up the video element for DRM before loading any content. Otherwise the video
+element is set up for DRM on `encrypted` events. This is not supported in Safari.
 
 ```javascript
 // additional plugin options
@@ -350,6 +352,9 @@ player.eme.initializeMediaKeys(emeOptions, function(error) {
   // do something else
 });
 ```
+
+Note that if the callback returns anything other than `false`, an error will be fired on
+the player automatically if DRM setup fails.
 
 ### Passing methods seems complicated
 
