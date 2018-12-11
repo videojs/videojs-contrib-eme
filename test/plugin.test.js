@@ -101,55 +101,18 @@ QUnit.test('exposes options', function(assert) {
 // skip test for Safari
 if (!window.WebKitMediaKeys) {
   QUnit.test('initializeMediaKeys standard', function(assert) {
-    const done = assert.async();
-    const initData = new Uint8Array([1, 2, 3]).buffer;
-
-    this.player.eme();
-
-    this.player.eme.initializeMediaKeys({
-      keySystems: {
-        'org.w3.clearkey': {
-          pssh: initData
-        }
-      }
-    }, (error) => {
-      const sessions = this.player.eme.sessions;
-
-      assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-      assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
-      assert.equal(
-        error,
-        'Error: Neither URL nor getLicense function provided to get license',
-        'callback receives error'
-      );
-      this.player.on('error', () => {
-        assert.equal(
-          this.player.error().message,
-          'Neither URL nor getLicense function provided to get license',
-          'error is called on player'
-        );
-        done();
-      });
-    });
-  });
-
-  QUnit.test('initializeMediaKeys standard - no error when callback return false', function(assert) {
+    assert.expect(9);
     const done = assert.async();
     const initData = new Uint8Array([1, 2, 3]).buffer;
     let errors = 0;
-
-    assert.timeout(30000);
-    this.player.eme();
-
-    this.player.on('error', () => errors++);
-
-    this.player.eme.initializeMediaKeys({
+    const options = {
       keySystems: {
         'org.w3.clearkey': {
           pssh: initData
         }
       }
-    }, (error) => {
+    };
+    const callback = (error) => {
       const sessions = this.player.eme.sessions;
 
       assert.equal(sessions.length, 1, 'created a session when keySystems in options');
@@ -159,22 +122,45 @@ if (!window.WebKitMediaKeys) {
         'Error: Neither URL nor getLicense function provided to get license',
         'callback receives error'
       );
-      setTimeout(() => {
-        assert.equal(errors, 0, 'error not called on player');
-        assert.equal(this.player.error(), null, 'error not called on player');
-        done();
-      });
-      this.clock.tick(1);
-      return false;
+    };
+
+    this.player.eme();
+
+    this.player.on('error', () => {
+      errors++;
+      assert.equal(errors, 1, 'error triggered only once');
+      assert.equal(
+        this.player.error().message,
+        'Neither URL nor getLicense function provided to get license',
+        'error is called on player'
+      );
+      this.player.error(null);
     });
+
+    this.player.eme.initializeMediaKeys(options, callback);
+    // need to clear sessions to have the error trigger again
+    this.player.eme.sessions = [];
+    this.player.eme.initializeMediaKeys(options, callback, true);
+
+    setTimeout(() => {
+      assert.equal(this.player.error(), null,
+        'no error called on player with suppressError = true');
+      done();
+    });
+    this.clock.tick(1);
   });
+
 }
 
 QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
+  assert.expect(17);
   const done = assert.async();
   // stub setMediaKeys
   const setMediaKeys = this.player.tech_.el_.setMediaKeys;
+  let throwError = true;
+  let errors = 0;
   let keySession;
+  let errorMessage;
 
   if (!window.MSMediaKeys) {
     window.MSMediaKeys = () => {};
@@ -185,110 +171,88 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
     this.player.tech_.el_.msSetMediaKeys = () => {
       this.player.tech_.el_.msKeys = {
         createSession: () => {
-          keySession = new videojs.EventTarget();
-          return keySession;
+          if (throwError) {
+            throw new Error('error creating keySession');
+          } else {
+            keySession = new videojs.EventTarget();
+            return keySession;
+          }
         }
       };
     };
   }
 
   const initData = new Uint8Array([1, 2, 3]).buffer;
-
-  this.player.eme();
-
-  this.player.eme.initializeMediaKeys({
+  const options = {
     keySystems: {
       'com.microsoft.playready': {
         pssh: initData
       }
     }
-  }, (error) => {
+  };
+  const callback = (error) => {
     const sessions = this.player.eme.sessions;
 
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
     assert.notEqual(error, undefined, 'callback receives error');
-  });
 
-  this.player.on('error', () => {
-    assert.equal(this.player.error().message, 'some keySession error', 'receives error');
-    done();
-  });
-
-  if (keySession) {
-    // we stubbed the keySession
-    setTimeout(() => {
-      keySession.error = 'some keySession error';
-      keySession.trigger({
-        target: keySession,
-        type: 'mskeyerror'
-      });
-    });
-    this.clock.tick(1);
-  }
-
-  this.player.tech_.el_.msSetMediaKeys = null;
-  this.player.tech_.el_.setMediaKeys = setMediaKeys;
-});
-
-QUnit.test('initializeMediaKeys ms-prefix - no error when callback return false', function(assert) {
-  const done = assert.async();
-  // stub setMediaKeys
-  const setMediaKeys = this.player.tech_.el_.setMediaKeys;
-  let keySession;
-
-  if (!window.MSMediaKeys) {
-    window.MSMediaKeys = () => {};
-  }
-
-  this.player.tech_.el_.setMediaKeys = null;
-  if (!this.player.tech_.el_.msSetMediaKeys) {
-    this.player.tech_.el_.msSetMediaKeys = () => {
-      this.player.tech_.el_.msKeys = {
-        createSession: () => {
-          keySession = new videojs.EventTarget();
-          return keySession;
-        }
-      };
-    };
-  }
-
-  const initData = new Uint8Array([1, 2, 3]).buffer;
-
-  this.player.eme();
-
-  this.player.eme.initializeMediaKeys({
-    keySystems: {
-      'com.microsoft.playready': {
-        pssh: initData
-      }
-    }
-  }, (error) => {
-    const sessions = this.player.eme.sessions;
-
-    assert.equal(sessions.length, 1, 'created a session when keySystems in options');
-    assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
-    assert.notEqual(error, undefined, 'callback receives error');
-    return false;
-  });
-
-  if (keySession) {
-    // we stubbed the keySession
-    setTimeout(() => {
-      keySession.error = 'some keySession error';
-      keySession.on('mskeyerror', () => {
-        setTimeout(() => {
-          assert.equal(this.player.error(), null, 'error not called on player');
-          done();
+  };
+  const reset = () => {
+    this.player.eme.sessions = [];
+    keySession = null;
+  };
+  const asyncKeySessionError = () => {
+    if (keySession) {
+      // we stubbed the keySession
+      setTimeout(() => {
+        keySession.error = {code: 1, systemCode: 2};
+        keySession.trigger({
+          target: keySession,
+          type: 'mskeyerror'
         });
       });
-      keySession.trigger({
-        target: keySession,
-        type: 'mskeyerror'
-      });
-    });
-    this.clock.tick(1);
-  }
+      this.clock.tick(1);
+    }
+  };
+
+  this.player.eme();
+
+  this.player.on('error', () => {
+    errors++;
+    assert.equal(
+      this.player.error().message,
+      errorMessage,
+      'error is called on player'
+    );
+    this.player.error(null);
+  });
+
+  // sync error thrown by handleMsNeedKeyEvent
+  errorMessage = 'error creating keySession';
+  this.player.eme.initializeMediaKeys(options, callback);
+  reset();
+  this.player.eme.initializeMediaKeys(options, callback, true);
+  reset();
+  // async error event on key session
+  throwError = false;
+  errorMessage = 'Unexpected key error from key session with code: 1 and systemCode: 2';
+  this.player.eme.initializeMediaKeys(options, callback);
+  asyncKeySessionError();
+  reset();
+  this.player.eme.initializeMediaKeys(options, callback, true);
+  asyncKeySessionError();
+  reset();
+
+  setTimeout(() => {
+    // `error` will be called on the player 3 times, because a key session
+    // error can't be suppressed on IE11
+    assert.equal(errors, 3, 'error called on player twice');
+    assert.equal(this.player.error(), null,
+      'no error called on player with suppressError = true');
+    done();
+  });
+  this.clock.tick(1);
 
   this.player.tech_.el_.msSetMediaKeys = null;
   this.player.tech_.el_.setMediaKeys = setMediaKeys;

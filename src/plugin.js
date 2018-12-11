@@ -289,8 +289,9 @@ const eme = function(options = {}) {
     * @param    {Object} [emeOptions={}]
     *           An object of eme plugin options.
     * @param    {Function} [callback=function(){}]
+    * @param    {Boolean} [suppressErrorIfPossible=false]
     */
-    initializeMediaKeys(emeOptions = {}, callback = function() {}) {
+    initializeMediaKeys(emeOptions = {}, callback = function() {}, suppressErrorIfPossible = false) {
       // TODO: this should be refactored and renamed to be less tied
       // to encrypted events
       const mergedEmeOptions = videojs.mergeOptions(
@@ -312,7 +313,8 @@ const eme = function(options = {}) {
         handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
           .catch((error) => {
-            if (callback(error) !== false) {
+            callback(error);
+            if (!suppressErrorIfPossible) {
               emeError(error);
             }
           });
@@ -321,8 +323,9 @@ const eme = function(options = {}) {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
           if (event.type === 'mskeyerror') {
-            if (callback(event.target.error) !== false) {
-              emeError(event.target.error);
+            callback(event.target.error);
+            if (!suppressErrorIfPossible) {
+              emeError(event.message);
             }
           } else {
             callback();
@@ -336,7 +339,8 @@ const eme = function(options = {}) {
         } catch (error) {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
-          if (callback(error) !== false) {
+          callback(error);
+          if (!suppressErrorIfPossible) {
             emeError(error);
           }
         }
