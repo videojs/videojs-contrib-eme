@@ -344,17 +344,21 @@ var emeOptions = {
   }
 };
 
-player.eme.initializeMediaKeys(emeOptions, function(error) {
+var emeCallback = function(error) {
   if (error) {
     // do something with error
   }
 
   // do something else
-});
+};
+
+player.eme.initializeMediaKeys(emeOptions, emeCallback, suppressErrorsIfPossible);
 ```
 
-Note that if the callback returns anything other than `false`, an error will be fired on
-the player automatically if DRM setup fails.
+With `suppressErrorsIfPossible` set to `false` (the default), the error handler
+will be invoked after the callback finishes, and `error` called on the player.
+When set to `true`, the error handler will not be invoked, with the exception
+of `mskeyerror` errors in IE11.
 
 ### Passing methods seems complicated
 
