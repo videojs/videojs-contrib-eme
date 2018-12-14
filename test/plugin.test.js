@@ -247,7 +247,7 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   setTimeout(() => {
     // `error` will be called on the player 3 times, because a key session
     // error can't be suppressed on IE11
-    assert.equal(errors, 3, 'error called on player twice');
+    assert.equal(errors, 3, 'error called on player 3 times');
     assert.equal(this.player.error(), null,
       'no error called on player with suppressError = true');
     done();

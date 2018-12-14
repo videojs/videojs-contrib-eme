@@ -355,10 +355,11 @@ var emeCallback = function(error) {
 player.eme.initializeMediaKeys(emeOptions, emeCallback, suppressErrorsIfPossible);
 ```
 
-With `suppressErrorsIfPossible` set to `false` (the default), the error handler
-will be invoked after the callback finishes, and `error` called on the player.
-When set to `true`, the error handler will not be invoked, with the exception
-of `mskeyerror` errors in IE11.
+When `suppressErrorsIfPossible` is set to `false` (the default) and an error
+occurs, the error handler will be invoked after the callback finishes, and
+`error` called on the player. When set to `true` and an error occurs, the
+error handler will not be invoked, with the exception of `mskeyerror` errors
+in IE11 since they cannot be suppressed asynchronously.
 
 ### Passing methods seems complicated
 
