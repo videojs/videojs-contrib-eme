@@ -184,7 +184,7 @@ export const setupSessions = (player) => {
  */
 export const emeErrorHandler = (player) => {
   return (objOrErr) => {
-    const message = objOrErr ? objOrErr.message || objOrErr : undefined;
+    const message = objOrErr ? objOrErr.message || objOrErr : null;
 
     player.error({
       // MEDIA_ERR_ENCRYPTED is code 5
