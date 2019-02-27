@@ -242,6 +242,10 @@ const onPlayerReady = (player, emeError) => {
   }
 
   // IE11 Windows 8.1+
+  // Since IE11 doesn't support promises, we have to use a combination of
+  // try/catch blocks and event handling to simulate promise rejection.
+  // Functionally speaking, there should be no discernible difference between
+  // the behavior of IE11 and those of other browsers.
   player.tech_.el_.addEventListener('msneedkey', (event) => {
     // TODO convert to videojs.log.debug and add back in
     // https://github.com/videojs/video.js/pull/4780
