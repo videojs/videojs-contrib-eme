@@ -36,7 +36,7 @@ export const addKeyToSession = (options, session, event, eventBus) => {
 
   const url = playreadyOptions.url || event.destinationURL;
 
-  requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
+  requestPlayreadyLicense(url, event.message.buffer, options, (err, response) => {
     if (eventBus) {
       eventBus.trigger('licenserequestattempted');
     }

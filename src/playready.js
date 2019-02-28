@@ -40,8 +40,12 @@ export const getMessageContents = (message) => {
   };
 };
 
-export const requestPlayreadyLicense = (url, messageBuffer, callback) => {
-  const { headers, message } = getMessageContents(messageBuffer);
+export const requestPlayreadyLicense = (url, messageBuffer, emeOptions, callback) => {
+  let { headers, message } = getMessageContents(messageBuffer);
+
+  if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
+    headers = videojs.mergeOptions(headers, emeOptions.headers);
+  }
 
   videojs.xhr({
     uri: url,

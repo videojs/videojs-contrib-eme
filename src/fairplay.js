@@ -126,7 +126,7 @@ const defaultGetLicense = (licenseUri) => {
     };
 
     if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
-      headers = Object.assign(headers, emeOptions.headers);
+      headers = videojs.mergeOptions(headers, emeOptions.headers);
     }
 
     videojs.xhr({
