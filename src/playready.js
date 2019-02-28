@@ -41,7 +41,9 @@ export const getMessageContents = (message) => {
 };
 
 export const requestPlayreadyLicense = (url, messageBuffer, emeOptions, callback) => {
-  let { headers, message } = getMessageContents(messageBuffer);
+  const messageContents = getMessageContents(messageBuffer);
+  const message = messageContents.message;
+  let headers = messageContents.headers;
 
   if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
     headers = videojs.mergeOptions(headers, emeOptions.headers);
