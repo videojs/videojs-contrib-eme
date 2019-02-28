@@ -121,14 +121,20 @@ const defaultGetContentId = (emeOptions, initData) => {
 
 const defaultGetLicense = (licenseUri) => {
   return (emeOptions, contentId, keyMessage, callback) => {
+    let headers = {
+      'Content-type': 'application/octet-stream'
+    };
+
+    if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
+      headers = Object.assign(headers, emeOptions.headers);
+    }
+
     videojs.xhr({
       uri: licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
       body: keyMessage,
-      headers: {
-        'Content-type': 'application/octet-stream'
-      }
+      headers
     }, (err, response, responseBody) => {
       if (err) {
         callback(err);
