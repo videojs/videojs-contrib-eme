@@ -1,3 +1,9 @@
+/**
+ * The W3C Working Draft of 22 October 2013 seems to be the best match for
+ * the ms-prefixed API. However, it should only be used as a guide; it is
+ * doubtful the spec is 100% implemented as described.
+ * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
+ */
 import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
@@ -45,19 +51,21 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
 const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
-      video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      try {
+        video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      } catch (error) {
+        reject('Could not create MediaKeys');
+        return;
+      }
     }
 
-    if (!video.webkitKeys) {
-      reject('Could not create MediaKeys');
-      return;
-    }
+    let keySession;
 
-    const keySession = video.webkitKeys.createSession(
-      'video/mp4',
-      concatInitDataIdAndCertificate({id: contentId, initData, cert}));
-
-    if (!keySession) {
+    try {
+      keySession = video.webkitKeys.createSession(
+        'video/mp4',
+        concatInitDataIdAndCertificate({id: contentId, initData, cert}));
+    } catch (error) {
       reject('Could not create key session');
       return;
     }
@@ -78,13 +86,15 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       });
     });
 
-    keySession.addEventListener('webkitkeyadded', (event) => {
-      resolve(event);
+    keySession.addEventListener('webkitkeyadded', () => {
+      resolve();
     });
 
     // for testing purposes, adding webkitkeyerror must be the last item in this method
-    keySession.addEventListener('webkitkeyerror', (event) => {
-      reject(event);
+    keySession.addEventListener('webkitkeyerror', () => {
+      const error = keySession.error;
+
+      reject(`KeySession error: code ${error.code}, systemCode ${error.systemCode}`);
     });
   });
 };
@@ -157,7 +167,7 @@ const fairplay = ({video, initData, options, eventBus}) => {
       contentId: getContentId(options, initData),
       eventBus
     });
-  }).catch(videojs.log.error.bind(videojs.log.error));
+  });
 };
 
 export default fairplay;

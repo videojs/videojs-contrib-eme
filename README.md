@@ -332,7 +332,9 @@ player.src({
 ### initializeMediaKeys
 Type: `function`
 
-`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful for setting up the video element for DRM before loading any content. Otherwise the video element is set up for DRM on `encrypted` events. This is not supported in Safari.
+`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful
+for setting up the video element for DRM before loading any content. Otherwise the video
+element is set up for DRM on `encrypted` events. This is not supported in Safari.
 
 ```javascript
 // additional plugin options
@@ -342,14 +344,22 @@ var emeOptions = {
   }
 };
 
-player.eme.initializeMediaKeys(emeOptions, function(error) {
+var emeCallback = function(error) {
   if (error) {
     // do something with error
   }
 
   // do something else
-});
+};
+
+player.eme.initializeMediaKeys(emeOptions, emeCallback, suppressErrorsIfPossible);
 ```
+
+When `suppressErrorsIfPossible` is set to `false` (the default) and an error
+occurs, the error handler will be invoked after the callback finishes, and
+`error` called on the player. When set to `true` and an error occurs, the
+error handler will not be invoked, with the exception of `mskeyerror` errors
+in IE11 since they cannot be suppressed asynchronously.
 
 ### Passing methods seems complicated
 
