@@ -494,6 +494,13 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
 });
 
 QUnit.test('getSupportedKeySystem error', function(assert) {
+
+  // Skip this test in Safari, getSupportedKeySystem is never used in Safari.
+  if (videojs.browser.IS_ANY_SAFARI) {
+    assert.expect(0);
+    return;
+  }
+
   const done = assert.async(1);
 
   getSupportedKeySystem({'un.supported.keysystem': {}}).catch((err) => {
