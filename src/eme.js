@@ -171,8 +171,8 @@ const setMediaKeys = ({
   return Promise.all(promises);
 };
 
-const defaultPlayreadyGetLicense = (url) => (emeOptions, keyMessage, callback) => {
-  requestPlayreadyLicense(url, keyMessage, emeOptions, (err, response, responseBody) => {
+const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+  requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, (err, response, responseBody) => {
     if (err) {
       callback(err);
       return;
@@ -182,17 +182,15 @@ const defaultPlayreadyGetLicense = (url) => (emeOptions, keyMessage, callback) =
   });
 };
 
-const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
-  let headers = {
-    'Content-type': 'application/octet-stream'
-  };
-
-  if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
-    headers = videojs.mergeOptions(headers, emeOptions.headers);
-  }
+const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+  const headers = videojs.mergeOptions(
+    {'Content-type': 'application/octet-stream'},
+    emeOptions.licenseHeaders,
+    keySystemOptions.licenseHeaders
+  );
 
   videojs.xhr({
-    uri: url,
+    uri: keySystemOptions.url,
     method: 'POST',
     responseType: 'arraybuffer',
     body: keyMessage,
@@ -236,8 +234,8 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
     keySystemOptions.getLicense = keySystem === 'com.microsoft.playready' ?
-      defaultPlayreadyGetLicense(keySystemOptions.url) :
-      defaultGetLicense(keySystemOptions.url);
+      defaultPlayreadyGetLicense(keySystemOptions) :
+      defaultGetLicense(keySystemOptions);
   }
 
   return keySystemOptions;

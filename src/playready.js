@@ -40,17 +40,18 @@ export const getMessageContents = (message) => {
   };
 };
 
-export const requestPlayreadyLicense = (url, messageBuffer, emeOptions, callback) => {
+export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOptions, callback) => {
   const messageContents = getMessageContents(messageBuffer);
   const message = messageContents.message;
-  let headers = messageContents.headers;
 
-  if (emeOptions.headers && typeof emeOptions.headers === 'object' && emeOptions.headers !== null) {
-    headers = videojs.mergeOptions(headers, emeOptions.headers);
-  }
+  const headers = videojs.mergeOptions(
+    messageContents.headers,
+    emeOptions.licenseHeaders,
+    keySystemOptions.licenseHeaders
+  );
 
   videojs.xhr({
-    uri: url,
+    uri: keySystemOptions.url,
     method: 'post',
     headers,
     body: message,
