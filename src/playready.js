@@ -46,7 +46,7 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
 
   const headers = videojs.mergeOptions(
     messageContents.headers,
-    emeOptions.licenseHeaders,
+    emeOptions.emeHeaders,
     keySystemOptions.licenseHeaders
   );
 

@@ -102,7 +102,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
 const defaultGetCertificate = (fairplayOptions) => {
   return (emeOptions, callback) => {
     const headers = videojs.mergeOptions(
-      emeOptions.certificateHeaders,
+      emeOptions.emeHeaders,
       fairplayOptions.certificateHeaders
     );
 
@@ -129,7 +129,7 @@ const defaultGetLicense = (fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
     const headers = videojs.mergeOptions(
       {'Content-type': 'application/octet-stream'},
-      emeOptions.licenseHeaders,
+      emeOptions.emeHeaders,
       fairplayOptions.licenseHeaders
     );
 

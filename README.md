@@ -18,61 +18,122 @@ Maintenance Status: Stable
 - [Using](#using)
   - [Initialization](#initialization)
   - [FairPlay](#fairplay)
+    - [Get Certificate/License by URL](#get-certificatelicense-by-url)
+    - [Get Certificate/Content ID/License by Functions](#get-certificatecontent-idlicense-by-functions)
   - [PlayReady for IE11 (Windows 8.1+)](#playready-for-ie11-windows-81)
+    - [Get License by Default](#get-license-by-default)
+    - [Get Key by URL](#get-key-by-url)
+    - [Get Key by Function](#get-key-by-function)
   - [Other DRM Systems](#other-drm-systems)
-  - [Source Options](#source-options)
-  - [Plugin Options](#plugin-options)
-  - [emeOptions](#emeoptions)
-  - [initializeMediaKeys](#initializemediakeys)
-  - [Passing methods seems complicated](#passing-methods-seems-complicated)
-  - [Special Events](#special-events)
-- [Getting Started](#getting-started)
-  - [Running Tests](#running-tests)
-  - [Tag and Release](#tag-and-release)
+    - [Get License By URL](#get-license-by-url)
+    - [Get License By Function](#get-license-by-function)
+- [API](#api)
+  - [Available Options](#available-options)
+    - [`keySystems`](#keysystems)
+    - [`emeHeaders`](#emeheaders)
+  - [Setting Options per Source](#setting-options-per-source)
+  - [Setting Options for All Sources](#setting-options-for-all-sources)
+  - [`emeOptions`](#emeoptions)
+  - [`initializeMediaKeys()`](#initializemediakeys)
+  - [Events](#events)
+    - [`licenserequestattempted`](#licenserequestattempted)
+    - [`keystatuschange`](#keystatuschange)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Using
 
-By default, videojs-contrib-eme is not able to decrypt any audio/video. In order to
-decrypt audio/video, a user must pass in either relevant license URIs, or methods specific
-to a source and its combination of key system and codec. These are provided to the plugin
-via either videojs-contrib-eme's plugin options, or source options.
+By default, videojs-contrib-eme is not able to decrypt any audio/video.
+
+In order to decrypt audio/video, a user must pass in either relevant license URIs, or methods specific to a source and its combination of key system and codec. These are provided to the plugin via either videojs-contrib-eme's plugin options or source options.
 
 ### Initialization
+
 The videojs-contrib-eme plugin must be initialized before a source is loaded into the player:
 
-```javascript
+```js
 player.eme();
 player.src({
   src: '<your url here>',
   type: 'application/dash+xml',
   keySystems: {
-    'com.widevine.alpha': '<your url here>'
+    'com.widevine.alpha': '<YOUR URL HERE>'
   }
 });
 ```
 
 ### FairPlay
 
-For FairPlay, only `keySystems` is used from the options passed into videojs-contrib-eme,
-or provided as part of the source object.
+For FairPlay, only `keySystems` is used from the options passed into videojs-contrib-eme or provided as part of the source object.
 
-The required methods to provide are:
-* `getCertificate`
-* `getContentId`
-* `getLicense`
-or, if you are using the default FairPlay methods, the only required parameters are:
+There are two ways to configure FairPlay.
+
+#### Get Certificate/License by URL
+
+In this simpler implementation, you can provide URLs and allow videojs-contrib-eme to make the requests internally via default mechanisms.
+
+When using this method, there are two required properties of the `keySystems` object:
+
 * `certificateUri`
 * `licenseUri`
 
-Below is an example of videojs-contrib-eme options when only using FairPlay:
+And there are two _optional_ properties:
+
+* `certificateHeaders`
+* `licenseHeaders`
+
+With this configuration, videojs-contrib-eme will behave in the following ways:
+
+* It will fetch the certificate by making a GET request to your `certificateUri` with an expected response type of `arraybuffer`. Headers can be defined for this request via the `certificateHeaders` object.
+* The content ID will be interpreted from the `initData`.
+* It will fetch the license by making a POST request to your `licenseUri` with an expected response type of `arraybuffer`. This will have one default header of `Content-type: application/octet-stream`, but this can be overridden (or other headers added) using `licenseHeaders`.
+
+
+Below are examples of FairPlay configurations of this type:
+
+```js
+{
+  keySystems: {
+    'com.apple.fps.1_0': {
+      certificateUri: '<CERTIFICATE_URL>',
+      licenseUri: '<LICENSE_URL>'
+    }
+  }
+}
+```
+
+or
 
 ```javascript
 {
   keySystems: {
-    "com.apple.fps.1_0": {
+    'com.apple.fps.1_0': {
+      certificateUri: '<CERTIFICATE_URL>',
+      certificateHeaders: {
+        'Some-Header': 'value'
+      },
+      licenseUri: '<LICENSE_URL>',
+      licenseHeaders: {
+        'Some-Header': 'value'
+      }
+    }
+  }
+}
+```
+
+#### Get Certificate/Content ID/License by Functions
+
+You can control the license and certificate request processes by providing the following methods instead of the properties discussed above:
+
+* `getCertificate()` - Allows asynchronous retrieval of a certificate.
+* `getContentId()` - Allows synchronous retrieval of a content ID.
+* `getLicense()` - Allows asynchronous retrieval of a license.
+
+```js
+{
+  keySystems: {
+    'com.apple.fps.1_0': {
       getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
@@ -91,68 +152,53 @@ Below is an example of videojs-contrib-eme options when only using FairPlay:
 }
 ```
 
-Below is an example of videojs-contrib-eme options when only using FairPlay, and using
-the default FairPlay methods:
+### PlayReady for IE11 (Windows 8.1+)
 
-```javascript
-{
-  keySystems: {
-    "com.apple.fps.1_0": {
-      certificateUri: "<CERTIFICATE URI>",
-      licenseUri: "<LICENSE URI>"
-    }
-  }
+PlayReady for IE11 (Windows 8.1+) only requires `keySystems` from the options passed into videojs-contrib-eme or provided as part of the source object.
+
+There are three ways to configure PlayReady for IE11 (Windows 8.1+).
+
+#### Get License by Default
+
+If the value of `true` is provided, then a POST request will be made to the `destinationURI` passed by the message from the browser, with the headers and body specified in the message.
+
+```js
+keySystems: {
+  'com.microsoft.playready': true
 }
 ```
 
-The default methods are defined as follows:
-* getCertificate - GET certificateUri with response type of arraybuffer
-* getContentId - gets the hostname from the initData URI
-* getLicense - POST licenseUri with response type of arraybuffer, header of
-'Content-type': 'application/octet-stream', and body of webKitKeyMessage
+#### Get Key by URL
 
-### PlayReady for IE11 (Windows 8.1+)
+If a URL is provided - either within an object or as a string - then a POST request will be made to the provided URL, with the headers and body specified in the message. Additionally, a `licenseHeaders` object may be provided, if additional headers are required:
 
-PlayReady for IE11 (Windows 8.1+) only requires `keySystems` from the options passed
-into videojs-contrib-eme, or provided as part of the source object.
-
-There are four choices for options that may be passed:
-
-1) If the value of `true` is provided, then a POST request will be made to the
-`detinationURI` passed by the message from the browser, with the headers and body
-specified in the message.
-
-Example:
-```javascript
-  keySystems: {
-    "com.microsoft.playready": true
-  }
+```js
+keySystems: {
+  'com.microsoft.playready': '<YOUR_KEY_URL>'
+}
 ```
 
-2/3) If a url is provided, either within an object or as a string, then a POST request
-will be made to the provided url, with the headers and body specified in the message.
+or
 
-Example:
-```javascript
+```js
   keySystems: {
-    "com.microsoft.playready": "<your url here>"
-  }
-  // or
-  keySystems: {
-    "com.microsoft.playready": {
-      "url": "<your url here>"
+    'com.microsoft.playready': {
+      url: '<YOUR_KEY_URL>',
+      licenseHeaders: {
+        'Some-Header': 'value'
+      }
     }
   }
 ```
 
-4) If a `getKey` function is provided, then the function will be run with the message
-buffer and destinationURI passed by the browser, and will expect a callback with the key.
+#### Get Key by Function
 
-Example:
-```javascript
+If a `getKey` function is provided, then the function will be run with the message buffer and `destinationURI` passed by the browser, and will expect a callback with the key:
+
+```js
 {
   keySystems: {
-    "com.microsoft.playready": {
+    'com.microsoft.playready': {
       getKey: function(emeOptions, destinationURI, buffer, callback) {
         // request key
         // if err, callback(err)
@@ -165,23 +211,30 @@ Example:
 
 ### Other DRM Systems
 
-For DRM systems that use the W3C EME specification as of 5 July 2016, only `keySystems`
-and a way of obtaining the license are required.
+For DRM systems that use the W3C EME specification as of 5 July 2016, only `keySystems` and a way of obtaining the license are required.
 
-To obtain a license requires one of a couple different options:
-1) You may use a string as the license url, or a url as an entry in the options:
-```javascript
+Obtaining a license can be done in two ways.
+
+#### Get License By URL
+
+For simple use-cases, you may use a string as the license URL or a URL as a property of in the `keySystems` entry:
+
+```js
 {
   keySystems: {
-    'org.w3.clearkey': '<your-license-url>',
+    'org.w3.clearkey': '<YOUR_LICENSE_URL>',
     'com.widevine.alpha': {
-      url: '<your-license-url>'
+      url: '<YOUR_LICENSE_URL>'
     }
   }
 }
 ```
-2) You may pass a `getLicense` function:
-```javascript
+
+#### Get License By Function
+
+For more complex integrations, you may pass a `getLicense` function to fully control the license retrieval process:
+
+```js
 {
   keySystems: {
     'org.w3.clearkey': {
@@ -195,22 +248,16 @@ To obtain a license requires one of a couple different options:
 }
 ```
 
-Although the license acquisition related config is the only required configuration,
-`getCertificate` is also supported if your source needs to retrieve a certificate.
+Although the license acquisition is the only required configuration, `getCertificate()` is also supported if your source needs to retrieve a certificate, similar to the [FairPlay](#fairplay) implementation above.
 
-The `audioContentType` and `videoContentType` properties for non-FairPlay sources are
-used to determine if the system supports that codec, and to create an appropriate
-`keySystemAccess` object. If left out, it is possible that the system will create a
-`keySystemAccess` object for the given key system, but will not be able to play the
-source due to the browser's inability to use that codec.
+The `audioContentType` and `videoContentType` properties for non-FairPlay sources are used to determine if the system supports that codec and to create an appropriate `keySystemAccess` object. If left out, it is possible that the system will create a `keySystemAccess` object for the given key system, but will not be able to play the source due to the browser's inability to use that codec.
 
-Below is an example of videojs-contrib-eme options when only using one of these DRM
-systems, and custom `getLicense` and `getCertificate` functions:
+Below is an example of using one of these DRM systems and custom `getLicense()` and `getCertificate()` functions:
 
-```javascript
+```js
 {
   keySystems: {
-    "org.w3.clearkey": {
+    'org.w3.clearkey': {
       audioContentType: 'audio/webm; codecs="vorbis"',
       videoContentType: 'video/webm; codecs="vp9"',
       getCertificate: function(emeOptions, callback) {
@@ -228,21 +275,43 @@ systems, and custom `getLicense` and `getCertificate` functions:
 }
 ```
 
-### Source Options
+## API
 
-Since each source may have a different set of properties and methods, it is best to use
-source options instead of plugin options when specifying key systems. To do that, simply
-pass the same options as you would as part of the plugin options, but instead pass them
-as part of the source object when specifying `player.src(sourceObject)`.
+### Available Options
 
-For example:
+#### `keySystems`
 
-```javascript
+This is the main option through which videojs-contrib-eme can be configured. It maps key systems by name (e.g. `'org.w3.clearkey'`) to an object for configuring that key system.
+
+#### `emeHeaders`
+
+This object can be a convenient way to specify default headers for _all_ requests that are made by videojs-contrib-eme. These headers will override any headers that are set by videojs-contrib-eme internally, but can be further overridden by headers specified in `keySystems` objects (e.g., `certificateHeaders` or `licenseHeaders`).
+
+An `emeHeaders` object should look like this:
+
+```js
+emeHeaders: {
+  'Common-Header': 'value'
+}
+```
+
+### Setting Options per Source
+
+This is the recommended way of setting most options. Each source may have a different set of requirements; so, it is best to define options on a per source basis.
+
+To do this, attach the options to the source object you pass to `player.src()`:
+
+```js
 player.src({
-  // normal src and type options
+
+  // normal Video.js src and type options
   src: '<URL>',
   type: 'video/webm',
+
   // eme options
+  emeHeaders: {
+    'Common-Header': 'value'
+  },
   keySystems: {
     'org.w3.clearkey': {
       audioContentType: 'audio/webm; codecs="vorbis"',
@@ -262,81 +331,83 @@ player.src({
 });
 ```
 
-### Plugin Options
+### Setting Options for All Sources
 
-Plugin options may be provided in one of two ways. Either they are provided in the
-standard plugins configuration when setting up video.js itself, or they may be set by
-assigning to the options property on the eme object itself:
+While [setting options per source](#setting-options-per-source) is recommended, some implementations may want to use plugin-level options.
 
-```javascript
-player.eme.options = {
-  // options you want to pass
+These can be set during plugin invocation:
+
+```js
+player.eme({
+
+  // Set Common-Header on ALL requests for ALL key systems.
+  emeHeaders: {
+    'Common-Header': 'value'
+  }
+});
+```
+
+Plugin-level options may also be set after plugin initialization by assigning to the options property on the `eme` object itself:
+
+```js
+player.eme();
+
+player.eme.options.emeHeaders = {
+  'Common-Header': 'value'
 };
 ```
 
-### emeOptions
+or
 
-`emeOptions` are provided for all methods. This is a reference to the source options for
-the current source merged with (overwritten by) the latest plugin options. It is available
-to make it easier to access options so that you don't have to maintain them yourself.
+```js
+player.eme();
 
-For example. If you need to use a userId for the getCertificate request, you can pass in
-plugin options that have:
-
-```javascript
-{
-  keySystems: {
-    "org.w3.clearkey": {
-      getCertificate: function(emeOptions, callback) {
-        var userId = emeOptions.userId; // 'user-id'
-        // ...
-      },
-      getLicense: function(emeOptions, keyMessage, callback) {
-        var userId = emeOptions.userId; // 'user-id'
-        // ...
-      }
-    }
-  },
-  userId: 'user-id'
-}
+player.eme.options = {
+  emeHeaders: {
+    'Common-Header': 'value'
+  }
+};
 ```
 
-Or, if you need a source-specific userId, you can overwrite it via the source options:
+### `emeOptions`
 
-```javascript
-// plugin options
-{
+All methods in a key system receive `emeOptions` as their first argument.
+
+The `emeOptions` are an object which merges source-level options with plugin-level options.
+
+> **NOTE:** In these cases, plugin-level options will **override** the source-level options. This is used by libraries like [VHS](https://github.com/videojs/http-streaming), but could be unintuitive. This is another reason to prefer source-level options in all cases!
+
+It is available to make it easier to access options in custom key systems methods, so that you don't have to maintain your own references.
+
+For example, if you needed to use a `userId` for the `getCertificate()` request, you could:
+
+```js
+player.eme();
+
+player.src({
   keySystems: {
-    "org.w3.clearkey": {
+    'org.w3.clearkey': {
       getCertificate: function(emeOptions, callback) {
-        var userId = emeOptions.userId; // 'source-specific-user-id'
+        var userId = emeOptions.userId; // 'user-id'
         // ...
       },
       getLicense: function(emeOptions, keyMessage, callback) {
-        var userId = emeOptions.userId; // 'source-specific-user-id'
+        var userId = emeOptions.userId; // 'user-id'
         // ...
       }
     }
   },
   userId: 'user-id'
-}
-
-// source options
-player.src({
-  src: '<URL>',
-  type: 'video/webm',
-  userId: 'source-specific-user-id'
 });
 ```
 
-### initializeMediaKeys
-Type: `function`
+### `initializeMediaKeys()`
 
-`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand. This is useful
-for setting up the video element for DRM before loading any content. Otherwise the video
-element is set up for DRM on `encrypted` events. This is not supported in Safari.
+`player.eme.initializeMediaKeys()` sets up MediaKeys immediately on demand.
 
-```javascript
+This is useful for setting up the video element for DRM before loading any content. Otherwise, the video element is set up for DRM on `encrypted` events. This is not supported in Safari.
+
+```js
 // additional plugin options
 var emeOptions = {
   keySystems: {
@@ -352,43 +423,34 @@ var emeCallback = function(error) {
   // do something else
 };
 
+var suppressErrorsIfPossible = true;
+
 player.eme.initializeMediaKeys(emeOptions, emeCallback, suppressErrorsIfPossible);
 ```
 
-When `suppressErrorsIfPossible` is set to `false` (the default) and an error
-occurs, the error handler will be invoked after the callback finishes, and
-`error` called on the player. When set to `true` and an error occurs, the
-error handler will not be invoked, with the exception of `mskeyerror` errors
-in IE11 since they cannot be suppressed asynchronously.
+When `suppressErrorsIfPossible` is set to `false` (the default) and an error occurs, the error handler will be invoked after the callback finishes and `error()` will be called on the player. When set to `true` and an error occurs, the error handler will not be invoked with the exception of `mskeyerror` errors in IE11 since they cannot be suppressed asynchronously.
 
-### Passing methods seems complicated
+### Events
 
-While simple URLs are supported for many EME implementations, we wanted to provide as much
-flexibility as possible. This means that if your server has a different structure, you use
-a different format for FairPlay content IDs, or you want to test something in the browser
-without making a request, we can support that, since you can control the methods.
+There are some events that are specific to this plugin. 
 
-### Special Events
+#### `licenserequestattempted`
 
-There are some events that are specific to this plugin.  Once such event is `licenserequestattempted`.
-This event is triggered on the tech on the callback of every license request.
-
-In order to listen to this event:
+This event is triggered on the Video.js playback tech on the callback of every license request made by videojs-contrib-eme.
 
 ```
-player.tech().on('licenserequestattempted', function(event) {
+player.tech(true).on('licenserequestattempted', function(event) {
   // Act on event
 });
 ```
 
-Additionally, when the status of a key changes, an event of type `keystatuschange` will
-be triggered on the `tech_`. This helps you handle feedback to the user for situations
-like trying to play DRM-protected media on restricted devices.
+#### `keystatuschange`
 
-Just like the above, you can listen to the event like so:
+When the status of a key changes, an event of type `keystatuschange` will
+be triggered on the Video.js playback tech. This helps you handle feedback to the user for situations like trying to play DRM-protected media on restricted devices.
 
 ```
-player.tech().on('keystatuschange', function(event) {
+player.tech(true).on('keystatuschange', function(event) {
   // Event data:
   // keyId
   // status: usable, output-restricted, etc
@@ -396,28 +458,7 @@ player.tech().on('keystatuschange', function(event) {
 });
 ```
 
-It is triggered directly from the underlying `keystatuseschange` event, so the statuses
-should correspond to [those listed in the spec](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
-
-## Getting Started
-
-1. Clone this repository!
-1. Install dependencies: `npm install`
-1. Run a development server: `npm start`
-
-That's it! Refer to the [video.js plugin standards](https://github.com/videojs/generator-videojs-plugin/docs/standards.md) for more detail.
-
-### Running Tests
-
-- In all available and supported browsers: `npm test`
-- In a specific browser: `npm run test:chrome`, `npm run test:firefox`, etc.
-- While development server is running, navigate to [`http://localhost:9999/test/`](http://localhost:9999/test/) (_note:_ port may vary, check console output)
-
-### Tag and Release
-
-1. Make sure everything is committed.
-1. `npm version *` where `*` is `major`, `minor`, `patch`, etc. [Read more about versioning.](https://github.com/videojs/generator-videojs-plugin/docs/standards.md#versioning)
-1. `npm publish`
+This event is triggered directly from the underlying `keystatuseschange` event, so the statuses should correspond to [those listed in the spec](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
 
 ## License
 

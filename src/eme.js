@@ -185,7 +185,7 @@ const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage
 const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
   const headers = videojs.mergeOptions(
     {'Content-type': 'application/octet-stream'},
-    emeOptions.licenseHeaders,
+    emeOptions.emeHeaders,
     keySystemOptions.licenseHeaders
   );
 
