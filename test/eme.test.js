@@ -493,14 +493,17 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   });
 });
 
-QUnit.test('getSupportedKeySystem error', function(assert) {
-  const done = assert.async(1);
+// Skip this test in Safari, getSupportedKeySystem is never used in Safari.
+if (!videojs.browser.IS_ANY_SAFARI) {
+  QUnit.test('getSupportedKeySystem error', function(assert) {
+    const done = assert.async(1);
 
-  getSupportedKeySystem({'un.supported.keysystem': {}}).catch((err) => {
-    assert.equal(err.name, 'NotSupportedError', 'keysystem access request fails');
-    done();
+    getSupportedKeySystem({'un.supported.keysystem': {}}).catch((err) => {
+      assert.equal(err.name, 'NotSupportedError', 'keysystem access request fails');
+      done();
+    });
   });
-});
+}
 
 QUnit.test('errors when neither url nor getLicense is given', function(assert) {
   const options = {
