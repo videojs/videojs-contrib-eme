@@ -1,6 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
+import {mergeAndRemoveNull} from './utils';
 
 export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
@@ -183,7 +184,7 @@ const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage
 };
 
 const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
-  const headers = videojs.mergeOptions(
+  const headers = mergeAndRemoveNull(
     {'Content-type': 'application/octet-stream'},
     emeOptions.emeHeaders,
     keySystemOptions.licenseHeaders

@@ -1,5 +1,6 @@
 import videojs from 'video.js';
 import window from 'global/window';
+import {mergeAndRemoveNull} from './utils';
 
 /**
  * Parses the EME key message XML to extract HTTP headers and the Challenge element to use
@@ -44,7 +45,7 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
   const messageContents = getMessageContents(messageBuffer);
   const message = messageContents.message;
 
-  const headers = videojs.mergeOptions(
+  const headers = mergeAndRemoveNull(
     messageContents.headers,
     emeOptions.emeHeaders,
     keySystemOptions.licenseHeaders

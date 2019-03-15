@@ -6,7 +6,7 @@
  */
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
+import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -101,7 +101,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
 
 const defaultGetCertificate = (fairplayOptions) => {
   return (emeOptions, callback) => {
-    const headers = videojs.mergeOptions(
+    const headers = mergeAndRemoveNull(
       emeOptions.emeHeaders,
       fairplayOptions.certificateHeaders
     );
@@ -127,7 +127,7 @@ const defaultGetContentId = (emeOptions, initData) => {
 
 const defaultGetLicense = (fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
-    const headers = videojs.mergeOptions(
+    const headers = mergeAndRemoveNull(
       {'Content-type': 'application/octet-stream'},
       emeOptions.emeHeaders,
       fairplayOptions.licenseHeaders

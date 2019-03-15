@@ -33,6 +33,7 @@ Maintenance Status: Stable
     - [`emeHeaders`](#emeheaders)
   - [Setting Options per Source](#setting-options-per-source)
   - [Setting Options for All Sources](#setting-options-for-all-sources)
+  - [Header Hierarchy and Removal](#header-hierarchy-and-removal)
   - [`emeOptions`](#emeoptions)
   - [`initializeMediaKeys()`](#initializemediakeys)
   - [Events](#events)
@@ -367,6 +368,61 @@ player.eme.options = {
     'Common-Header': 'value'
   }
 };
+```
+
+### Header Hierarchy and Removal
+
+Headers defined in the `emeHeaders` option or in `licenseHeaders`/`certificateHeaders` objects within `keySystems` can _remove_ headers defined at lower levels without defining a new value. This can be done by setting their value to `null`.
+
+The hierarchy of header definitions is:
+
+```
+licenseHeaders/certificateHeaders > emeHeaders > internal defaults
+```
+
+In most cases, the header `{'Content-type': 'application/octet-stream'}` is a default and cannot be overridden without writing your own `getLicense()` function. This internal default can be overridden by either of the user-provided options.
+
+Here's an example:
+
+```js
+player.eme({
+  emeHeaders: {
+
+    // Remove the internal default Content-Type
+    'Content-Type': null,
+    'Custom-Foo': '<CUSTOM_FOO_VALUE>'
+  }
+});
+
+player.src({
+  src: '<URL>',
+  type: '<MIME_TYPE>',
+  keySystems: {
+    'com.apple.fps.1_0': {
+      certificateUri: '<CERTIFICATE_URL>',
+      certificateHeaders: {
+        'Custom-Foo': '<ANOTHER_CUSTOM_FOO_VALUE>'
+      },
+      licenseUri: '<LICENSE_URL>',
+      licenseHeaders: {
+        'License-Bar': '<LICENSE_BAR_VALUE>'
+      }
+    }
+  }
+})
+```
+
+This will result in the following headers for the certificate request:
+
+```
+Custom-Foo: <ANOTHER_CUSTOM_FOO_VALUE>
+```
+
+And for the license request:
+
+```
+Custom-Foo: <CUSTOM_FOO_VALUE>
+License-Bar: <LICENSE_BAR_VALUE>
 ```
 
 ### `emeOptions`
