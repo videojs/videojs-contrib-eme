@@ -1,5 +1,11 @@
 import QUnit from 'qunit';
-import {default as fairplay, FAIRPLAY_KEY_SYSTEM} from '../src/fairplay';
+import {
+  default as fairplay,
+  FAIRPLAY_KEY_SYSTEM,
+  defaultGetLicense,
+  defaultGetCertificate
+} from '../src/fairplay';
+import videojs from 'video.js';
 import window from 'global/window';
 
 QUnit.module('videojs-contrib-eme fairplay');
@@ -293,4 +299,104 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
     done();
   });
 
+});
+
+QUnit.test('emeHeaders sent with license and certificate requests', function(assert) {
+  const origXhr = videojs.xhr;
+  const emeOptions = {
+    emeHeaders: {
+      'Some-Header': 'some-header-value'
+    }
+  };
+  const fairplayOptions = {
+    licenseUri: 'some-url',
+    certificateUri: 'some-other-url'
+  };
+  const xhrCalls = [];
+
+  videojs.xhr = (xhrOptions) => {
+    xhrCalls.push(xhrOptions);
+  };
+
+  const getLicense = defaultGetLicense(fairplayOptions);
+  const getCertificate = defaultGetCertificate(fairplayOptions);
+
+  getLicense(emeOptions);
+  getCertificate(emeOptions);
+
+  assert.equal(xhrCalls.length, 2, 'made two XHR requests');
+
+  assert.deepEqual(xhrCalls[0], {
+    uri: 'some-url',
+    method: 'POST',
+    responseType: 'arraybuffer',
+    body: undefined,
+    headers: {
+      'Content-type': 'application/octet-stream',
+      'Some-Header': 'some-header-value'
+    }
+  }, 'made license request with proper emeHeaders value');
+
+  assert.deepEqual(xhrCalls[1], {
+    uri: 'some-other-url',
+    responseType: 'arraybuffer',
+    headers: {
+      'Some-Header': 'some-header-value'
+    }
+  }, 'made certificate request with proper emeHeaders value');
+
+  videojs.xhr = origXhr;
+});
+
+QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders value', function(assert) {
+  const origXhr = videojs.xhr;
+  const emeOptions = {
+    emeHeaders: {
+      'Some-Header': 'some-header-value'
+    }
+  };
+  const fairplayOptions = {
+    licenseUri: 'some-url',
+    certificateUri: 'some-other-url',
+    licenseHeaders: {
+      'Some-Header': 'higher-priority-license-header'
+    },
+    certificateHeaders: {
+      'Some-Header': 'higher-priority-cert-header'
+    }
+  };
+  const xhrCalls = [];
+
+  videojs.xhr = (xhrOptions) => {
+    xhrCalls.push(xhrOptions);
+  };
+
+  const getLicense = defaultGetLicense(fairplayOptions);
+  const getCertificate = defaultGetCertificate(fairplayOptions);
+
+  getLicense(emeOptions);
+  getCertificate(emeOptions);
+
+  assert.equal(xhrCalls.length, 2, 'made two XHR requests');
+
+  assert.deepEqual(xhrCalls[0], {
+    uri: 'some-url',
+    method: 'POST',
+    responseType: 'arraybuffer',
+    body: undefined,
+    headers: {
+      'Content-type': 'application/octet-stream',
+      'Some-Header': 'higher-priority-license-header'
+    }
+  }, 'made license request with proper licenseHeaders value');
+
+  assert.deepEqual(xhrCalls[1], {
+    uri: 'some-other-url',
+    responseType: 'arraybuffer',
+    headers: {
+      'Some-Header': 'higher-priority-cert-header'
+    }
+  }, 'made certificate request with proper certificateHeaders value');
+
+  videojs.xhr = origXhr;
 });

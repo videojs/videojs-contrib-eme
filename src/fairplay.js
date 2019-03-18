@@ -99,7 +99,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
   });
 };
 
-const defaultGetCertificate = (fairplayOptions) => {
+export const defaultGetCertificate = (fairplayOptions) => {
   return (emeOptions, callback) => {
     const headers = mergeAndRemoveNull(
       emeOptions.emeHeaders,
@@ -125,7 +125,7 @@ const defaultGetContentId = (emeOptions, initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
-const defaultGetLicense = (fairplayOptions) => {
+export const defaultGetLicense = (fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
     const headers = mergeAndRemoveNull(
       {'Content-type': 'application/octet-stream'},
