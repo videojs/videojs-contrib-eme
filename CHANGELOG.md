@@ -1,3 +1,19 @@
+<a name="3.5.0"></a>
+# [3.5.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.4.1...v3.5.0) (2019-03-20)
+
+### Features
+
+* Add support for defining custom headers for default license and certificate requests. (#76) ([7197390](https://github.com/videojs/videojs-contrib-eme/commit/7197390)), closes [#76](https://github.com/videojs/videojs-contrib-eme/issues/76)
+* Trigger player errors from EME errors and refactor to use promises internally. ([7cae936](https://github.com/videojs/videojs-contrib-eme/commit/7cae936))
+
+### Chores
+
+* use npm lts/carbon (#71) ([dc5d8c4](https://github.com/videojs/videojs-contrib-eme/commit/dc5d8c4)), closes [#71](https://github.com/videojs/videojs-contrib-eme/issues/71)
+
+### Tests
+
+* Update dependencies and fix test that fails in Safari. (#77) ([5238d08](https://github.com/videojs/videojs-contrib-eme/commit/5238d08)), closes [#77](https://github.com/videojs/videojs-contrib-eme/issues/77)
+
 <a name="3.4.1"></a>
 ## [3.4.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.4.0...v3.4.1) (2018-10-24)
 
