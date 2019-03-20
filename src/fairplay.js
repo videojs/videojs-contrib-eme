@@ -6,7 +6,7 @@
  */
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
+import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -99,11 +99,17 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
   });
 };
 
-const defaultGetCertificate = (certificateUri) => {
+export const defaultGetCertificate = (fairplayOptions) => {
   return (emeOptions, callback) => {
+    const headers = mergeAndRemoveNull(
+      emeOptions.emeHeaders,
+      fairplayOptions.certificateHeaders
+    );
+
     videojs.xhr({
-      uri: certificateUri,
-      responseType: 'arraybuffer'
+      uri: fairplayOptions.certificateUri,
+      responseType: 'arraybuffer',
+      headers
     }, (err, response, responseBody) => {
       if (err) {
         callback(err);
@@ -119,16 +125,20 @@ const defaultGetContentId = (emeOptions, initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
-const defaultGetLicense = (licenseUri) => {
+export const defaultGetLicense = (fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
+    const headers = mergeAndRemoveNull(
+      {'Content-type': 'application/octet-stream'},
+      emeOptions.emeHeaders,
+      fairplayOptions.licenseHeaders
+    );
+
     videojs.xhr({
-      uri: licenseUri,
+      uri: fairplayOptions.licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
       body: keyMessage,
-      headers: {
-        'Content-type': 'application/octet-stream'
-      }
+      headers
     }, (err, response, responseBody) => {
       if (err) {
         callback(err);
@@ -143,10 +153,10 @@ const defaultGetLicense = (licenseUri) => {
 const fairplay = ({video, initData, options, eventBus}) => {
   const fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
   const getCertificate = fairplayOptions.getCertificate ||
-    defaultGetCertificate(fairplayOptions.certificateUri);
+    defaultGetCertificate(fairplayOptions);
   const getContentId = fairplayOptions.getContentId || defaultGetContentId;
   const getLicense = fairplayOptions.getLicense ||
-    defaultGetLicense(fairplayOptions.licenseUri);
+    defaultGetLicense(fairplayOptions);
 
   return new Promise((resolve, reject) => {
     getCertificate(options, (err, cert) => {

@@ -1,6 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
+import {mergeAndRemoveNull} from './utils';
 
 export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
@@ -171,8 +172,8 @@ const setMediaKeys = ({
   return Promise.all(promises);
 };
 
-const defaultPlayreadyGetLicense = (url) => (emeOptions, keyMessage, callback) => {
-  requestPlayreadyLicense(url, keyMessage, (err, response, responseBody) => {
+const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+  requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, (err, response, responseBody) => {
     if (err) {
       callback(err);
       return;
@@ -182,15 +183,19 @@ const defaultPlayreadyGetLicense = (url) => (emeOptions, keyMessage, callback) =
   });
 };
 
-const defaultGetLicense = (url) => (emeOptions, keyMessage, callback) => {
+const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+  const headers = mergeAndRemoveNull(
+    {'Content-type': 'application/octet-stream'},
+    emeOptions.emeHeaders,
+    keySystemOptions.licenseHeaders
+  );
+
   videojs.xhr({
-    uri: url,
+    uri: keySystemOptions.url,
     method: 'POST',
     responseType: 'arraybuffer',
     body: keyMessage,
-    headers: {
-      'Content-type': 'application/octet-stream'
-    }
+    headers
   }, (err, response, responseBody) => {
     if (err) {
       callback(err);
@@ -230,8 +235,8 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
     keySystemOptions.getLicense = keySystem === 'com.microsoft.playready' ?
-      defaultPlayreadyGetLicense(keySystemOptions.url) :
-      defaultGetLicense(keySystemOptions.url);
+      defaultPlayreadyGetLicense(keySystemOptions) :
+      defaultGetLicense(keySystemOptions);
   }
 
   return keySystemOptions;

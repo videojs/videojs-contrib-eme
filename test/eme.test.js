@@ -763,3 +763,128 @@ QUnit.test('keySession.update promise rejection', function(assert) {
   });
 
 });
+
+QUnit.test('emeHeaders option sets headers on default license xhr request', function(assert) {
+  const done = assert.async();
+  const origXhr = videojs.xhr;
+  const xhrCalls = [];
+  const session = new videojs.EventTarget();
+
+  videojs.xhr = (options) => {
+    xhrCalls.push(options);
+  };
+
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
+  };
+
+  standard5July2016({
+    keySystemAccess,
+    video: {
+      setMediaKeys: (createdMediaKeys) => Promise.resolve(createdMediaKeys)
+    },
+    initDataType: '',
+    initData: '',
+    options: {
+      keySystems: {
+        'com.widevine.alpha': 'some-url'
+      },
+      emeHeaders: {
+        'Some-Header': 'some-header-value'
+      }
+    }
+  }).catch((e) => {});
+
+  setTimeout(() => {
+    session.trigger({
+      type: 'message',
+      message: 'the-message'
+    });
+
+    assert.equal(xhrCalls.length, 1, 'made one XHR');
+    assert.deepEqual(xhrCalls[0], {
+      uri: 'some-url',
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: 'the-message',
+      headers: {
+        'Content-type': 'application/octet-stream',
+        'Some-Header': 'some-header-value'
+      }
+    }, 'made request with proper emeHeaders option value');
+
+    videojs.xhr = origXhr;
+
+    done();
+  });
+});
+
+QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', function(assert) {
+  const done = assert.async();
+  const origXhr = videojs.xhr;
+  const xhrCalls = [];
+  const session = new videojs.EventTarget();
+
+  videojs.xhr = (options) => {
+    xhrCalls.push(options);
+  };
+
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return {
+        createSession: () => session
+      };
+    }
+  };
+
+  standard5July2016({
+    keySystemAccess,
+    video: {
+      setMediaKeys: (createdMediaKeys) => Promise.resolve(createdMediaKeys)
+    },
+    initDataType: '',
+    initData: '',
+    options: {
+      keySystems: {
+        'com.widevine.alpha': {
+          url: 'some-url',
+          licenseHeaders: {
+            'Some-Header': 'priority-header-value'
+          }
+        }
+      },
+      emeHeaders: {
+        'Some-Header': 'lower-priority-header-value'
+      }
+    }
+  }).catch((e) => {});
+
+  setTimeout(() => {
+    session.trigger({
+      type: 'message',
+      message: 'the-message'
+    });
+
+    assert.equal(xhrCalls.length, 1, 'made one XHR');
+    assert.deepEqual(xhrCalls[0], {
+      uri: 'some-url',
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: 'the-message',
+      headers: {
+        'Content-type': 'application/octet-stream',
+        'Some-Header': 'priority-header-value'
+      }
+    }, 'made request with proper licenseHeaders value');
+
+    videojs.xhr = origXhr;
+
+    done();
+  });
+});

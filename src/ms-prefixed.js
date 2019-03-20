@@ -31,18 +31,22 @@ export const addKeyToSession = (options, session, event, eventBus) => {
   }
 
   if (typeof playreadyOptions === 'string') {
-    playreadyOptions = { url: playreadyOptions };
+    playreadyOptions = {url: playreadyOptions};
+  } else if (typeof playreadyOptions === 'boolean') {
+    playreadyOptions = {};
   }
 
-  const url = playreadyOptions.url || event.destinationURL;
+  if (!playreadyOptions.url) {
+    playreadyOptions.url = event.destinationURL;
+  }
 
-  requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
+  requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, (err, response) => {
     if (eventBus) {
       eventBus.trigger('licenserequestattempted');
     }
     if (err) {
       eventBus.trigger({
-        message: 'Unable to request key from url: ' + url,
+        message: 'Unable to request key from url: ' + playreadyOptions.url,
         target: session,
         type: 'mskeyerror'
       });
