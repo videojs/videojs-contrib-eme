@@ -49,6 +49,8 @@ By default, videojs-contrib-eme is not able to decrypt any audio/video.
 
 In order to decrypt audio/video, a user must pass in either relevant license URIs, or methods specific to a source and its combination of key system and codec. These are provided to the plugin via either videojs-contrib-eme's plugin options or source options.
 
+If you're new to DRM on the web, read [about how EME is used to play protected content on the web](https://developers.google.com/web/fundamentals/media/eme).
+
 ### Initialization
 
 The videojs-contrib-eme plugin must be initialized before a source is loaded into the player:

@@ -184,7 +184,7 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   assert.equal(this.session.keys[0], 'a key', 'added correct key to session');
 
   getKeyCallback = (callback) => {
-    callback('an error', 'an errored key');
+    callback('an error', {}, 'an errored key');
   };
 
   this.session.trigger({
@@ -253,14 +253,14 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     body: utils.stringToArrayBuffer('key value')
   };
 
-  xhrCalls[0].callback('an error', response);
+  xhrCalls[0].callback('an error', {}, response);
 
   assert.equal(errorMessage,
     'Unable to request key from url: destination-url',
     'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
-  xhrCalls[0].callback(null, response);
+  xhrCalls[0].callback(null, {}, response);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
@@ -372,14 +372,14 @@ QUnit.test('makes request with provided url string on key message', function(ass
     body: utils.stringToArrayBuffer('key value')
   };
 
-  xhrCalls[0].callback('an error', response);
+  xhrCalls[0].callback('an error', {}, response);
 
   assert.equal(errorMessage,
     'Unable to request key from url: provided-url',
     'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
-  xhrCalls[0].callback(null, response);
+  xhrCalls[0].callback(null, {}, response);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
   assert.deepEqual(this.session.keys[0],
@@ -456,7 +456,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     body: utils.stringToArrayBuffer('key value')
   };
 
-  xhrCalls[0].callback('an error', response);
+  xhrCalls[0].callback('an error', {}, response);
 
   assert.equal(callCounts.licenseRequestAttempts, 1, 'license request event triggered');
   assert.equal(errorMessage,
@@ -464,7 +464,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     'triggers mskeyerror on event bus when callback has an error');
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
-  xhrCalls[0].callback(null, response);
+  xhrCalls[0].callback(null, {}, response);
 
   assert.equal(callCounts.licenseRequestAttempts, 2,
     'second license request event triggered');
