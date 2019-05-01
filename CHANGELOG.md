@@ -1,3 +1,14 @@
+<a name="3.5.1"></a>
+## [3.5.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.0...v3.5.1) (2019-05-01)
+
+### Bug Fixes
+
+* Use correct callback function signature for PlayReady license request callbacks. (#81) ([07a1f25](https://github.com/videojs/videojs-contrib-eme/commit/07a1f25)), closes [#81](https://github.com/videojs/videojs-contrib-eme/issues/81)
+
+### Chores
+
+* **package:** Regenerate package-lock.json (#82) ([beb62af](https://github.com/videojs/videojs-contrib-eme/commit/beb62af)), closes [#82](https://github.com/videojs/videojs-contrib-eme/issues/82)
+
 <a name="3.5.0"></a>
 # [3.5.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.4.1...v3.5.0) (2019-03-20)
 
