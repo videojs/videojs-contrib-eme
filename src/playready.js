@@ -57,5 +57,12 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
     headers,
     body: message,
     responseType: 'arraybuffer'
-  }, callback);
+  }, (err, response, responseBody) => {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    callback(null, responseBody);
+  });
 };
