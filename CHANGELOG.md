@@ -1,3 +1,10 @@
+<a name="3.5.2"></a>
+## [3.5.2](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.1...v3.5.2) (2019-05-01)
+
+### Bug Fixes
+
+* Fix regression in ms-prefixed PlayReady license request callbacks caused by #81 (#83) ([b52ba35](https://github.com/videojs/videojs-contrib-eme/commit/b52ba35)), closes [#81](https://github.com/videojs/videojs-contrib-eme/issues/81) [#83](https://github.com/videojs/videojs-contrib-eme/issues/83)
+
 <a name="3.5.1"></a>
 ## [3.5.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.0...v3.5.1) (2019-05-01)
 
