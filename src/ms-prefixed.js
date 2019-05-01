@@ -40,7 +40,7 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     playreadyOptions.url = event.destinationURL;
   }
 
-  requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, (err, response) => {
+  requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, (err, responseBody) => {
     if (eventBus) {
       eventBus.trigger('licenserequestattempted');
     }
@@ -53,7 +53,7 @@ export const addKeyToSession = (options, session, event, eventBus) => {
       return;
     }
 
-    session.update(new Uint8Array(response.body));
+    session.update(new Uint8Array(responseBody));
   });
 };
 
