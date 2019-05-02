@@ -475,3 +475,37 @@ QUnit.test('makes request with provided url on key message', function(assert) {
 
   videojs.xhr = origXhr;
 });
+
+QUnit.test('will use a custom getLicense method if one is provided', function(assert) {
+  let callCount = 0;
+
+  msPrefixed({
+    video: this.video,
+    initData: '',
+    options: {
+      keySystems: {
+        'com.microsoft.playready': {
+          getLicense() {
+            callCount++;
+          }
+        }
+      }
+    }
+  });
+
+  const buffer = createMessageBuffer([{
+    name: 'Content-Type',
+    value: 'text/xml; charset=utf-8'
+  }, {
+    name: 'SOAPAction',
+    value: '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+  }]);
+
+  this.session.trigger({
+    type: 'mskeymessage',
+    destinationURL: 'destination-url',
+    message: {buffer}
+  });
+
+  assert.equal(callCount, 1, 'getLicense was called');
+});
