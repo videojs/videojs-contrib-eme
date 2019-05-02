@@ -40,10 +40,11 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     playreadyOptions.url = event.destinationURL;
   }
 
-  requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, (err, responseBody) => {
+  const callback = (err, responseBody) => {
     if (eventBus) {
       eventBus.trigger('licenserequestattempted');
     }
+
     if (err) {
       eventBus.trigger({
         message: 'Unable to request key from url: ' + playreadyOptions.url,
@@ -54,7 +55,13 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     }
 
     session.update(new Uint8Array(responseBody));
-  });
+  };
+
+  if (playreadyOptions.getLicense) {
+    playreadyOptions.getLicense(options, event.message.buffer, callback);
+  } else {
+    requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, callback);
+  }
 };
 
 export const createSession = (video, initData, options, eventBus) => {
