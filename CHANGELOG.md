@@ -1,3 +1,10 @@
+<a name="3.5.3"></a>
+## [3.5.3](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.2...v3.5.3) (2019-05-02)
+
+### Bug Fixes
+
+* Fix support for custom getLicense methods for ms-prefixed PlayReady (#84) ([473f535](https://github.com/videojs/videojs-contrib-eme/commit/473f535)), closes [#84](https://github.com/videojs/videojs-contrib-eme/issues/84)
+
 <a name="3.5.2"></a>
 ## [3.5.2](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.1...v3.5.2) (2019-05-01)
 
