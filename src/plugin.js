@@ -1,4 +1,5 @@
 import videojs from 'video.js';
+import window from 'global/window';
 import { standard5July2016, getSupportedKeySystem } from './eme';
 import {
   default as fairplay,
@@ -212,56 +213,56 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  // Support EME 05 July 2016
-  // Chrome 42+, Firefox 47+, Edge
-  player.tech_.el_.addEventListener('encrypted', (event) => {
-    // TODO convert to videojs.log.debug and add back in
-    // https://github.com/videojs/video.js/pull/4780
-    // videojs.log('eme', 'Received an \'encrypted\' event');
-    setupSessions(player);
-    handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
-      .catch(emeError);
-  });
-  // Support Safari EME with FairPlay
-  // (also used in early Chrome or Chrome with EME disabled flag)
-  player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-    // TODO convert to videojs.log.debug and add back in
-    // https://github.com/videojs/video.js/pull/4780
-    // videojs.log('eme', 'Received a \'webkitneedkey\' event');
+  if (window.WebKitMediaKeys) {
+    // Support Safari EME with FairPlay
+    // (also used in early Chrome or Chrome with EME disabled flag)
+    player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received a \'webkitneedkey\' event');
 
-    // TODO it's possible that the video state must be cleared if reusing the same video
-    // element between sources
-    setupSessions(player);
-    handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
-      .catch(emeError);
-  });
+      // TODO it's possible that the video state must be cleared if reusing the same video
+      // element between sources
+      setupSessions(player);
+      handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
+        .catch(emeError);
+    });
 
-  // EDGE still fires msneedkey, but should use encrypted instead
-  if (videojs.browser.IS_EDGE) {
-    return;
+  } else if (window.MediaKeys) {
+    // Support EME 05 July 2016
+    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
+    player.tech_.el_.addEventListener('encrypted', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received an \'encrypted\' event');
+      setupSessions(player);
+      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+        .catch(emeError);
+    });
+
+  } else if (window.MSMediaKeys) {
+    // IE11 Windows 8.1+
+    // Since IE11 doesn't support promises, we have to use a combination of
+    // try/catch blocks and event handling to simulate promise rejection.
+    // Functionally speaking, there should be no discernible difference between
+    // the behavior of IE11 and those of other browsers.
+    player.tech_.el_.addEventListener('msneedkey', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received an \'msneedkey\' event');
+      setupSessions(player);
+      try {
+        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+      } catch (error) {
+        emeError(error);
+      }
+    });
+    player.tech_.on('mskeyerror', emeError);
+    // TODO: refactor this plugin so it can use a plugin dispose
+    player.on('dispose', () => {
+      player.tech_.off('mskeyerror', emeError);
+    });
   }
-
-  // IE11 Windows 8.1+
-  // Since IE11 doesn't support promises, we have to use a combination of
-  // try/catch blocks and event handling to simulate promise rejection.
-  // Functionally speaking, there should be no discernible difference between
-  // the behavior of IE11 and those of other browsers.
-  player.tech_.el_.addEventListener('msneedkey', (event) => {
-    // TODO convert to videojs.log.debug and add back in
-    // https://github.com/videojs/video.js/pull/4780
-    // videojs.log('eme', 'Received an \'msneedkey\' event');
-    setupSessions(player);
-    try {
-      handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
-    } catch (error) {
-      emeError(error);
-    }
-  });
-  player.tech_.on('mskeyerror', emeError);
-  // TODO: refactor this plugin so it can use a plugin dispose
-  player.on('dispose', () => {
-    player.tech_.off('mskeyerror', emeError);
-  });
 };
 
 /**
