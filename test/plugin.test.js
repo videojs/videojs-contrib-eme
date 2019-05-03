@@ -161,6 +161,11 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   let errors = 0;
   let keySession;
   let errorMessage;
+  const origMediaKeys = window.MediaKeys;
+  const origWebKitMediaKeys = window.WebKitMediaKeys;
+
+  window.MediaKeys = undefined;
+  window.WebKitMediaKeys = undefined;
 
   if (!window.MSMediaKeys) {
     window.MSMediaKeys = () => {};
@@ -250,6 +255,8 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
     assert.equal(errors, 3, 'error called on player 3 times');
     assert.equal(this.player.error(), null,
       'no error called on player with suppressError = true');
+    window.MediaKeys = origMediaKeys;
+    window.WebKitMediaKeys = origWebKitMediaKeys;
     done();
   });
   this.clock.tick(1);
@@ -262,7 +269,14 @@ QUnit.test('tech error listener is removed on dispose', function(assert) {
   const done = assert.async(1);
   let called = 0;
   const browser = videojs.browser;
+  const origMediaKeys = window.MediaKeys;
+  const origWebKitMediaKeys = window.WebKitMediaKeys;
 
+  window.MediaKeys = undefined;
+  window.WebKitMediaKeys = undefined;
+  if (!window.MSMediaKeys) {
+    window.MSMediaKeys = noop.bind(this);
+  }
   // let this test pass on edge
   videojs.browser = {IS_EDGE: false};
 
@@ -284,6 +298,8 @@ QUnit.test('tech error listener is removed on dispose', function(assert) {
 
     this.player.error = undefined;
     videojs.browser = browser;
+    window.MediaKeys = origMediaKeys;
+    window.WebKitMediaKeys = origWebKitMediaKeys;
     done();
   });
 
