@@ -213,7 +213,19 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  if (window.WebKitMediaKeys) {
+  if (window.MediaKeys) {
+    // Support EME 05 July 2016
+    // Chrome 42+, Firefox 47+, Edge
+    player.tech_.el_.addEventListener('encrypted', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received an \'encrypted\' event');
+      setupSessions(player);
+      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+        .catch(emeError);
+    });
+
+  } else if (window.WebKitMediaKeys) {
     // Support Safari EME with FairPlay
     // (also used in early Chrome or Chrome with EME disabled flag)
     player.tech_.el_.addEventListener('webkitneedkey', (event) => {
@@ -225,18 +237,6 @@ const onPlayerReady = (player, emeError) => {
       // element between sources
       setupSessions(player);
       handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
-        .catch(emeError);
-    });
-
-  } else if (window.MediaKeys) {
-    // Support EME 05 July 2016
-    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
-    player.tech_.el_.addEventListener('encrypted', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'encrypted\' event');
-      setupSessions(player);
-      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
         .catch(emeError);
     });
 
