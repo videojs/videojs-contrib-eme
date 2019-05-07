@@ -173,14 +173,7 @@ const setMediaKeys = ({
 };
 
 const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
-  requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, (err, response, responseBody) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    callback(null, responseBody);
-  });
+  requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, callback);
 };
 
 const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
