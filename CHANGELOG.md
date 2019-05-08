@@ -1,3 +1,11 @@
+<a name="3.5.4"></a>
+## [3.5.4](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.3...v3.5.4) (2019-05-08)
+
+### Bug Fixes
+
+* use legacy WebKit API when available to address Safari 12.1 issues ([7a20e5d](https://github.com/videojs/videojs-contrib-eme/commit/7a20e5d))
+* use new method signature for requestPlayreadyLicense from #81 (#85) ([36d5f9c](https://github.com/videojs/videojs-contrib-eme/commit/36d5f9c)), closes [#81](https://github.com/videojs/videojs-contrib-eme/issues/81) [#85](https://github.com/videojs/videojs-contrib-eme/issues/85)
+
 <a name="3.5.3"></a>
 ## [3.5.3](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.2...v3.5.3) (2019-05-02)
 
