@@ -12,11 +12,14 @@ export const getSupportedKeySystem = (keySystems) => {
   let promise;
 
   Object.keys(keySystems).forEach((keySystem) => {
-    // TODO use initDataTypes when appropriate
     const systemOptions = {};
-    const initDataTypes = keySystems[keySystem].initDataTypes;
+    const initDataTypes = keySystems[keySystem].initDataTypes ||
+      // fairplay requires an explicit initDataTypes
+      (keySystem.startsWith('com.apple.fps') ? ['sinf'] : null);
     const audioContentType = keySystems[keySystem].audioContentType;
-    const videoContentType = keySystems[keySystem].videoContentType;
+    const videoContentType = keySystems[keySystem].videoContentType ||
+      // fairplay requires an explicit videoCapabilities
+      (keySystem.startsWith('com.apple.fps') ? 'video/mp4' : null);
 
     if (audioContentType) {
       systemOptions.audioCapabilities = [{
