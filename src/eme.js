@@ -240,7 +240,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   }
 
   if (!keySystemOptions.url && !keySystemOptions.getLicense) {
-    throw new Error('Neither URL nor getLicense function provided to get license');
+    throw new Error('Missing configuration: one of url, licenseUri, or getLicense is required');
   }
 
   if (typeof keySystemOptions.certificateUri !== 'undefined') {
@@ -258,7 +258,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   }
 
   if (keySystem.startsWith('com.apple.fps') && !keySystemOptions.getCertificate) {
-    throw new Error('Neither URL nor getCertificate provided');
+    throw new Error('Missing configuration: one of certificateUri or getCertificate is required');
   }
 
   return keySystemOptions;

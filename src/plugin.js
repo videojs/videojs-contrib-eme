@@ -314,7 +314,7 @@ const eme = function(options = {}) {
 
       setupSessions(player);
 
-      if (player.tech_.el_.setMediaKeys) {
+      if (window.MediaKeys) {
         handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
           .catch((error) => {
@@ -323,7 +323,7 @@ const eme = function(options = {}) {
               emeError(error);
             }
           });
-      } else if (player.tech_.el_.msSetMediaKeys) {
+      } else if (window.MSMediaKeys) {
         const msKeyHandler = (event) => {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);

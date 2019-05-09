@@ -1,5 +1,6 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
+import window from 'global/window';
 import {
   standard5July2016,
   makeNewRequest,
@@ -505,7 +506,7 @@ if (!videojs.browser.IS_ANY_SAFARI) {
   });
 }
 
-QUnit.test('errors when neither url nor getLicense is given', function(assert) {
+QUnit.test('errors when none of url, licenseUri, or getLicense is given', function(assert) {
   const options = {
     keySystems: {
       'com.widevine.alpha': {}
@@ -523,7 +524,32 @@ QUnit.test('errors when neither url nor getLicense is given', function(assert) {
   }).catch((err) => {
     assert.equal(
       err,
-      'Error: Neither URL nor getLicense function provided to get license',
+      'Error: Missing configuration: one of url, licenseUri, or getLicense is required',
+      'correct error message'
+    );
+    done();
+  });
+});
+
+QUnit.test('errors when neither certificateUri nor getCertificate is given for fairplay', function(assert) {
+  const options = {
+    keySystems: {
+      'com.apple.fps': {url: 'fake-url'}
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.apple.fps'
+  };
+  const done = assert.async(1);
+
+  standard5July2016({
+    video: {},
+    keySystemAccess,
+    options
+  }).catch((err) => {
+    assert.equal(
+      err,
+      'Error: Missing configuration: one of certificateUri or getCertificate is required',
       'correct error message'
     );
     done();
@@ -887,4 +913,19 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
 
     done();
   });
+});
+
+QUnit.test('sets required fairplay defaults if not explicitly configured', function(assert) {
+  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
+
+  window.navigator.requestMediaKeySystemAccess = (keySystem, systemOptions) => {
+    assert.ok(systemOptions[0].initDataTypes.indexOf('sinf') !== -1,
+      'includes required initDataType');
+    assert.ok(systemOptions[0].videoCapabilities[0].contentType.indexOf('video/mp4') !== -1,
+      'includes required video contentType');
+  };
+
+  getSupportedKeySystem({'com.apple.fps': {}});
+
+  window.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
 });
