@@ -98,8 +98,8 @@ QUnit.test('exposes options', function(assert) {
     'exposes publisherId');
 });
 
-// skip test for Safari
-if (!window.WebKitMediaKeys) {
+// skip test for prefix-only Safari
+if (window.MediaKeys) {
   QUnit.test('initializeMediaKeys standard', function(assert) {
     assert.expect(9);
     const done = assert.async();
@@ -119,7 +119,7 @@ if (!window.WebKitMediaKeys) {
       assert.deepEqual(sessions[0].initData, initData, 'captured initData in the session');
       assert.equal(
         error,
-        'Error: Neither URL nor getLicense function provided to get license',
+        'Error: Missing configuration: one of url, licenseUri, or getLicense is required',
         'callback receives error'
       );
     };
@@ -131,7 +131,7 @@ if (!window.WebKitMediaKeys) {
       assert.equal(errors, 1, 'error triggered only once');
       assert.equal(
         this.player.error().message,
-        'Neither URL nor getLicense function provided to get license',
+        'Missing configuration: one of url, licenseUri, or getLicense is required',
         'error is called on player'
       );
       this.player.error(null);
@@ -268,7 +268,6 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
 QUnit.test('tech error listener is removed on dispose', function(assert) {
   const done = assert.async(1);
   let called = 0;
-  const browser = videojs.browser;
   const origMediaKeys = window.MediaKeys;
   const origWebKitMediaKeys = window.WebKitMediaKeys;
 
@@ -277,8 +276,6 @@ QUnit.test('tech error listener is removed on dispose', function(assert) {
   if (!window.MSMediaKeys) {
     window.MSMediaKeys = noop.bind(this);
   }
-  // let this test pass on edge
-  videojs.browser = {IS_EDGE: false};
 
   this.player.error = () => {
     called++;
@@ -297,13 +294,51 @@ QUnit.test('tech error listener is removed on dispose', function(assert) {
     assert.equal(called, 1, 'not called after player disposal');
 
     this.player.error = undefined;
-    videojs.browser = browser;
     window.MediaKeys = origMediaKeys;
     window.WebKitMediaKeys = origWebKitMediaKeys;
     done();
   });
 
   this.clock.tick(1);
+});
+
+QUnit.test('only registers for spec-compliant events if legacy APIs are available', function(assert) {
+  const done = assert.async(1);
+
+  const origMediaKeys = window.MediaKeys;
+  const origMSMediaKeys = window.MSMediaKeys;
+  const origWebKitMediaKeys = window.WebKitMediaKeys;
+
+  const events = {
+    encrypted: 0,
+    msneedkey: 0,
+    webkitneedkey: 0
+  };
+
+  this.player.tech_.el_ = {
+    addEventListener: e => events[e]++,
+    hasAttribute: () => false
+  };
+
+  window.MediaKeys = noop;
+  window.MSMediaKeys = noop;
+  window.WebKitMediaKeys = noop;
+
+  this.player.eme();
+
+  this.player.ready(() => {
+    assert.equal(events.encrypted, 1, 'registers for encrypted events');
+    assert.equal(events.msneedkey, 0, "doesn't register for msneedkey events");
+    assert.equal(events.webkitneedkey, 0, "doesn't register for webkitneedkey events");
+
+    window.MediaKeys = origMediaKeys;
+    window.MSMediaKeys = origMSMediaKeys;
+    window.WebKitMediaKeys = origWebKitMediaKeys;
+    done();
+  });
+
+  this.clock.tick(1);
+
 });
 
 QUnit.module('plugin guard functions', {
