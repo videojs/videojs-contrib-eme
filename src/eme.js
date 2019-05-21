@@ -236,7 +236,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     keySystemOptions = { url: keySystemOptions };
   }
   if (typeof keySystemOptions.licenseUri !== 'undefined') {
-    keySystemOptions = { url: keySystemOptions.licenseUri };
+    keySystemOptions.url = keySystemOptions.licenseUri;
   }
 
   if (!keySystemOptions.url && !keySystemOptions.getLicense) {
