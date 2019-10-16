@@ -110,7 +110,34 @@ export const makeNewRequest = ({
   });
 };
 
-const addSession = ({
+/*
+ * Creates a new media key session if media keys are available, otherwise queues the
+ * session creation for when the media keys are available.
+ *
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysession|MediaKeySession}
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeys|MediaKeys}
+ *
+ * @function addSession
+ * @param {Object} video
+ *        Target video element
+ * @param {string} initDataType
+ *        The type of init data provided
+ * @param {Uint8Array} initData
+ *        The media's init data
+ * @param {Object} options
+ *        Options provided to the plugin for this key system
+ * @param {function()} [getLicense]
+ *        User provided function to retrieve a license
+ * @param {function()} removeSession
+ *        Function to remove the persisted session on key expiration so that a new session
+ *        may be created
+ * @param {Object} eventBus
+ *        Event bus for any events pertinent to users
+ * @return {Promise}
+ *         A resolved promise if session is waiting for media keys, or a promise for the
+ *         session creation if media keys are available
+ */
+export const addSession = ({
   video,
   initDataType,
   initData,
@@ -131,19 +158,43 @@ const addSession = ({
     });
   }
 
-  video.pendingSessionData.push({initDataType, initData});
+  video.pendingSessionData.push({
+    initDataType,
+    initData,
+    options,
+    getLicense,
+    removeSession,
+    eventBus
+  });
   return Promise.resolve();
 };
 
-const setMediaKeys = ({
+/*
+ * Given media keys created from a key system access object, check for any session data
+ * that was queued and create new sessions for each.
+ *
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess|MediaKeySystemAccess}
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysession|MediaKeySession}
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeys|MediaKeys}
+ *
+ * @function addPendingSessions
+ * @param {Object} video
+ *        Target video element
+ * @param {string} [certificate]
+ *        The server certificate (if used)
+ * @param {Object} createdMediaKeys
+ *        Media keys to use for session creation
+ * @return {Promise}
+ *         A promise containing new session creations and setting of media keys on the
+ *         video object
+ */
+export const addPendingSessions = ({
   video,
   certificate,
-  createdMediaKeys,
-  options,
-  getLicense,
-  removeSession,
-  eventBus
+  createdMediaKeys
 }) => {
+  // save media keys on the video element to act as a reference for other functions so
+  // that they don't recreate the keys
   video.mediaKeysObject = createdMediaKeys;
   const promises = [];
 
@@ -158,10 +209,10 @@ const setMediaKeys = ({
       mediaKeys: video.mediaKeysObject,
       initDataType: data.initDataType,
       initData: data.initData,
-      options,
-      getLicense,
-      removeSession,
-      eventBus
+      options: data.options,
+      getLicense: data.getLicense,
+      removeSession: data.removeSession,
+      eventBus: data.eventBus
     }));
   }
 
@@ -282,14 +333,10 @@ export const standard5July2016 = ({
     }).then(() => {
       return keySystemAccess.createMediaKeys();
     }).then((createdMediaKeys) => {
-      return setMediaKeys({
+      return addPendingSessions({
         video,
         certificate,
-        createdMediaKeys,
-        options,
-        getLicense: promisifyGetLicense(keySystemOptions.getLicense, eventBus),
-        removeSession,
-        eventBus
+        createdMediaKeys
       });
     }).catch((err) => {
       // if we have a specific error message, use it, otherwise show a more
