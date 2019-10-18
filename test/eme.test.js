@@ -902,7 +902,7 @@ QUnit.test('addSession saves options', function(assert) {
   const options = { some: 'option' };
   const getLicense = () => '';
   const removeSession = () => '';
-  const eventBus = 'bus';
+  const eventBus = { trigger: () => {} };
 
   addSession({
     video,
@@ -932,7 +932,6 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
   assert.expect(5);
 
   const done = assert.async();
-
   const options = { some: 'option' };
   const getLicense = (emeOptions, message) => {
     assert.deepEqual(emeOptions, options, 'used pending session data options');
@@ -945,11 +944,12 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
     options,
     getLicense,
     removeSession: () => '',
-    eventBus: 'bus'
+    eventBus: { trigger: () => {} }
   }];
   const video = {
     pendingSessionData,
-    setMediaKeys: (mediaKeys) => Promise.resolve()
+    // internal API, not used in this test
+    setMediaKeys: () => Promise.resolve()
   };
   const createdMediaKeys = {
     createSession: () => {
@@ -972,7 +972,7 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
             'message',
             'added listener for message event'
           );
-          // callback should call getLicense
+          // callback should call getLicense, which continues this test
           eventListeners[0].callback({ message: 'test message' });
           return Promise.resolve();
         },
