@@ -98,6 +98,16 @@ QUnit.test('exposes options', function(assert) {
     'exposes publisherId');
 });
 
+QUnit.test('exposes getSupportedCDMs() and detectSupportedCDMs()', function(assert) {
+  assert.notOk(this.player.eme.getSupportedCDMs, 'getSupportedCDMs is unavailable at start');
+  assert.notOk(this.player.eme.detectSupportedCDMs, 'detectSupportedCDMs is unavailable at start');
+
+  this.player.eme();
+
+  assert.ok(this.player.eme.getSupportedCDMs, 'getSupportedCDMs is available after initialization');
+  assert.ok(this.player.eme.detectSupportedCDMs, 'detectSupportedCDMs is available after initialization');
+});
+
 // skip test for Safari
 if (!window.WebKitMediaKeys) {
   QUnit.test('initializeMediaKeys standard', function(assert) {

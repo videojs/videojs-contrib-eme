@@ -9,7 +9,7 @@ const keySystems = {
 };
 
 // Use a combination of API feature and user agent detection to provide an initial
-// best guess as to which CDMs are supported
+// best guess as to which CDMs are supported.
 const bestGuessSupport = {
   fairplay: !!window.WebKitMediaKeys,
   playready: !!(window.MSMediaKeys && videojs.browser.IE_VERSION) ||
@@ -22,13 +22,18 @@ const bestGuessSupport = {
 
 let latestSupportResults = bestGuessSupport;
 
-// Synchronously return the latest or best guess list of supported CDMs
-export const getSupportedCDM = () => {
+// Synchronously return the latest list of supported CDMs returned by detectCDMSupport().
+// If none is available, return the best guess
+export const getSupportedCDMs = () => {
   return latestSupportResults;
 };
 
-// Asynchronously detect the list of supported CDMs
-export const detectCDMSupport = () => {
+// Asynchronously detect the list of supported CDMs by requesting key system access
+// when possible, otherwise rely on browser-specific EME API feature detection. This
+// is curried to allow passing a promise polyfill from the player options when the
+// plugin is initialized. The polyfill is necessary to ensure the function behaves
+// consistently between IE (which lacks native promise support) and other browsers
+export const createDetectSupportedCDMsFunc = (promise = window.Promise) => () => {
   const results = {
     fairplay: false,
     playready: false,
@@ -44,9 +49,8 @@ export const detectCDMSupport = () => {
     results.playready = true;
   }
 
-  // Note: `requestMediaKeySystemAccess` is undefined in Chrome unless over https
   if (window.MediaKeys && window.navigator.requestMediaKeySystemAccess) {
-    const defaultConfig = [{
+    const validConfig = [{
       initDataTypes: [],
       audioCapabilities: [{
         contentType: 'audio/mp4;codecs="mp4a.40.2"'
@@ -56,22 +60,23 @@ export const detectCDMSupport = () => {
       }]
     }];
 
-    return Promise.all([
-      window.navigator.requestMediaKeySystemAccess(keySystems.widevine, defaultConfig).catch(() => {}),
-      window.navigator.requestMediaKeySystemAccess(keySystems.playready, defaultConfig).catch(() => {}),
-      window.navigator.requestMediaKeySystemAccess(keySystems.clearkey, defaultConfig).catch(() => {})
+    // Currently, Safari doesn't support requestMediaKeySystemAccess() so Fairplay
+    // is excluded from the checks here
+    return promise.all([
+      window.navigator.requestMediaKeySystemAccess(keySystems.widevine, validConfig).catch(() => {}),
+      window.navigator.requestMediaKeySystemAccess(keySystems.playready, validConfig).catch(() => {}),
+      window.navigator.requestMediaKeySystemAccess(keySystems.clearkey, validConfig).catch(() => {})
     ]).then(([widevine, playready, clearkey]) => {
       results.widevine = !!widevine;
       results.playready = !!playready;
       results.clearkey = !!clearkey;
-
-      // Update the guesses now that we have more definitive answers
       latestSupportResults = results;
+
       return results;
     });
   }
-  // Update the guesses now that we have more definitive answers
-  latestSupportResults = results;
-  return Promise.resolve(results);
 
+  latestSupportResults = results;
+
+  return promise.resolve(results);
 };

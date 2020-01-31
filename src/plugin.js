@@ -9,6 +9,7 @@ import {
   default as msPrefixed,
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
+import { getSupportedCDMs, createDetectSupportedCDMsFunc } from './cdm.js';
 import { arrayBuffersEqual, arrayBufferFrom } from './utils';
 
 export const hasSession = (sessions, initData) => {
@@ -294,7 +295,7 @@ const eme = function(options = {}) {
     * @param    {Object} [emeOptions={}]
     *           An object of eme plugin options.
     * @param    {Function} [callback=function(){}]
-    * @param    {Boolean} [suppressErrorIfPossible=false]
+    * @param    {boolean} [suppressErrorIfPossible=false]
     */
     initializeMediaKeys(emeOptions = {}, callback = function() {}, suppressErrorIfPossible = false) {
       // TODO: this should be refactored and renamed to be less tied
@@ -351,6 +352,10 @@ const eme = function(options = {}) {
         }
       }
     },
+    // Pass a promise polyfill from the player options for IE support. If none
+    // exists, native Promises will be used and the function won't be supported in IE
+    detectSupportedCDMs: createDetectSupportedCDMsFunc(player.options().Promise),
+    getSupportedCDMs,
     options
   };
 };
