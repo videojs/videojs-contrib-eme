@@ -145,6 +145,14 @@ export const defaultGetLicense = (fairplayOptions) => {
         return;
       }
 
+      if (response.statusCode >= 400 && response.statusCode <= 599) {
+        callback({
+          message: `License request failed with response code ${response.statusCode}`,
+          statusCode: response.statusCode
+        });
+        return;
+      }
+
       callback(null, responseBody);
     });
   };

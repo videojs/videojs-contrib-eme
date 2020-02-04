@@ -190,7 +190,8 @@ export const emeErrorHandler = (player) => {
     player.error({
       // MEDIA_ERR_ENCRYPTED is code 5
       code: 5,
-      message
+      message,
+      originalError: objOrErr
     });
   };
 };
@@ -294,7 +295,7 @@ const eme = function(options = {}) {
     * @param    {Object} [emeOptions={}]
     *           An object of eme plugin options.
     * @param    {Function} [callback=function(){}]
-    * @param    {Boolean} [suppressErrorIfPossible=false]
+    * @param    {boolean} [suppressErrorIfPossible=false]
     */
     initializeMediaKeys(emeOptions = {}, callback = function() {}, suppressErrorIfPossible = false) {
       // TODO: this should be refactored and renamed to be less tied
