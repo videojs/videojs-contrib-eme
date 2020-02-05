@@ -196,10 +196,8 @@ const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callbac
     }
 
     if (response.statusCode >= 400 && response.statusCode <= 599) {
-      callback({
-        message: `License request failed with response code ${response.statusCode}`,
-        statusCode: response.statusCode
-      });
+      // Pass an empty object as the error to use the default code 5 error message
+      callback({});
       return;
     }
 

@@ -741,6 +741,9 @@ QUnit.test('emeError properly handles various parameter types', function(assert)
   emeError(undefined);
   assert.equal(errorObj.message, null, 'null error message');
 
+  emeError({});
+  assert.equal(errorObj.message, null, 'null error message');
+
   emeError(new Error('some error'));
   assert.equal(errorObj.message, 'some error', 'use error text when error');
 
