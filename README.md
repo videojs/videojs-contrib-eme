@@ -27,7 +27,7 @@ Maintenance Status: Stable
   - [Other DRM Systems](#other-drm-systems)
     - [Get License By URL](#get-license-by-url)
     - [Get License By Function](#get-license-by-function)
-  - [A Note on Get License Callbacks](#a-note-on-get-license-callbacks)
+  - [Get License Errors](#get-license-errors)
 - [API](#api)
   - [Available Options](#available-options)
     - [`keySystems`](#keysystems)
@@ -279,7 +279,7 @@ Below is an example of using one of these DRM systems and custom `getLicense()` 
 }
 ```
 
-### A Note on Get License Callbacks
+### Get License Errors
 
 The default `getLicense()` functions pass an error to the callback if the license request returns a 4xx or 5xx response code. Depending on how the license server is configured, it is possible in some cases that a valid license could still be returned even if the response code is in that range. If you wish not to pass an error for 4xx and 5xx response codes, you may pass your own `getLicense()` function with the `keySystems` as described above.
 

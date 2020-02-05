@@ -176,7 +176,7 @@ const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage
   requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, callback);
 };
 
-const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
   const headers = mergeAndRemoveNull(
     {'Content-type': 'application/octet-stream'},
     emeOptions.emeHeaders,
