@@ -1,3 +1,10 @@
+<a name="3.5.5"></a>
+## [3.5.5](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.4...v3.5.5) (2020-02-06)
+
+### Bug Fixes
+
+* getLicense should pass an error to callback if XHR returns 400/500 (#99) ([498ebaf](https://github.com/videojs/videojs-contrib-eme/commit/498ebaf)), closes [#99](https://github.com/videojs/videojs-contrib-eme/issues/99)
+
 <a name="3.5.4"></a>
 ## [3.5.4](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.3...v3.5.4) (2019-05-08)
 
