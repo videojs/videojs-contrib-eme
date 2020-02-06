@@ -145,6 +145,12 @@ export const defaultGetLicense = (fairplayOptions) => {
         return;
       }
 
+      if (response.statusCode >= 400 && response.statusCode <= 599) {
+        // Pass an empty object as the error to use the default code 5 error message
+        callback({});
+        return;
+      }
+
       callback(null, responseBody);
     });
   };

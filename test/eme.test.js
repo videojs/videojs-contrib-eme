@@ -1,10 +1,12 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
 import {
+  defaultGetLicense,
   standard5July2016,
   makeNewRequest,
   getSupportedKeySystem
 } from '../src/eme';
+import sinon from 'sinon';
 
 // mock session to make testing easier (so we can trigger events)
 const getMockSession = () => {
@@ -715,6 +717,58 @@ QUnit.test('getLicense promise rejection', function(assert) {
     done();
   });
 
+});
+
+QUnit.test('getLicense calls back with error for 400 and 500 status codes', function(assert) {
+  const getLicenseCallback = sinon.spy();
+  const getLicense = defaultGetLicense({});
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 400}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 500}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 599}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
+  assert.equal(getLicenseCallback.alwaysCalledWith({}), true, 'getLicense callback called with correct error');
+});
+
+QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
+  const getLicenseCallback = sinon.spy();
+  const getLicense = defaultGetLicense({});
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 200}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 399}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  videojs.xhr = (params, callback) => {
+    return callback(null, {statusCode: 600}, {body: 'some-body'});
+  };
+
+  getLicense({}, null, getLicenseCallback);
+
+  assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
+  assert.equal(getLicenseCallback.alwaysCalledWith(null, {body: 'some-body'}), true, 'getLicense callback called with correct args');
 });
 
 QUnit.test('keySession.update promise rejection', function(assert) {

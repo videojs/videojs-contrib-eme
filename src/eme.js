@@ -176,7 +176,7 @@ const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage
   requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, callback);
 };
 
-const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
   const headers = mergeAndRemoveNull(
     {'Content-type': 'application/octet-stream'},
     emeOptions.emeHeaders,
@@ -192,6 +192,12 @@ const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callbac
   }, (err, response, responseBody) => {
     if (err) {
       callback(err);
+      return;
+    }
+
+    if (response.statusCode >= 400 && response.statusCode <= 599) {
+      // Pass an empty object as the error to use the default code 5 error message
+      callback({});
       return;
     }
 
