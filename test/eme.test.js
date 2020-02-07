@@ -4,7 +4,9 @@ import {
   defaultGetLicense,
   standard5July2016,
   makeNewRequest,
-  getSupportedKeySystem
+  getSupportedKeySystem,
+  addSession,
+  addPendingSessions
 } from '../src/eme';
 import sinon from 'sinon';
 
@@ -610,7 +612,7 @@ QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
 
 });
 
-QUnit.test('rejects promise when setMediaKeys rejects', function(assert) {
+QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
   let rejectSetServerCertificate = true;
   const rejectGenerateRequest = true;
   let rejectSetMediaKeys = true;
@@ -939,6 +941,105 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
 
     videojs.xhr = origXhr;
 
+    done();
+  });
+});
+
+QUnit.module('session management');
+
+QUnit.test('addSession saves options', function(assert) {
+  const video = {
+    pendingSessionData: []
+  };
+  const initDataType = 'temporary';
+  const initData = new Uint8Array();
+  const options = { some: 'option' };
+  const getLicense = () => '';
+  const removeSession = () => '';
+  const eventBus = { trigger: () => {} };
+
+  addSession({
+    video,
+    initDataType,
+    initData,
+    options,
+    getLicense,
+    removeSession,
+    eventBus
+  });
+
+  assert.deepEqual(
+    video.pendingSessionData,
+    [{
+      initDataType,
+      initData,
+      options,
+      getLicense,
+      removeSession,
+      eventBus
+    }],
+    'saved options into pendingSessionData array'
+  );
+});
+
+QUnit.test('addPendingSessions reuses saved options', function(assert) {
+  assert.expect(5);
+
+  const done = assert.async();
+  const options = { some: 'option' };
+  const getLicense = (emeOptions, message) => {
+    assert.deepEqual(emeOptions, options, 'used pending session data options');
+    return Promise.resolve('license');
+  };
+  const eventListeners = [];
+  const pendingSessionData = [{
+    initDataType: 'temporary',
+    initData: new Uint8Array(),
+    options,
+    getLicense,
+    removeSession: () => '',
+    eventBus: { trigger: () => {} }
+  }];
+  const video = {
+    pendingSessionData,
+    // internal API, not used in this test
+    setMediaKeys: () => Promise.resolve()
+  };
+  const createdMediaKeys = {
+    createSession: () => {
+      return {
+        addEventListener: (event, callback) => eventListeners.push({ event, callback }),
+        generateRequest: (initDataType, initData) => {
+          assert.equal(
+            initDataType,
+            pendingSessionData[0].initDataType,
+            'generateRequest received correct initDataType'
+          );
+          assert.equal(
+            initData,
+            pendingSessionData[0].initData,
+            'generateRequest received correct initData'
+          );
+          assert.equal(eventListeners.length, 2, 'added two event listeners');
+          assert.equal(
+            eventListeners[0].event,
+            'message',
+            'added listener for message event'
+          );
+          // callback should call getLicense, which continues this test
+          eventListeners[0].callback({ message: 'test message' });
+          return Promise.resolve();
+        },
+        // this call and everything after is beyond the scope of this test
+        update: () => Promise.resolve()
+      };
+    }
+  };
+
+  return addPendingSessions({
+    video,
+    createdMediaKeys
+  }).then((resolve, reject) => {
     done();
   });
 });
