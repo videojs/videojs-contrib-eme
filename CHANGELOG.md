@@ -1,3 +1,10 @@
+<a name="3.5.6"></a>
+## [3.5.6](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.5...v3.5.6) (2020-02-10)
+
+### Bug Fixes
+
+* save session-specific options in pending session data when waiting on media keys (#96) ([6cdbfa8](https://github.com/videojs/videojs-contrib-eme/commit/6cdbfa8)), closes [#96](https://github.com/videojs/videojs-contrib-eme/issues/96)
+
 <a name="3.5.5"></a>
 ## [3.5.5](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.4...v3.5.5) (2020-02-06)
 
