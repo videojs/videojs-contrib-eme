@@ -2,7 +2,8 @@ import QUnit from 'qunit';
 
 import {
   arrayBuffersEqual,
-  arrayBufferFrom
+  arrayBufferFrom,
+  mergeAndRemoveNull
 } from '../src/utils';
 
 QUnit.module('utils');
@@ -46,4 +47,23 @@ QUnit.test('arrayBufferFrom returns buffer from typed arrays', function(assert) 
   buffer = arrayBufferFrom(buffer);
   assert.ok(buffer instanceof ArrayBuffer, 'buffer is still an ArrayBuffer');
   assert.equal(buffer, uint16Array.buffer, 'buffer is the same buffer');
+});
+
+QUnit.test('mergeAndRemoveNull removes property if value is null', function(assert) {
+  const object1 = {
+    a: 'a',
+    b: 'b',
+    c: 'c'
+  };
+  const object2 = {
+    a: 'A',
+    b: null
+  };
+
+  const resultObj = mergeAndRemoveNull(object1, object2);
+
+  assert.deepEqual(resultObj, {
+    a: 'A',
+    c: 'c'
+  }, 'successfully merged and removed null property');
 });

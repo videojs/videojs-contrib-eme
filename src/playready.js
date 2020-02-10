@@ -1,5 +1,6 @@
 import videojs from 'video.js';
 import window from 'global/window';
+import {mergeAndRemoveNull} from './utils';
 
 /**
  * Parses the EME key message XML to extract HTTP headers and the Challenge element to use
@@ -40,14 +41,34 @@ export const getMessageContents = (message) => {
   };
 };
 
-export const requestPlayreadyLicense = (url, messageBuffer, callback) => {
-  const { headers, message } = getMessageContents(messageBuffer);
+export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOptions, callback) => {
+  const messageContents = getMessageContents(messageBuffer);
+  const message = messageContents.message;
+
+  const headers = mergeAndRemoveNull(
+    messageContents.headers,
+    emeOptions.emeHeaders,
+    keySystemOptions.licenseHeaders
+  );
 
   videojs.xhr({
-    uri: url,
+    uri: keySystemOptions.url,
     method: 'post',
     headers,
     body: message,
     responseType: 'arraybuffer'
-  }, callback);
+  }, (err, response, responseBody) => {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    if (response.statusCode >= 400 && response.statusCode <= 599) {
+      // Pass an empty object as the error to use the default code 5 error message
+      callback({});
+      return;
+    }
+
+    callback(null, responseBody);
+  });
 };

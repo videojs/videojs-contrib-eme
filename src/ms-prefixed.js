@@ -1,4 +1,10 @@
-import videojs from 'video.js';
+/**
+ * The W3C Working Draft of 22 October 2013 seems to be the best match for
+ * the ms-prefixed API. However, it should only be used as a guide; it is
+ * doubtful the spec is 100% implemented as described.
+ * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
+ * @see https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/mt598601(v=vs.85)
+ */
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
 
@@ -11,7 +17,11 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     playreadyOptions.getKey(
       options, event.destinationURL, event.message.buffer, (err, key) => {
         if (err) {
-          videojs.log.error('Unable to get key: ' + err);
+          eventBus.trigger({
+            message: 'Unable to get key: ' + err,
+            target: session,
+            type: 'mskeyerror'
+          });
           return;
         }
 
@@ -21,30 +31,45 @@ export const addKeyToSession = (options, session, event, eventBus) => {
   }
 
   if (typeof playreadyOptions === 'string') {
-    playreadyOptions = { url: playreadyOptions };
+    playreadyOptions = {url: playreadyOptions};
+  } else if (typeof playreadyOptions === 'boolean') {
+    playreadyOptions = {};
   }
 
-  const url = playreadyOptions.url || event.destinationURL;
+  if (!playreadyOptions.url) {
+    playreadyOptions.url = event.destinationURL;
+  }
 
-  requestPlayreadyLicense(url, event.message.buffer, (err, response) => {
+  const callback = (err, responseBody) => {
     if (eventBus) {
       eventBus.trigger('licenserequestattempted');
     }
+
     if (err) {
-      videojs.log.error('Unable to request key from url: ' + url);
+      eventBus.trigger({
+        message: 'Unable to request key from url: ' + playreadyOptions.url,
+        target: session,
+        type: 'mskeyerror'
+      });
       return;
     }
 
-    session.update(new Uint8Array(response.body));
-  });
+    session.update(new Uint8Array(responseBody));
+  };
+
+  if (playreadyOptions.getLicense) {
+    playreadyOptions.getLicense(options, event.message.buffer, callback);
+  } else {
+    requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, callback);
+  }
 };
 
 export const createSession = (video, initData, options, eventBus) => {
+  // Note: invalid mime type passed here throws a NotSupportedError
   const session = video.msKeys.createSession('video/mp4', initData);
 
   if (!session) {
-    videojs.log.error('Could not create key session.');
-    return;
+    throw new Error('Could not create key session.');
   }
 
   // Note that mskeymessage may not always be called for PlayReady:
@@ -61,9 +86,19 @@ export const createSession = (video, initData, options, eventBus) => {
   });
 
   session.addEventListener('mskeyerror', (event) => {
-    videojs.log.error(
-      'Unexpected key error from key session with ' +
-      `code: ${session.error.code} and systemCode: ${session.error.systemCode}`);
+    eventBus.trigger({
+      message: 'Unexpected key error from key session with ' +
+      `code: ${session.error.code} and systemCode: ${session.error.systemCode}`,
+      target: session,
+      type: 'mskeyerror'
+    });
+  });
+
+  session.addEventListener('mskeyadded', () => {
+    eventBus.trigger({
+      target: session,
+      type: 'mskeyadded'
+    });
   });
 };
 
@@ -72,6 +107,7 @@ export default ({video, initData, options, eventBus}) => {
   // verify that we aren't trying to create a new session when one already exists, here
   // sessions are managed earlier (on the player.eme object), meaning that at this point
   // any existing keys should be cleaned up.
+  // TODO: Will this break rotation? Is it safe?
   if (video.msKeys) {
     delete video.msKeys;
   }
@@ -79,9 +115,8 @@ export default ({video, initData, options, eventBus}) => {
   try {
     video.msSetMediaKeys(new window.MSMediaKeys(PLAYREADY_KEY_SYSTEM));
   } catch (e) {
-    videojs.log.error(
-      'Unable to create media keys for PlayReady key system. Error: ' + e.message);
-    return;
+    throw new Error('Unable to create media keys for PlayReady key system. ' +
+      'Error: ' + e.message);
   }
 
   createSession(video, initData, options, eventBus);

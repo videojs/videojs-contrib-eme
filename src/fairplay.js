@@ -1,6 +1,12 @@
+/**
+ * The W3C Working Draft of 22 October 2013 seems to be the best match for
+ * the ms-prefixed API. However, it should only be used as a guide; it is
+ * doubtful the spec is 100% implemented as described.
+ * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
+ */
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri} from './utils';
+import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -45,19 +51,21 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
 const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
-      video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      try {
+        video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+      } catch (error) {
+        reject('Could not create MediaKeys');
+        return;
+      }
     }
 
-    if (!video.webkitKeys) {
-      reject('Could not create MediaKeys');
-      return;
-    }
+    let keySession;
 
-    const keySession = video.webkitKeys.createSession(
-      'video/mp4',
-      concatInitDataIdAndCertificate({id: contentId, initData, cert}));
-
-    if (!keySession) {
+    try {
+      keySession = video.webkitKeys.createSession(
+        'video/mp4',
+        concatInitDataIdAndCertificate({id: contentId, initData, cert}));
+    } catch (error) {
       reject('Could not create key session');
       return;
     }
@@ -78,22 +86,30 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       });
     });
 
-    keySession.addEventListener('webkitkeyadded', (event) => {
-      resolve(event);
+    keySession.addEventListener('webkitkeyadded', () => {
+      resolve();
     });
 
     // for testing purposes, adding webkitkeyerror must be the last item in this method
-    keySession.addEventListener('webkitkeyerror', (event) => {
-      reject(event);
+    keySession.addEventListener('webkitkeyerror', () => {
+      const error = keySession.error;
+
+      reject(`KeySession error: code ${error.code}, systemCode ${error.systemCode}`);
     });
   });
 };
 
-const defaultGetCertificate = (certificateUri) => {
+export const defaultGetCertificate = (fairplayOptions) => {
   return (emeOptions, callback) => {
+    const headers = mergeAndRemoveNull(
+      emeOptions.emeHeaders,
+      fairplayOptions.certificateHeaders
+    );
+
     videojs.xhr({
-      uri: certificateUri,
-      responseType: 'arraybuffer'
+      uri: fairplayOptions.certificateUri,
+      responseType: 'arraybuffer',
+      headers
     }, (err, response, responseBody) => {
       if (err) {
         callback(err);
@@ -109,19 +125,29 @@ const defaultGetContentId = (emeOptions, initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
-const defaultGetLicense = (licenseUri) => {
+export const defaultGetLicense = (fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
+    const headers = mergeAndRemoveNull(
+      {'Content-type': 'application/octet-stream'},
+      emeOptions.emeHeaders,
+      fairplayOptions.licenseHeaders
+    );
+
     videojs.xhr({
-      uri: licenseUri,
+      uri: fairplayOptions.licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
       body: keyMessage,
-      headers: {
-        'Content-type': 'application/octet-stream'
-      }
+      headers
     }, (err, response, responseBody) => {
       if (err) {
         callback(err);
+        return;
+      }
+
+      if (response.statusCode >= 400 && response.statusCode <= 599) {
+        // Pass an empty object as the error to use the default code 5 error message
+        callback({});
         return;
       }
 
@@ -133,10 +159,10 @@ const defaultGetLicense = (licenseUri) => {
 const fairplay = ({video, initData, options, eventBus}) => {
   const fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
   const getCertificate = fairplayOptions.getCertificate ||
-    defaultGetCertificate(fairplayOptions.certificateUri);
+    defaultGetCertificate(fairplayOptions);
   const getContentId = fairplayOptions.getContentId || defaultGetContentId;
   const getLicense = fairplayOptions.getLicense ||
-    defaultGetLicense(fairplayOptions.licenseUri);
+    defaultGetLicense(fairplayOptions);
 
   return new Promise((resolve, reject) => {
     getCertificate(options, (err, cert) => {
@@ -157,7 +183,7 @@ const fairplay = ({video, initData, options, eventBus}) => {
       contentId: getContentId(options, initData),
       eventBus
     });
-  }).catch(videojs.log.error.bind(videojs.log.error));
+  });
 };
 
 export default fairplay;

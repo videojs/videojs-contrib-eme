@@ -1,4 +1,5 @@
 import document from 'global/document';
+import videojs from 'video.js';
 
 export const stringToUint16Array = (string) => {
   // 2 bytes for each char
@@ -51,4 +52,17 @@ export const arrayBufferFrom = (bufferOrTypedArray) => {
   }
 
   return bufferOrTypedArray;
+};
+
+export const mergeAndRemoveNull = (...args) => {
+  const result = videojs.mergeOptions(...args);
+
+  // Any header whose value is `null` will be removed.
+  Object.keys(result).forEach(k => {
+    if (result[k] === null) {
+      delete result[k];
+    }
+  });
+
+  return result;
 };
