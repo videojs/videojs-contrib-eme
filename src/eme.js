@@ -3,6 +3,50 @@ import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
 
+/**
+ * Returns an array of MediaKeySystemConfigurationObjects provided in the keySystem
+ * options.
+ *
+ * @see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration|MediaKeySystemConfigurationObject}
+ *
+ * @param {Object} keySystemOptions
+ *        Options passed into videojs-contrib-eme for a specific keySystem
+ * @return {Object[]}
+ *         Array of MediaKeySystemConfigurationObjects
+ */
+export const getSupportedConfigurations = (keySystemOptions) => {
+  if (keySystemOptions.supportedConfigurations) {
+    return keySystemOptions.supportedConfigurations;
+  }
+
+  // TODO use initDataTypes when appropriate
+  const supportedConfiguration = {};
+  const audioContentType = keySystemOptions.audioContentType;
+  const audioRobustness = keySystemOptions.audioRobustness;
+  const videoContentType = keySystemOptions.videoContentType;
+  const videoRobustness = keySystemOptions.videoRobustness;
+
+  if (audioContentType || audioRobustness) {
+    supportedConfiguration.audioCapabilities = [
+      Object.assign({},
+        (audioContentType ? { contentType: audioContentType } : {}),
+        (audioRobustness ? { robustness: audioRobustness } : {})
+      )
+    ];
+  }
+
+  if (videoContentType || videoRobustness) {
+    supportedConfiguration.videoCapabilities = [
+      Object.assign({},
+        (videoContentType ? { contentType: videoContentType } : {}),
+        (videoRobustness ? { robustness: videoRobustness } : {})
+      )
+    ];
+  }
+
+  return [supportedConfiguration];
+};
+
 export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
@@ -10,36 +54,14 @@ export const getSupportedKeySystem = (keySystems) => {
   let promise;
 
   Object.keys(keySystems).forEach((keySystem) => {
-    // TODO use initDataTypes when appropriate
-    const systemOptions = {};
-    const audioContentType = keySystems[keySystem].audioContentType;
-    const audioRobustness = keySystems[keySystem].audioRobustness;
-    const videoContentType = keySystems[keySystem].videoContentType;
-    const videoRobustness = keySystems[keySystem].videoRobustness;
-
-    if (audioContentType || audioRobustness) {
-      systemOptions.audioCapabilities = [
-        Object.assign({},
-          (audioContentType ? { contentType: audioContentType } : {}),
-          (audioRobustness ? { robustness: audioRobustness } : {})
-        )
-      ];
-    }
-
-    if (videoContentType || videoRobustness) {
-      systemOptions.videoCapabilities = [
-        Object.assign({},
-          (videoContentType ? { contentType: videoContentType } : {}),
-          (videoRobustness ? { robustness: videoRobustness } : {})
-        )
-      ];
-    }
+    const supportedConfigurations = getSupportedConfigurations(keySystems[keySystem]);
 
     if (!promise) {
-      promise = window.navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]);
+      promise =
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
     } else {
-      promise = promise.catch(
-        (e) => window.navigator.requestMediaKeySystemAccess(keySystem, [systemOptions]));
+      promise = promise.catch((e) =>
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations));
     }
   });
 

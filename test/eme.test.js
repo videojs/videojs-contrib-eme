@@ -6,7 +6,8 @@ import {
   makeNewRequest,
   getSupportedKeySystem,
   addSession,
-  addPendingSessions
+  addPendingSessions,
+  getSupportedConfigurations
 } from '../src/eme';
 import sinon from 'sinon';
 
@@ -1042,4 +1043,103 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
   }).then((resolve, reject) => {
     done();
   });
+});
+
+QUnit.module('videojs-contrib-eme getSupportedConfigurations');
+
+QUnit.test('includes audio and video content types', function(assert) {
+  assert.deepEqual(
+    getSupportedConfigurations({
+      audioContentType: 'audio/mp4; codecs="mp4a.40.2"',
+      videoContentType: 'video/mp4; codecs="avc1.42E01E"'
+    }),
+    [{
+      audioCapabilities: [{
+        contentType: 'audio/mp4; codecs="mp4a.40.2"'
+      }],
+      videoCapabilities: [{
+        contentType: 'video/mp4; codecs="avc1.42E01E"'
+      }]
+    }],
+    'included audio and video content types'
+  );
+});
+
+QUnit.test('includes audio and video robustness', function(assert) {
+  assert.deepEqual(
+    getSupportedConfigurations({
+      audioRobustness: 'SW_SECURE_CRYPTO',
+      videoRobustness: 'SW_SECURE_CRYPTO'
+    }),
+    [{
+      audioCapabilities: [{
+        robustness: 'SW_SECURE_CRYPTO'
+      }],
+      videoCapabilities: [{
+        robustness: 'SW_SECURE_CRYPTO'
+      }]
+    }],
+    'included audio and video robustness'
+  );
+});
+
+QUnit.test('includes audio and video content types and robustness', function(assert) {
+  assert.deepEqual(
+    getSupportedConfigurations({
+      audioContentType: 'audio/mp4; codecs="mp4a.40.2"',
+      audioRobustness: 'SW_SECURE_CRYPTO',
+      videoContentType: 'video/mp4; codecs="avc1.42E01E"',
+      videoRobustness: 'SW_SECURE_CRYPTO'
+    }),
+    [{
+      audioCapabilities: [{
+        contentType: 'audio/mp4; codecs="mp4a.40.2"',
+        robustness: 'SW_SECURE_CRYPTO'
+      }],
+      videoCapabilities: [{
+        contentType: 'video/mp4; codecs="avc1.42E01E"',
+        robustness: 'SW_SECURE_CRYPTO'
+      }]
+    }],
+    'included audio and video content types and robustness'
+  );
+});
+
+QUnit.test('uses supportedConfigurations directly if provided', function(assert) {
+  assert.deepEqual(
+    getSupportedConfigurations({
+      supportedConfigurations: [{
+        initDataTypes: ['cenc'],
+        audioCapabilities: [{
+          contentType: 'audio/mp4; codecs="mp4a.40.2"',
+          robustness: 'SW_SECURE_CRYPTO',
+          extraOption: 'audio-extra'
+        }],
+        videoCapabilities: [{
+          contentType: 'video/mp4; codecs="avc1.42E01E"',
+          robustness: 'SW_SECURE_CRYPTO',
+          extraOption: 'video-extra'
+        }]
+      }],
+      // should not be used
+      audioContentType: 'audio/mp4; codecs="mp4a.40.5"',
+      audioRobustness: 'HW_SECURE_CRYPTO',
+      videoContentType: 'video/mp4; codecs="avc1.42001e"',
+      videoRobustness: 'HW_SECURE_CRYPTO'
+    }),
+    [{
+      initDataTypes: ['cenc'],
+      audioCapabilities: [{
+        contentType: 'audio/mp4; codecs="mp4a.40.2"',
+        robustness: 'SW_SECURE_CRYPTO',
+        extraOption: 'audio-extra'
+      }],
+      videoCapabilities: [{
+        contentType: 'video/mp4; codecs="avc1.42E01E"',
+        robustness: 'SW_SECURE_CRYPTO',
+        extraOption: 'video-extra'
+      }]
+    }],
+    'used supportedConfigurations directly'
+  );
 });
