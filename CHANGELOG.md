@@ -1,3 +1,10 @@
+<a name="3.6.0"></a>
+# [3.6.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.6...v3.6.0) (2020-02-12)
+
+### Features
+
+* support setting robustness and supportedConfigurations (#100) ([502c8ea](https://github.com/videojs/videojs-contrib-eme/commit/502c8ea)), closes [#100](https://github.com/videojs/videojs-contrib-eme/issues/100)
+
 <a name="3.5.6"></a>
 ## [3.5.6](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.5...v3.5.6) (2020-02-10)
 
