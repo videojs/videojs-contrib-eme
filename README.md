@@ -27,6 +27,7 @@ Maintenance Status: Stable
   - [Other DRM Systems](#other-drm-systems)
     - [Get License By URL](#get-license-by-url)
     - [Get License By Function](#get-license-by-function)
+  - [MediaKeySystemConfiguration and supportedConfigurations](#mediakeysystemconfiguration-and-supportedconfigurations)
   - [Get License Errors](#get-license-errors)
 - [API](#api)
   - [Available Options](#available-options)
@@ -279,6 +280,34 @@ Below is an example of using one of these DRM systems and custom `getLicense()` 
 }
 ```
 
+### MediaKeySystemConfiguration and supportedConfigurations
+
+In addition to `audioContentType` and `videoContentType` posted above, it is possible to directly provide the `supportedConfigurations` array to use for the `requestMediaKeySystemAccess` call. This allows for the entire range of options specified by the [MediaKeySystemConfiguration] object.
+
+Note that if `supportedConfigurations` is provided, it will override `audioContentType`, `videoContentType`, `audioRobustness`, and `videoRobustness`.
+
+Example:
+
+```js
+{
+  keySystems: {
+    'org.w3.clearkey': {
+      supportedConfigurations: [{
+        videoCapabilities: [{
+          contentType: 'video/webm; codecs="vp9"',
+          robustness: 'SW_SECURE_CRYPTO'
+        }],
+        audioCapabilities: [{
+          contentType: 'audio/webm; codecs="vorbis"',
+          robustness: 'SW_SECURE_CRYPTO'
+        }]
+      }],
+      'org.w3.clearkey': '<YOUR_LICENSE_URL>'
+    }
+  }
+}
+```
+
 ### Get License Errors
 
 The default `getLicense()` functions pass an error to the callback if the license request returns a 4xx or 5xx response code. Depending on how the license server is configured, it is possible in some cases that a valid license could still be returned even if the response code is in that range. If you wish not to pass an error for 4xx and 5xx response codes, you may pass your own `getLicense()` function with the `keySystems` as described above.
@@ -526,3 +555,5 @@ This event is triggered directly from the underlying `keystatuseschange` event, 
 ## License
 
 Apache License, Version 2.0. [View the license file](LICENSE)
+
+[MediaKeySystemConfiguration]: https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration
