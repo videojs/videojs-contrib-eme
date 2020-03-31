@@ -1105,6 +1105,14 @@ QUnit.test('includes audio and video content types and robustness', function(ass
   );
 });
 
+QUnit.test('includes persistentState', function(assert) {
+  assert.deepEqual(
+    getSupportedConfigurations({ persistentState: 'optional' }),
+    [{ persistentState: 'optional' }],
+    'included persistentState'
+  );
+});
+
 QUnit.test('uses supportedConfigurations directly if provided', function(assert) {
   assert.deepEqual(
     getSupportedConfigurations({
