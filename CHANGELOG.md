@@ -1,3 +1,10 @@
+<a name="3.7.0"></a>
+# [3.7.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.6.0...v3.7.0) (2020-04-01)
+
+### Features
+
+* add support for setting persistentState in supportedConfigurations (#102) ([ef9fa23](https://github.com/videojs/videojs-contrib-eme/commit/ef9fa23)), closes [#102](https://github.com/videojs/videojs-contrib-eme/issues/102)
+
 <a name="3.6.0"></a>
 # [3.6.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.6...v3.6.0) (2020-02-12)
 
