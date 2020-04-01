@@ -25,6 +25,7 @@ export const getSupportedConfigurations = (keySystemOptions) => {
   const audioRobustness = keySystemOptions.audioRobustness;
   const videoContentType = keySystemOptions.videoContentType;
   const videoRobustness = keySystemOptions.videoRobustness;
+  const persistentState = keySystemOptions.persistentState;
 
   if (audioContentType || audioRobustness) {
     supportedConfiguration.audioCapabilities = [
@@ -42,6 +43,10 @@ export const getSupportedConfigurations = (keySystemOptions) => {
         (videoRobustness ? { robustness: videoRobustness } : {})
       )
     ];
+  }
+
+  if (persistentState) {
+    supportedConfiguration.persistentState = persistentState;
   }
 
   return [supportedConfiguration];

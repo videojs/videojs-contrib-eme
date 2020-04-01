@@ -284,7 +284,7 @@ Below is an example of using one of these DRM systems and custom `getLicense()` 
 
 In addition to `audioContentType` and `videoContentType` posted above, it is possible to directly provide the `supportedConfigurations` array to use for the `requestMediaKeySystemAccess` call. This allows for the entire range of options specified by the [MediaKeySystemConfiguration] object.
 
-Note that if `supportedConfigurations` is provided, it will override `audioContentType`, `videoContentType`, `audioRobustness`, and `videoRobustness`.
+Note that if `supportedConfigurations` is provided, it will override `audioContentType`, `videoContentType`, `audioRobustness`, `videoRobustness`, and `persistentState`.
 
 Example:
 
