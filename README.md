@@ -142,7 +142,19 @@ You can control the license and certificate request processes by providing the f
       getCertificate: function(emeOptions, callback) {
         // request certificate
         // if err, callback(err)
-        // if success, callback(null, certificate)
+        // if success, callback(null, certificate) as Uint8Array
+
+        // example:
+        videojs.xhr({
+          uri: "<CERTIFICATE_URL>",
+          responseType: 'arraybuffer',
+        }, function (err, response, responseBody) {
+          if (err) {
+            callback(err);
+            return;
+          }
+          callback(null, new Uint8Array(responseBody));
+        });
       },
       getContentId: function(emeOptions, initData) {
         // return content ID
