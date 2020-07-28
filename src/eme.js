@@ -87,6 +87,10 @@ export const makeNewRequest = ({
   return new Promise((resolve, reject) => {
 
     keySession.addEventListener('message', (event) => {
+      // all other types will be handled by keystatuseschange
+      if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
+        return;
+      }
       getLicense(options, event.message)
         .then((license) => {
           resolve(keySession.update(license));
