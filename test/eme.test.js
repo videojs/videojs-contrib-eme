@@ -277,7 +277,8 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   setTimeout(() => {
     session.trigger({
       type: 'message',
-      message: 'the-message'
+      message: 'the-message',
+      messageType: 'license-request'
     });
 
     assert.equal(xhrCalls.length, 1, 'made one XHR');
@@ -334,7 +335,8 @@ QUnit.test('accepts a license URL as property', function(assert) {
   setTimeout(() => {
     session.trigger({
       type: 'message',
-      message: 'the-message'
+      message: 'the-message',
+      messageType: 'license-request'
     });
 
     assert.equal(xhrCalls.length, 1, 'made one XHR');
@@ -466,7 +468,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     assert.equal(callCounts.licenseRequestAttempts, 0,
       'license request event not triggered (since no callback yet)');
 
-    keySessionEventListeners.message({});
+    keySessionEventListeners.message({messageType: 'license-request'});
 
     // Step 3: get license
     assert.equal(callCounts.getCertificate, 1, 'certificate requested');
@@ -676,6 +678,53 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
 
 });
 
+QUnit.test('getLicense not called for messageType that isnt license-request or license-renewal', function(assert) {
+  const done = assert.async();
+  let getLicenseCalls = 0;
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getLicense(emeOptions, keyMessage, callback) {
+          getLicenseCalls++;
+        }
+      }
+    }
+  };
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.resolve({
+        setServerCertificate: () => Promise.resolve(),
+        createSession: () => {
+          return {
+            addEventListener: (event, callback) => {
+              if (event === 'message') {
+                setTimeout(() => {
+                  callback({message: 'whatever', messageType: 'do-not-request-license'});
+                  assert.equal(getLicenseCalls, 0, 'did not call getLicense');
+                  done();
+                });
+              }
+            },
+            keyStatuses: [],
+            generateRequest: () => Promise.resolve()
+          };
+        }
+      });
+    }
+  };
+  const video = {
+    setMediaKeys: () => Promise.resolve()
+  };
+
+  standard5July2016({
+    video,
+    keySystemAccess,
+    options
+  });
+});
+
 QUnit.test('getLicense promise rejection', function(assert) {
   const options = {
     keySystems: {
@@ -696,7 +745,7 @@ QUnit.test('getLicense promise rejection', function(assert) {
           return {
             addEventListener: (event, callback) => {
               setTimeout(() => {
-                callback(options, {message: 'whatever'});
+                callback({message: 'whatever', messageType: 'license-request'});
               });
             },
             keyStatuses: [],
@@ -794,7 +843,7 @@ QUnit.test('keySession.update promise rejection', function(assert) {
           return {
             addEventListener: (event, callback) => {
               setTimeout(() => {
-                callback({message: 'whatever'});
+                callback({messageType: 'license-request', message: 'whatever'});
               });
             },
             keyStatuses: [],
@@ -860,7 +909,8 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
   setTimeout(() => {
     session.trigger({
       type: 'message',
-      message: 'the-message'
+      message: 'the-message',
+      messageType: 'license-request'
     });
 
     assert.equal(xhrCalls.length, 1, 'made one XHR');
@@ -925,7 +975,8 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
   setTimeout(() => {
     session.trigger({
       type: 'message',
-      message: 'the-message'
+      message: 'the-message',
+      messageType: 'license-request'
     });
 
     assert.equal(xhrCalls.length, 1, 'made one XHR');
@@ -1028,7 +1079,7 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
             'added listener for message event'
           );
           // callback should call getLicense, which continues this test
-          eventListeners[0].callback({ message: 'test message' });
+          eventListeners[0].callback({messageType: 'license-request', message: 'test message'});
           return Promise.resolve();
         },
         // this call and everything after is beyond the scope of this test
