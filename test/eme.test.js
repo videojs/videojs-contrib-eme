@@ -139,7 +139,7 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
 
 });
 
-QUnit.test('keystatuseschange with expired key closes session', function(assert) {
+QUnit.test('keystatuseschange with expired key closes and recreates session', function(assert) {
   const removeSessionCalls = [];
   // once the eme module gets the removeSession function, the session argument is already
   // bound to the function (note that it's a custom session maintained by the plugin, not
@@ -150,10 +150,15 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
   const eventBus = {
     trigger: (name) => {}
   };
+  let creates = 0;
 
   makeNewRequest({
     mediaKeys: {
-      createSession: () => mockSession
+      createSession: () => {
+        creates++;
+
+        return mockSession;
+      }
     },
     initDataType: '',
     initData,
@@ -163,6 +168,7 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
     eventBus
   });
 
+  assert.equal(creates, 1, 'created session');
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
   assert.equal(mockSession.listeners[1].type,
     'keystatuseschange',
@@ -190,6 +196,8 @@ QUnit.test('keystatuseschange with expired key closes session', function(assert)
   // synchronously
   assert.equal(removeSessionCalls.length, 1, 'called remove session');
   assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
+
+  assert.equal(creates, 2, 'created another session');
 });
 
 QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {
