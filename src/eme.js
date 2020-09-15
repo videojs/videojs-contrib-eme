@@ -73,15 +73,16 @@ export const getSupportedKeySystem = (keySystems) => {
   return promise;
 };
 
-export const makeNewRequest = ({
-  mediaKeys,
-  initDataType,
-  initData,
-  options,
-  getLicense,
-  removeSession,
-  eventBus
-}) => {
+export const makeNewRequest = (requestOptions) => {
+  const {
+    mediaKeys,
+    initDataType,
+    initData,
+    options,
+    getLicense,
+    removeSession,
+    eventBus
+  } = requestOptions;
   const keySession = mediaKeys.createSession();
 
   return new Promise((resolve, reject) => {
@@ -140,6 +141,7 @@ export const makeNewRequest = ({
         // videojs.log.debug('Session expired, closing the session.');
         keySession.close().then(() => {
           removeSession(initData);
+          makeNewRequest(requestOptions);
         });
       }
     }, false);
