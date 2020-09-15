@@ -1,3 +1,11 @@
+<a name="3.7.1"></a>
+## [3.7.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.7.0...v3.7.1) (2020-09-15)
+
+### Bug Fixes
+
+* only getLicense on license-request or license-renewal (#116) ([c15d1ca](https://github.com/videojs/videojs-contrib-eme/commit/c15d1ca)), closes [#116](https://github.com/videojs/videojs-contrib-eme/issues/116)
+* try to re-request key if the session expired (#120) ([20d6adc](https://github.com/videojs/videojs-contrib-eme/commit/20d6adc)), closes [#120](https://github.com/videojs/videojs-contrib-eme/issues/120)
+
 <a name="3.7.0"></a>
 # [3.7.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.6.0...v3.7.0) (2020-04-01)
 
