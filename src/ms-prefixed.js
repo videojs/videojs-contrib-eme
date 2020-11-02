@@ -72,6 +72,8 @@ export const createSession = (video, initData, options, eventBus) => {
     throw new Error('Could not create key session.');
   }
 
+  eventBus.trigger('keysessioncreated');
+
   // Note that mskeymessage may not always be called for PlayReady:
   //
   // "If initData contains a PlayReady object that contains an OnDemand header, only a

@@ -16,6 +16,9 @@ import {
   removeSession,
   emeErrorHandler
 } from '../src/plugin';
+import {
+  getMockEventBus
+} from './utils';
 
 const Player = videojs.getComponent('Player');
 
@@ -454,7 +457,7 @@ QUnit.test('handleMsNeedKeyEvent uses predefined init data', function(assert) {
     }
   };
 
-  handleMsNeedKeyEvent(this.event2, options, sessions);
+  handleMsNeedKeyEvent(this.event2, options, sessions, getMockEventBus());
   assert.equal(sessions.length, 1, 'created a session when keySystems in options');
   assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
 
@@ -476,22 +479,23 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
   };
   let options = {};
   const sessions = [];
+  const mockEventBus = getMockEventBus();
 
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, mockEventBus);
   assert.equal(sessions.length, 0, 'no session created when no options');
 
   options = { keySystems: {} };
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, mockEventBus);
   assert.equal(sessions.length, 0, 'no session created when no PlayReady key system');
 
   options = { keySystems: { 'com.microsoft.notplayready': true } };
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, mockEventBus);
   assert.equal(sessions.length,
     0,
     'no session created when no proper PlayReady key system');
 
   options = { keySystems: { 'com.microsoft.playready': true } };
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, mockEventBus);
   assert.equal(sessions.length, 1, 'session created');
   assert.ok(sessions[0].playready, 'created a PlayReady session');
 
@@ -500,7 +504,7 @@ QUnit.test('handleMsNeedKeyEvent checks for required options', function(assert) 
   // even when there's new init data, we should not create a new session
   event.initData = new Uint8Array([4, 5, 6]);
 
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, mockEventBus);
   assert.equal(sessions.length, 1, 'no new session created');
   assert.equal(sessions[0], createdSession, 'did not replace session');
 });
@@ -515,7 +519,7 @@ QUnit.test('handleMsNeedKeyEvent checks for required init data', function(assert
   const options = { keySystems: { 'com.microsoft.playready': true } };
   const sessions = [];
 
-  handleMsNeedKeyEvent(event, options, sessions);
+  handleMsNeedKeyEvent(event, options, sessions, getMockEventBus());
   assert.equal(sessions.length, 0, 'no session created when no init data');
 });
 
