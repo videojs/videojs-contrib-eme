@@ -5,7 +5,10 @@ import {
   createMessageBuffer,
   challengeElement
 } from './playready-message';
-import msPrefixed from '../src/ms-prefixed';
+import {
+  createSession,
+  default as msPrefixed
+} from '../src/ms-prefixed';
 import {
   stringToArrayBuffer,
   getMockEventBus
@@ -514,4 +517,26 @@ QUnit.test('will use a custom getLicense method if one is provided', function(as
   });
 
   assert.equal(callCount, 1, 'getLicense was called');
+});
+
+QUnit.test('createSession triggers keysessioncreated', function(assert) {
+  const video = {
+    msKeys: {
+      createSession: () => {
+        return {
+          addEventListener: () => {}
+        };
+      }
+    }
+  };
+  const eventBus = getMockEventBus();
+
+  createSession(video, '', {}, eventBus);
+
+  assert.equal(eventBus.calls.length, 1, 'one event triggered');
+  assert.equal(
+    eventBus.calls[0],
+    'keysessioncreated',
+    'triggered keysessioncreated event'
+  );
 });
