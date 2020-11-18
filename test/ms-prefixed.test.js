@@ -5,8 +5,14 @@ import {
   createMessageBuffer,
   challengeElement
 } from './playready-message';
-import msPrefixed from '../src/ms-prefixed';
-import utils from './utils';
+import {
+  createSession,
+  default as msPrefixed
+} from '../src/ms-prefixed';
+import {
+  stringToArrayBuffer,
+  getMockEventBus
+} from './utils';
 
 QUnit.module('videojs-contrib-eme ms-prefixed', {
   beforeEach() {
@@ -47,7 +53,8 @@ QUnit.test('overwrites msKeys', function(assert) {
       keySystems: {
         'com.microsoft.playready': true
       }
-    }
+    },
+    eventBus: getMockEventBus()
   });
 
   assert.notEqual(this.video.msKeys, origMsKeys, 'overwrote msKeys');
@@ -112,7 +119,7 @@ QUnit.test('throws error on keysession mskeyerror event', function(assert) {
     },
     eventBus: {
       trigger: (event) => {
-        errorMessage = event.message;
+        errorMessage = typeof event === 'string' ? event : event.message;
       }
     }
   });
@@ -161,7 +168,7 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
     options: emeOptions,
     eventBus: {
       trigger: (event) => {
-        errorMessage = event.message;
+        errorMessage = typeof event === 'string' ? event : event.message;
       }
     }
   });
@@ -218,7 +225,7 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     },
     eventBus: {
       trigger: (event) => {
-        if (event.type === 'mskeyerror') {
+        if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
       }
@@ -250,7 +257,7 @@ QUnit.test('makes request when nothing provided on key message', function(assert
     'responseType is an arraybuffer');
 
   const response = {
-    body: utils.stringToArrayBuffer('key value')
+    body: stringToArrayBuffer('key value')
   };
 
   xhrCalls[0].callback('an error', response, response.body);
@@ -284,7 +291,8 @@ QUnit.test('makes request on key message when empty object provided in options',
         keySystems: {
           'com.microsoft.playready': {}
         }
-      }
+      },
+      eventBus: getMockEventBus()
     });
     this.session.trigger({
       type: 'mskeymessage',
@@ -331,7 +339,7 @@ QUnit.test('makes request with provided url string on key message', function(ass
     },
     eventBus: {
       trigger: (event) => {
-        if (event.type === 'mskeyerror') {
+        if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
       }
@@ -369,7 +377,7 @@ QUnit.test('makes request with provided url string on key message', function(ass
     'responseType is an arraybuffer');
 
   const response = {
-    body: utils.stringToArrayBuffer('key value')
+    body: stringToArrayBuffer('key value')
   };
 
   xhrCalls[0].callback('an error', response, response.body);
@@ -413,7 +421,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
       trigger: (event) => {
         if (event === 'licenserequestattempted') {
           callCounts.licenseRequestAttempts++;
-        } else if (event.type === 'mskeyerror') {
+        } else if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
       }
@@ -453,7 +461,7 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     'license request event not triggered (since no callback yet)');
 
   const response = {
-    body: utils.stringToArrayBuffer('key value')
+    body: stringToArrayBuffer('key value')
   };
 
   xhrCalls[0].callback('an error', response, response.body);
@@ -490,7 +498,8 @@ QUnit.test('will use a custom getLicense method if one is provided', function(as
           }
         }
       }
-    }
+    },
+    eventBus: getMockEventBus()
   });
 
   const buffer = createMessageBuffer([{
@@ -508,4 +517,26 @@ QUnit.test('will use a custom getLicense method if one is provided', function(as
   });
 
   assert.equal(callCount, 1, 'getLicense was called');
+});
+
+QUnit.test('createSession triggers keysessioncreated', function(assert) {
+  const video = {
+    msKeys: {
+      createSession: () => {
+        return {
+          addEventListener: () => {}
+        };
+      }
+    }
+  };
+  const eventBus = getMockEventBus();
+
+  createSession(video, '', {}, eventBus);
+
+  assert.equal(eventBus.calls.length, 1, 'one event triggered');
+  assert.equal(
+    eventBus.calls[0],
+    'keysessioncreated',
+    'triggered keysessioncreated event'
+  );
 });

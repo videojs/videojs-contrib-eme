@@ -85,6 +85,8 @@ export const makeNewRequest = (requestOptions) => {
   } = requestOptions;
   const keySession = mediaKeys.createSession();
 
+  eventBus.trigger('keysessioncreated');
+
   return new Promise((resolve, reject) => {
 
     keySession.addEventListener('message', (event) => {

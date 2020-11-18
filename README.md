@@ -41,6 +41,7 @@ Maintenance Status: Stable
   - [Events](#events)
     - [`licenserequestattempted`](#licenserequestattempted)
     - [`keystatuschange`](#keystatuschange)
+  - [`keysessioncreated`](#keysessioncreated)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -551,6 +552,16 @@ player.tech(true).on('keystatuschange', function(event) {
 ```
 
 This event is triggered directly from the underlying `keystatuseschange` event, so the statuses should correspond to [those listed in the spec](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
+
+### `keysessioncreated`
+
+When the key session is created, an event of type `keysessioncreated` will be triggered on the Video.js playback tech.
+
+```
+player.tech().on('keysessioncreated', function(event) {
+  // note that there is no event data for keysessioncreated
+});
+```
 
 ## License
 

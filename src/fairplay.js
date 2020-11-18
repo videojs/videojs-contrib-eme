@@ -70,6 +70,8 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       return;
     }
 
+    eventBus.trigger('keysessioncreated');
+
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
