@@ -27,6 +27,9 @@ Maintenance Status: Stable
   - [Other DRM Systems](#other-drm-systems)
     - [Get License By URL](#get-license-by-url)
     - [Get License By Function](#get-license-by-function)
+    - [Get Certificate by function](#get-certificate-by-function)
+  - [audioContentType/videoContentType](#audiocontenttypevideocontenttype)
+  - [audioRobustness/videoRobustness](#audiorobustnessvideorobustness)
   - [MediaKeySystemConfiguration and supportedConfigurations](#mediakeysystemconfiguration-and-supportedconfigurations)
   - [Get License Errors](#get-license-errors)
 - [API](#api)
@@ -254,28 +257,53 @@ For more complex integrations, you may pass a `getLicense` function to fully con
 }
 ```
 
+
+#### Get Certificate by function
 Although the license acquisition is the only required configuration, `getCertificate()` is also supported if your source needs to retrieve a certificate, similar to the [FairPlay](#fairplay) implementation above.
+
+Example:
+```js
+{
+  'org.w3.clearkey': {
+    getCertificate: function(emeOptions, callback) {
+      // request certificate
+      // if err, callback(err)
+      // if success, callback(null, certificate)
+    },
+  }
+}
+```
+
+
+### audioContentType/videoContentType
 
 The `audioContentType` and `videoContentType` properties for non-FairPlay sources are used to determine if the system supports that codec and to create an appropriate `keySystemAccess` object. If left out, it is possible that the system will create a `keySystemAccess` object for the given key system, but will not be able to play the source due to the browser's inability to use that codec.
 
-Below is an example of using one of these DRM systems and custom `getLicense()` and `getCertificate()` functions:
-
+example:
 ```js
 {
   keySystems: {
     'org.w3.clearkey': {
       audioContentType: 'audio/webm; codecs="vorbis"',
       videoContentType: 'video/webm; codecs="vp9"',
-      getCertificate: function(emeOptions, callback) {
-        // request certificate
-        // if err, callback(err)
-        // if success, callback(null, certificate)
-      },
-      getLicense: function(emeOptions, keyMessage, callback) {
-        // request license
-        // if err, callback(err)
-        // if success, callback(null, license)
-      }
+    }
+  }
+}
+```
+
+### audioRobustness/videoRobustness
+> If `audioRobustness`/`videoRobustness` is not passed in for widevine, you will see a warning similar to: `It is recommended that a robustness level be specified. Not specifying the robustness level could result in unexpected behavior`. Possible Options for widevine: `SW_SECURE_CRYPTO`, `SW_SECURE_DECODE`, `HW_SECURE_CRYPTO`, `HW_SECURE_DECODE`, `HW_SECURE_ALL`
+
+The `audioRobustness` and `videoRobustness` properties for non-FairPlay sources are used to determine the robustness level of the DRM you are using.
+
+Example:
+
+```js
+{
+  keySystems: {
+    'com.widevine.alpha': {
+      audioRobustness: 'SW_SECURE_CRYPTO',
+      videoRobustness: 'SW_SECURE_CRYPTO'
     }
   }
 }
@@ -283,7 +311,7 @@ Below is an example of using one of these DRM systems and custom `getLicense()` 
 
 ### MediaKeySystemConfiguration and supportedConfigurations
 
-In addition to `audioContentType` and `videoContentType` posted above, it is possible to directly provide the `supportedConfigurations` array to use for the `requestMediaKeySystemAccess` call. This allows for the entire range of options specified by the [MediaKeySystemConfiguration] object.
+In addition to key systems options provided above, it is possible to directly provide the `supportedConfigurations` array to use for the `requestMediaKeySystemAccess` call. This allows for the entire range of options specified by the [MediaKeySystemConfiguration] object.
 
 Note that if `supportedConfigurations` is provided, it will override `audioContentType`, `videoContentType`, `audioRobustness`, `videoRobustness`, and `persistentState`.
 
