@@ -292,7 +292,7 @@ example:
 ```
 
 ### audioRobustness/videoRobustness
-> If `audioRobustness`/`videoRobustness` is not passed in for widevine, you will see a warning similar to: `It is recommended that a robustness level be specified. Not specifying the robustness level could result in unexpected behavior`
+> If `audioRobustness`/`videoRobustness` is not passed in for widevine, you will see a warning similar to: `It is recommended that a robustness level be specified. Not specifying the robustness level could result in unexpected behavior`. Possible Options for widevine: `SW_SECURE_CRYPTO`, `SW_SECURE_DECODE`, `HW_SECURE_CRYPTO`, `HW_SECURE_DECODE`, `HW_SECURE_ALL`
 
 The `audioRobustness` and `videoRobustness` properties for non-FairPlay sources are used to determine the robustness level of the DRM you are using.
 
