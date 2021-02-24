@@ -381,8 +381,14 @@ export const standard5July2016 = ({
         resolve();
       });
     }).then(() => {
-      return keySystemAccess.createMediaKeys();
+      return new Promise((resolve, reject) => {
+        if (window.emeMediaKeys) resolve(window.emeMediaKeys)
+
+        keySystemAccess.createMediaKeys().then(resolve)
+      })
     }).then((createdMediaKeys) => {
+      window.emeMediaKeys = createdMediaKeys
+
       return addPendingSessions({
         video,
         certificate,
