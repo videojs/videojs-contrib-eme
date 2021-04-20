@@ -214,8 +214,8 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   if (window.WebKitMediaKeys) {
-    player.eme.webkitneedkey = {
-      first: false,
+    player.eme.webkitneedkey_ = {
+      seenFirstEvent: false,
       timeout: null
     };
     const handleFn = (event) => {
@@ -239,11 +239,11 @@ const onPlayerReady = (player, emeError) => {
       // our first existing request if we get another within 1 second. This
       // prevents a non-fatal player error from showing up due to a
       // request failure.
-      if (!player.eme.webkitneedkey.first) {
-        player.clearTimeout(player.eme.webkitneedkey.timeout);
-        player.eme.webkitneedkey.timeout = player.setTimeout(() => {
-          player.eme.webkitneedkey.first = true;
-          player.eme.webkitneedkey.timeout = null;
+      if (!player.eme.webkitneedkey_.seenFirstEvent) {
+        player.clearTimeout(player.eme.webkitneedkey_.timeout);
+        player.eme.webkitneedkey_.timeout = player.setTimeout(() => {
+          player.eme.webkitneedkey_.seenFirstEvent = true;
+          player.eme.webkitneedkey_.timeout = null;
           handleFn(event);
         }, 1000);
       // after we have a verifyied first request. we will request on
