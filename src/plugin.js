@@ -214,10 +214,6 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   if (window.WebKitMediaKeys) {
-    player.eme.webkitneedkey_ = {
-      seenFirstEvent: false,
-      timeout: null
-    };
     const handleFn = (event) => {
       // TODO convert to videojs.log.debug and add back in
       // https://github.com/videojs/video.js/pull/4780
@@ -233,20 +229,30 @@ const onPlayerReady = (player, emeError) => {
     // Support Safari EME with FairPlay
     // (also used in early Chrome or Chrome with EME disabled flag)
     player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+      const src = player.src();
+      // on source change or first startup reset webkitneedkey options.
+
+      if (player.eme.activeSrc !== src || !player.eme.webkitneedkey_) {
+        player.eme.webkitneedkey_ = {
+          handledFirstEvent: false
+        };
+      }
       // It's possible that at the start of playback a rendition switch
       // on a small player in safari's HLS implementation will cause
       // two webkitneedkey events to occur. We want to make sure to cancel
       // our first existing request if we get another within 1 second. This
       // prevents a non-fatal player error from showing up due to a
       // request failure.
-      if (!player.eme.webkitneedkey_.seenFirstEvent) {
+      if (!player.eme.webkitneedkey_.handledFirstEvent) {
+        // clear the old timeout so that a new one can be created
+        // with the new rendition's event data
         player.clearTimeout(player.eme.webkitneedkey_.timeout);
         player.eme.webkitneedkey_.timeout = player.setTimeout(() => {
-          player.eme.webkitneedkey_.seenFirstEvent = true;
+          player.eme.webkitneedkey_.handledFirstEvent = true;
           player.eme.webkitneedkey_.timeout = null;
           handleFn(event);
         }, 1000);
-      // after we have a verifyied first request. we will request on
+      // after we have a verified first request, we will request on
       // every other event like normal.
       } else {
         handleFn(event);
