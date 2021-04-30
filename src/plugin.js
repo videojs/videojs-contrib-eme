@@ -229,6 +229,8 @@ const onPlayerReady = (player, emeError) => {
     // Support Safari EME with FairPlay
     // (also used in early Chrome or Chrome with EME disabled flag)
     player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+      const options = getOptions(player);
+      const firstWebkitneedkeyTimeout = options.firstWebkitneedkeyTimeout || 1000;
       const src = player.src();
       // on source change or first startup reset webkitneedkey options.
 
@@ -251,7 +253,7 @@ const onPlayerReady = (player, emeError) => {
           player.eme.webkitneedkey_.handledFirstEvent = true;
           player.eme.webkitneedkey_.timeout = null;
           handleFn(event);
-        }, 1000);
+        }, firstWebkitneedkeyTimeout);
       // after we have a verified first request, we will request on
       // every other event like normal.
       } else {
