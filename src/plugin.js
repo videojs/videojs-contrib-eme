@@ -234,9 +234,14 @@ const onPlayerReady = (player, emeError) => {
       const src = player.src();
       // on source change or first startup reset webkitneedkey options.
 
-      if (player.eme.activeSrc !== src || !player.eme.webkitneedkey_) {
+      player.eme.webkitneedkey_ = player.eme.webkitneedkey_ || {};
+
+      // if the source changed we need to handle the first event again.
+      // track source changes internally.
+      if (player.eme.webkitneedkey_.src !== src) {
         player.eme.webkitneedkey_ = {
-          handledFirstEvent: false
+          handledFirstEvent: false,
+          src
         };
       }
       // It's possible that at the start of playback a rendition switch
