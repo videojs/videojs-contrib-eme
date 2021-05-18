@@ -36,6 +36,7 @@ Maintenance Status: Stable
   - [Available Options](#available-options)
     - [`keySystems`](#keysystems)
     - [`emeHeaders`](#emeheaders)
+    - [`firstWebkitneedkeyTimeout`](#firstwebkitneedkeytimeout)
   - [Setting Options per Source](#setting-options-per-source)
   - [Setting Options for All Sources](#setting-options-for-all-sources)
   - [Header Hierarchy and Removal](#header-hierarchy-and-removal)
@@ -360,6 +361,11 @@ emeHeaders: {
   'Common-Header': 'value'
 }
 ```
+
+#### `firstWebkitneedkeyTimeout`
+> Default: 1000
+
+The amount of time in milliseconds to wait on the first `webkitneedkey` event before making the key request. This was implemented due to a bug in Safari where rendition switches at the start of playback can cause `webkitneedkey` to fire multiple times, with only the last one being valid.
 
 ### Setting Options per Source
 
