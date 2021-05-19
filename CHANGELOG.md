@@ -1,3 +1,14 @@
+<a name="3.8.1"></a>
+## [3.8.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.0...v3.8.1) (2021-05-19)
+
+### Bug Fixes
+
+* handle initial duplicate webkitneedskey to prevent error dialog (#134) ([5ded675](https://github.com/videojs/videojs-contrib-eme/commit/5ded675)), closes [#134](https://github.com/videojs/videojs-contrib-eme/issues/134)
+
+### Chores
+
+* update docs for robustness and mention widevine warning (#129) ([9c4f577](https://github.com/videojs/videojs-contrib-eme/commit/9c4f577)), closes [#129](https://github.com/videojs/videojs-contrib-eme/issues/129)
+
 <a name="3.8.0"></a>
 # [3.8.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.7.1...v3.8.0) (2020-11-18)
 
