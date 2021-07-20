@@ -827,7 +827,9 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
   getLicense({}, null, getLicenseCallback);
 
   assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
-  assert.ok(getLicenseCallback.alwaysCalledWith({}), 'getLicense callback called with correct error');
+  assert.ok(getLicenseCallback.alwaysCalledWith({
+    cause: JSON.stringify({body: 'some-body'})
+  }), 'getLicense callback called with correct error');
 });
 
 QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
