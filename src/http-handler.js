@@ -12,7 +12,7 @@ export const httpResponseHandler = (callback) => (err, response, responseBody) =
     let cause;
 
     if (window.TextDecoder) {
-      const charset = getCharset(response.headers['content-type']);
+      const charset = getCharset(response.headers && response.headers['content-type']);
 
       cause = new TextDecoder(charset).decode(responseBody);
     } else {
@@ -27,7 +27,7 @@ export const httpResponseHandler = (callback) => (err, response, responseBody) =
   callback(null, responseBody);
 };
 
-function getCharset(contentTypeHeader) {
+function getCharset(contentTypeHeader = '') {
   return contentTypeHeader
     .toLowerCase()
     .split(';')
