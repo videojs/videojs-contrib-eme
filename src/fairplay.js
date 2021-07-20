@@ -118,6 +118,13 @@ export const defaultGetCertificate = (fairplayOptions) => {
         return;
       }
 
+      if (response.statusCode >= 400 && response.statusCode <= 599) {
+        const cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
+
+        callback({cause});
+        return;
+      }
+
       callback(null, new Uint8Array(responseBody));
     });
   };
@@ -148,8 +155,9 @@ export const defaultGetLicense = (fairplayOptions) => {
       }
 
       if (response.statusCode >= 400 && response.statusCode <= 599) {
-        // Pass an empty object as the error to use the default code 5 error message
-        callback({});
+        const cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
+
+        callback({cause});
         return;
       }
 
