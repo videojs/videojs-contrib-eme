@@ -797,26 +797,37 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
   const getLicenseCallback = sinon.spy();
   const getLicense = defaultGetLicense({});
 
+  function toArrayBuffer(obj) {
+    const json = JSON.stringify(obj);
+    const buffer = new ArrayBuffer(json.length);
+    const bufferView = new Uint8Array(buffer);
+
+    for (let i = 0; i < json.length; i++) {
+      bufferView[i] = json.charCodeAt(i);
+    }
+    return buffer;
+  }
+
   videojs.xhr = (params, callback) => {
-    return callback(null, {statusCode: 400}, {body: 'some-body'});
+    return callback(null, {statusCode: 400}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
-    return callback(null, {statusCode: 500}, {body: 'some-body'});
+    return callback(null, {statusCode: 500}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
-    return callback(null, {statusCode: 599}, {body: 'some-body'});
+    return callback(null, {statusCode: 599}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
   assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
-  assert.equal(getLicenseCallback.alwaysCalledWith({}), true, 'getLicense callback called with correct error');
+  assert.ok(getLicenseCallback.alwaysCalledWith({}), 'getLicense callback called with correct error');
 });
 
 QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
