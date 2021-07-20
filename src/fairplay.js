@@ -7,6 +7,7 @@
 import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -112,21 +113,16 @@ export const defaultGetCertificate = (fairplayOptions) => {
       uri: fairplayOptions.certificateUri,
       responseType: 'arraybuffer',
       headers
-    }, (err, response, responseBody) => {
+    }, httpResponseHandler((err, license) => {
       if (err) {
         callback(err);
         return;
       }
 
-      if (response.statusCode >= 400 && response.statusCode <= 599) {
-        const cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
-
-        callback({cause});
-        return;
-      }
-
-      callback(null, new Uint8Array(responseBody));
-    });
+      // in this case, license is still the raw ArrayBuffer,
+      // convert it into Uint8Array as expected
+      callback(null, new Uint8Array(license));
+    }));
   };
 };
 
@@ -148,21 +144,7 @@ export const defaultGetLicense = (fairplayOptions) => {
       responseType: 'arraybuffer',
       body: keyMessage,
       headers
-    }, (err, response, responseBody) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      if (response.statusCode >= 400 && response.statusCode <= 599) {
-        const cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
-
-        callback({cause});
-        return;
-      }
-
-      callback(null, responseBody);
-    });
+    }, httpResponseHandler(callback));
   };
 };
 
