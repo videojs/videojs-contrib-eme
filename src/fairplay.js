@@ -7,6 +7,7 @@
 import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -112,14 +113,17 @@ export const defaultGetCertificate = (fairplayOptions) => {
       uri: fairplayOptions.certificateUri,
       responseType: 'arraybuffer',
       headers
-    }, (err, response, responseBody) => {
+    }, httpResponseHandler((err, license) => {
       if (err) {
         callback(err);
         return;
       }
 
-      callback(null, new Uint8Array(responseBody));
-    });
+      // in this case, license is still the raw ArrayBuffer,
+      // (we don't want httpResponseHandler to decode it)
+      // convert it into Uint8Array as expected
+      callback(null, new Uint8Array(license));
+    }));
   };
 };
 
@@ -141,20 +145,7 @@ export const defaultGetLicense = (fairplayOptions) => {
       responseType: 'arraybuffer',
       body: keyMessage,
       headers
-    }, (err, response, responseBody) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      if (response.statusCode >= 400 && response.statusCode <= 599) {
-        // Pass an empty object as the error to use the default code 5 error message
-        callback({});
-        return;
-      }
-
-      callback(null, responseBody);
-    });
+    }, httpResponseHandler(callback, true));
   };
 };
 

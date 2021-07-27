@@ -2,6 +2,7 @@ import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 /**
  * Returns an array of MediaKeySystemConfigurationObjects provided in the keySystem
@@ -284,20 +285,8 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     responseType: 'arraybuffer',
     body: keyMessage,
     headers
-  }, (err, response, responseBody) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    if (response.statusCode >= 400 && response.statusCode <= 599) {
-      // Pass an empty object as the error to use the default code 5 error message
-      callback({});
-      return;
-    }
-
-    callback(null, responseBody);
-  });
+  }, httpResponseHandler(callback, true)
+  );
 };
 
 const promisifyGetLicense = (getLicenseFn, eventBus) => {

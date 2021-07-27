@@ -185,13 +185,25 @@ export const setupSessions = (player) => {
  */
 export const emeErrorHandler = (player) => {
   return (objOrErr) => {
-    const message = typeof objOrErr === 'string' ? objOrErr : (objOrErr && objOrErr.message) || null;
-
-    player.error({
+    const error = {
       // MEDIA_ERR_ENCRYPTED is code 5
-      code: 5,
-      message
-    });
+      code: 5
+    };
+
+    if (typeof objOrErr === 'string') {
+      error.message = objOrErr;
+    } else if (objOrErr) {
+      if (objOrErr.message) {
+        error.message = objOrErr.message;
+      }
+      if (objOrErr.cause &&
+          (objOrErr.cause.length ||
+           objOrErr.cause.byteLength)) {
+        error.cause = objOrErr.cause;
+      }
+    }
+
+    player.error(error);
   };
 };
 

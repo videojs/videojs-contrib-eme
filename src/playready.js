@@ -1,6 +1,7 @@
 import videojs from 'video.js';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 /**
  * Parses the EME key message XML to extract HTTP headers and the Challenge element to use
@@ -57,18 +58,5 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
     headers,
     body: message,
     responseType: 'arraybuffer'
-  }, (err, response, responseBody) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    if (response.statusCode >= 400 && response.statusCode <= 599) {
-      // Pass an empty object as the error to use the default code 5 error message
-      callback({});
-      return;
-    }
-
-    callback(null, responseBody);
-  });
+  }, httpResponseHandler(callback, true));
 };
