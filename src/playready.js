@@ -58,5 +58,5 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
     headers,
     body: message,
     responseType: 'arraybuffer'
-  }, httpResponseHandler(callback));
+  }, httpResponseHandler(callback, true));
 };

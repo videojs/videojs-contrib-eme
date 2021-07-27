@@ -285,7 +285,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     responseType: 'arraybuffer',
     body: keyMessage,
     headers
-  }, httpResponseHandler(callback)
+  }, httpResponseHandler(callback, true)
   );
 };
 

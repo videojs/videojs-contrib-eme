@@ -120,6 +120,7 @@ export const defaultGetCertificate = (fairplayOptions) => {
       }
 
       // in this case, license is still the raw ArrayBuffer,
+      // (we don't want httpResponseHandler to decode it)
       // convert it into Uint8Array as expected
       callback(null, new Uint8Array(license));
     }));
@@ -144,7 +145,7 @@ export const defaultGetLicense = (fairplayOptions) => {
       responseType: 'arraybuffer',
       body: keyMessage,
       headers
-    }, httpResponseHandler(callback));
+    }, httpResponseHandler(callback, true));
   };
 };
 
