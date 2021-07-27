@@ -196,7 +196,9 @@ export const emeErrorHandler = (player) => {
       if (objOrErr.message) {
         error.message = objOrErr.message;
       }
-      if (objOrErr.cause && objOrErr.cause.length) {
+      if (objOrErr.cause &&
+          (objOrErr.cause.length ||
+           objOrErr.cause.byteLength)) {
         error.cause = objOrErr.cause;
       }
     }
