@@ -1,43 +1,30 @@
-import window from 'global/window';
+import videojs from 'video.js';
 
-export const httpResponseHandler = (callback) => (err, response, responseBody) => {
-  // if the XHR failed, return that error
-  if (err) {
-    callback(err);
-    return;
-  }
+let httpResponseHandler = videojs.xhr.httpHandler;
 
-  // if the HTTP status code is 4xx or 5xx, the request also failed
-  if (response.statusCode >= 400 && response.statusCode <= 599) {
-    let cause;
-
-    if (window.TextDecoder) {
-      const charset = getCharset(response.headers && response.headers['content-type']);
-
-      cause = new TextDecoder(charset).decode(responseBody);
-    } else {
-      cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
+// to make sure this doesn't break with older versions of Video.js,
+// do a super simple wrapper instead
+if (!httpResponseHandler) {
+  httpResponseHandler = (callback, decodeResponseBody) => (err, response, responseBody) => {
+    if (err) {
+      callback(err);
+      return;
     }
 
-    callback({cause});
-    return;
-  }
+    // if the HTTP status code is 4xx or 5xx, the request also failed
+    if (response.statusCode >= 400 && response.statusCode <= 599) {
+      let cause = responseBody;
 
-  // otherwise, request succeeded
-  callback(null, responseBody);
-};
-
-function getCharset(contentTypeHeader = '') {
-  return contentTypeHeader
-    .toLowerCase()
-    .split(';')
-    .reduce((charset, contentType) => {
-      const [type, value] = contentType.split('=');
-
-      if (type.trim() === 'charset') {
-        return value.trim();
+      if (decodeResponseBody) {
+        cause = String.fromCharCode.apply(null, new Uint8Array(responseBody));
       }
 
-      return charset;
-    }, 'utf-8');
+      callback({cause});
+      return;
+    }
+
+    // otherwise, request succeeded
+    callback(null, responseBody);
+  };
 }
+export { httpResponseHandler };
