@@ -1,3 +1,10 @@
+<a name="3.9.0"></a>
+# [3.9.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.1...v3.9.0) (2021-07-27)
+
+### Features
+
+* on license request errors, return response body as cause (#137) ([a9a5b82](https://github.com/videojs/videojs-contrib-eme/commit/a9a5b82)), closes [#137](https://github.com/videojs/videojs-contrib-eme/issues/137)
+
 <a name="3.8.1"></a>
 ## [3.8.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.0...v3.8.1) (2021-05-19)
 
