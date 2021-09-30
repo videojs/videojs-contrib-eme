@@ -70,7 +70,7 @@
     "videojs-generate-karma-config": "^5.1.0",
     "videojs-generate-rollup-config": "^3.1.0",
     "videojs-generator-verify": "^1.2.0",
-    "videojs-standard": "~7.1.0"
+    "videojs-standard": "~9.0.1"
   },
   "generator-videojs-plugin": {
     "version": "7.3.2"

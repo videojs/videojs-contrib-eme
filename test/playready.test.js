@@ -20,7 +20,8 @@ QUnit.test('getMessageContents parses message contents', function(assert) {
       'Content-Type': 'text/xml; charset=utf-8',
       'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
-    'parses headers');
+    'parses headers'
+  );
   assert.deepEqual(message, challengeElement, 'parses challenge element');
 });
 

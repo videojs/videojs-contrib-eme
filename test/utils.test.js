@@ -11,10 +11,12 @@ QUnit.module('utils');
 QUnit.test('arrayBuffersEqual checks if two array buffers are equal', function(assert) {
   assert.ok(
     arrayBuffersEqual(new ArrayBuffer(3), new ArrayBuffer(3)),
-    'same size empty array buffers are equal');
+    'same size empty array buffers are equal'
+  );
   assert.notOk(
     arrayBuffersEqual(new ArrayBuffer(2), new ArrayBuffer(3)),
-    'different size empty array buffers are not equal');
+    'different size empty array buffers are not equal'
+  );
 
   const arrayBuffer = new ArrayBuffer(10);
 
@@ -22,13 +24,16 @@ QUnit.test('arrayBuffersEqual checks if two array buffers are equal', function(a
 
   assert.ok(
     arrayBuffersEqual(new Uint8Array([1, 2, 3]).buffer, new Uint8Array([1, 2, 3]).buffer),
-    'array buffers with same content are equal');
+    'array buffers with same content are equal'
+  );
   assert.notOk(
     arrayBuffersEqual(new Uint8Array([1, 2, 3]).buffer, new Uint8Array([1, 2, 4]).buffer),
-    'array buffers with different content are not equal');
+    'array buffers with different content are not equal'
+  );
   assert.notOk(
     arrayBuffersEqual(new Uint8Array([1, 2, 3]).buffer, new Uint8Array([1, 2]).buffer),
-    'array buffers with different content lengths are not equal');
+    'array buffers with different content lengths are not equal'
+  );
 });
 
 QUnit.test('arrayBufferFrom returns buffer from typed arrays', function(assert) {

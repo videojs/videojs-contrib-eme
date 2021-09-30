@@ -30,7 +30,8 @@ export const getSupportedConfigurations = (keySystemOptions) => {
 
   if (audioContentType || audioRobustness) {
     supportedConfiguration.audioCapabilities = [
-      Object.assign({},
+      Object.assign(
+        {},
         (audioContentType ? { contentType: audioContentType } : {}),
         (audioRobustness ? { robustness: audioRobustness } : {})
       )
@@ -39,7 +40,8 @@ export const getSupportedConfigurations = (keySystemOptions) => {
 
   if (videoContentType || videoRobustness) {
     supportedConfiguration.videoCapabilities = [
-      Object.assign({},
+      Object.assign(
+        {},
         (videoContentType ? { contentType: videoContentType } : {}),
         (videoRobustness ? { robustness: videoRobustness } : {})
       )
@@ -126,11 +128,13 @@ export const makeNewRequest = (requestOptions) => {
           expired = true;
           break;
         case 'internal-error':
+          const message =
+            'Key status reported as "internal-error." Leaving the session open since we ' +
+            'don\'t have enough details to know if this error is fatal.';
+
           // "This value is not actionable by the application."
           // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-internal-error
-          videojs.log.warn(
-            'Key status reported as "internal-error." Leaving the session open since we ' +
-            'don\'t have enough details to know if this error is fatal.', event);
+          videojs.log.warn(message, event);
           break;
         }
       });
@@ -285,8 +289,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     responseType: 'arraybuffer',
     body: keyMessage,
     headers
-  }, httpResponseHandler(callback, true)
-  );
+  }, httpResponseHandler(callback, true));
 };
 
 const promisifyGetLicense = (getLicenseFn, eventBus) => {
@@ -352,7 +355,8 @@ export const standard5July2016 = ({
 
       keySystemOptions = standardizeKeySystemOptions(
         keySystemAccess.keySystem,
-        options.keySystems[keySystemAccess.keySystem]);
+        options.keySystems[keySystemAccess.keySystem]
+      );
 
       if (!keySystemOptions.getCertificate) {
         resolve(keySystemAccess);
@@ -388,16 +392,18 @@ export const standard5July2016 = ({
   }
 
   return keySystemPromise.then(() => {
+    const {getLicense} = standardizeKeySystemOptions(
+      video.keySystem,
+      options.keySystems[video.keySystem]
+    );
+
     return addSession({
       video,
       initDataType,
       initData,
       options,
       // if key system has not been determined then addSession doesn't need getLicense
-      getLicense: video.keySystem ?
-        promisifyGetLicense(standardizeKeySystemOptions(
-          video.keySystem,
-          options.keySystems[video.keySystem]).getLicense, eventBus) : null,
+      getLicense: video.keySystem ? promisifyGetLicense(getLicense, eventBus) : null,
       removeSession,
       eventBus
     });
