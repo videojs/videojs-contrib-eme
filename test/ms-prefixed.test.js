@@ -202,9 +202,11 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
     }
   });
 
-  assert.equal(errorMessage,
+  assert.equal(
+    errorMessage,
     'Unable to get key: an error',
-    'fires mskeyerror on eventBus when callback has an error');
+    'fires mskeyerror on eventBus when callback has an error'
+  );
   assert.equal(this.session.keys.length, 1, 'did not add a new key');
 });
 
@@ -240,21 +242,26 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   });
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
-  assert.equal(xhrCalls[0].config.uri,
+  assert.equal(
+    xhrCalls[0].config.uri,
     'destination-url',
-    'made request to destinationURL');
+    'made request to destinationURL'
+  );
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
       'Content-Type': 'text/xml; charset=utf-8',
       'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
-    'uses headers from message');
+    'uses headers from message'
+  );
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
-  assert.equal(xhrCalls[0].config.responseType,
+  assert.equal(
+    xhrCalls[0].config.responseType,
     'arraybuffer',
-    'responseType is an arraybuffer');
+    'responseType is an arraybuffer'
+  );
 
   const response = {
     body: stringToArrayBuffer('key value')
@@ -262,22 +269,27 @@ QUnit.test('makes request when nothing provided on key message', function(assert
 
   xhrCalls[0].callback('an error', response, response.body);
 
-  assert.equal(errorMessage,
+  assert.equal(
+    errorMessage,
     'Unable to request key from url: destination-url',
-    'triggers mskeyerror on event bus when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error'
+  );
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response, response.body);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
-  assert.deepEqual(this.session.keys[0],
+  assert.deepEqual(
+    this.session.keys[0],
     new Uint8Array(response.body),
-    'correct key added to session');
+    'correct key added to session'
+  );
 
   videojs.xhr = origXhr;
 });
 
-QUnit.test('makes request on key message when empty object provided in options',
+QUnit.test(
+  'makes request on key message when empty object provided in options',
   function(assert) {
     const origXhr = videojs.xhr;
     const xhrCalls = [];
@@ -303,24 +315,30 @@ QUnit.test('makes request on key message when empty object provided in options',
     });
 
     assert.equal(xhrCalls.length, 1, 'one xhr request');
-    assert.equal(xhrCalls[0].config.uri,
+    assert.equal(
+      xhrCalls[0].config.uri,
       'destination-url',
-      'made request to destinationURL');
+      'made request to destinationURL'
+    );
     assert.deepEqual(
       xhrCalls[0].config.headers,
       {
         'Content-Type': 'text/xml; charset=utf-8',
         'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
       },
-      'uses headers from message');
+      'uses headers from message'
+    );
     assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
     assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
-    assert.equal(xhrCalls[0].config.responseType,
+    assert.equal(
+      xhrCalls[0].config.responseType,
       'arraybuffer',
-      'responseType is an arraybuffer');
+      'responseType is an arraybuffer'
+    );
 
     videojs.xhr = origXhr;
-  });
+  }
+);
 
 QUnit.test('makes request with provided url string on key message', function(assert) {
   const origXhr = videojs.xhr;
@@ -360,21 +378,26 @@ QUnit.test('makes request with provided url string on key message', function(ass
   });
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
-  assert.equal(xhrCalls[0].config.uri,
+  assert.equal(
+    xhrCalls[0].config.uri,
     'provided-url',
-    'made request to provided-url');
+    'made request to provided-url'
+  );
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
       'Content-Type': 'text/xml; charset=utf-8',
       'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
-    'uses headers from message');
+    'uses headers from message'
+  );
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
-  assert.equal(xhrCalls[0].config.responseType,
+  assert.equal(
+    xhrCalls[0].config.responseType,
     'arraybuffer',
-    'responseType is an arraybuffer');
+    'responseType is an arraybuffer'
+  );
 
   const response = {
     body: stringToArrayBuffer('key value')
@@ -382,17 +405,21 @@ QUnit.test('makes request with provided url string on key message', function(ass
 
   xhrCalls[0].callback('an error', response, response.body);
 
-  assert.equal(errorMessage,
+  assert.equal(
+    errorMessage,
     'Unable to request key from url: provided-url',
-    'triggers mskeyerror on event bus when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error'
+  );
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response, response.body);
 
   assert.equal(this.session.keys.length, 1, 'key added to session');
-  assert.deepEqual(this.session.keys[0],
+  assert.deepEqual(
+    this.session.keys[0],
     new Uint8Array(response.body),
-    'correct key added to session');
+    'correct key added to session'
+  );
 
   videojs.xhr = origXhr;
 });
@@ -442,23 +469,30 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   });
 
   assert.equal(xhrCalls.length, 1, 'one xhr request');
-  assert.equal(xhrCalls[0].config.uri,
+  assert.equal(
+    xhrCalls[0].config.uri,
     'provided-url',
-    'made request to provided-url');
+    'made request to provided-url'
+  );
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
       'Content-Type': 'text/xml; charset=utf-8',
       'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
-    'uses headers from message');
+    'uses headers from message'
+  );
   assert.equal(xhrCalls[0].config.body, challengeElement, 'sends the challenge element');
   assert.equal(xhrCalls[0].config.method, 'post', 'request is a post');
-  assert.equal(xhrCalls[0].config.responseType,
+  assert.equal(
+    xhrCalls[0].config.responseType,
     'arraybuffer',
-    'responseType is an arraybuffer');
-  assert.equal(callCounts.licenseRequestAttempts, 0,
-    'license request event not triggered (since no callback yet)');
+    'responseType is an arraybuffer'
+  );
+  assert.equal(
+    callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)'
+  );
 
   const response = {
     body: stringToArrayBuffer('key value')
@@ -467,19 +501,25 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   xhrCalls[0].callback('an error', response, response.body);
 
   assert.equal(callCounts.licenseRequestAttempts, 1, 'license request event triggered');
-  assert.equal(errorMessage,
+  assert.equal(
+    errorMessage,
     'Unable to request key from url: provided-url',
-    'triggers mskeyerror on event bus when callback has an error');
+    'triggers mskeyerror on event bus when callback has an error'
+  );
   assert.equal(this.session.keys.length, 0, 'no key added to session');
 
   xhrCalls[0].callback(null, response, response.body);
 
-  assert.equal(callCounts.licenseRequestAttempts, 2,
-    'second license request event triggered');
+  assert.equal(
+    callCounts.licenseRequestAttempts, 2,
+    'second license request event triggered'
+  );
   assert.equal(this.session.keys.length, 1, 'key added to session');
-  assert.deepEqual(this.session.keys[0],
+  assert.deepEqual(
+    this.session.keys[0],
     new Uint8Array(response.body),
-    'correct key added to session');
+    'correct key added to session'
+  );
 
   videojs.xhr = origXhr;
 });

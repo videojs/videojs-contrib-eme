@@ -96,8 +96,10 @@ QUnit.test('lifecycle', function(assert) {
   assert.equal(callCounts.createSession, 0, 'a key session has not been created');
   assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
   assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-  assert.equal(callCounts.licenseRequestAttempts, 0,
-    'license request event not triggered (since no callback yet)');
+  assert.equal(
+    callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)'
+  );
 
   callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
@@ -107,15 +109,23 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-    assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered (since no callback yet)');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)'
+    );
 
-    assert.ok(keySessionEventListeners.webkitkeymessage,
-      'added an event listener for webkitkeymessage');
-    assert.ok(keySessionEventListeners.webkitkeyadded,
-      'added an event listener for webkitkeyadded');
-    assert.ok(keySessionEventListeners.webkitkeyerror,
-      'added an event listener for webkitkeyerror');
+    assert.ok(
+      keySessionEventListeners.webkitkeymessage,
+      'added an event listener for webkitkeymessage'
+    );
+    assert.ok(
+      keySessionEventListeners.webkitkeyadded,
+      'added an event listener for webkitkeyadded'
+    );
+    assert.ok(
+      keySessionEventListeners.webkitkeyerror,
+      'added an event listener for webkitkeyerror'
+    );
 
     keySessionEventListeners.webkitkeymessage({});
 
@@ -124,8 +134,10 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-    assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered (since no callback yet)');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)'
+    );
 
     callbacks.getLicense(null, []);
 
@@ -134,8 +146,10 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 1, 'updateKeySession has been called');
-    assert.equal(callCounts.licenseRequestAttempts, 1,
-      'license request event triggered');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 1,
+      'license request event triggered'
+    );
 
     keySessionEventListeners.webkitkeyadded();
   };
@@ -234,8 +248,10 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
     options: {keySystems},
     eventBus: getMockEventBus()
   }).catch(err => {
-    assert.equal(err, 'Could not create key session',
-      'message is good');
+    assert.equal(
+      err, 'Could not create key session',
+      'message is good'
+    );
     done();
   });
 

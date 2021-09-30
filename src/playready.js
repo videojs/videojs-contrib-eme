@@ -12,10 +12,10 @@ import {httpResponseHandler} from './http-handler.js';
  * license request
  */
 export const getMessageContents = (message) => {
-  const xml = (new window.DOMParser()).parseFromString(
-    // TODO do we want to support UTF-8?
-    String.fromCharCode.apply(null, new Uint16Array(message)),
-    'application/xml');
+  // TODO do we want to support UTF-8?
+  const xmlString = String.fromCharCode.apply(null, new Uint16Array(message));
+  const xml = (new window.DOMParser())
+    .parseFromString(xmlString, 'application/xml');
   const headersElement = xml.getElementsByTagName('HttpHeaders')[0];
   const headers = {};
 

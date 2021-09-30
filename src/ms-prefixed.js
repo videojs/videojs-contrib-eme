@@ -2,6 +2,7 @@
  * The W3C Working Draft of 22 October 2013 seems to be the best match for
  * the ms-prefixed API. However, it should only be used as a guide; it is
  * doubtful the spec is 100% implemented as described.
+ *
  * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
  * @see https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/mt598601(v=vs.85)
  */
@@ -14,19 +15,18 @@ export const addKeyToSession = (options, session, event, eventBus) => {
   let playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
   if (typeof playreadyOptions.getKey === 'function') {
-    playreadyOptions.getKey(
-      options, event.destinationURL, event.message.buffer, (err, key) => {
-        if (err) {
-          eventBus.trigger({
-            message: 'Unable to get key: ' + err,
-            target: session,
-            type: 'mskeyerror'
-          });
-          return;
-        }
+    playreadyOptions.getKey(options, event.destinationURL, event.message.buffer, (err, key) => {
+      if (err) {
+        eventBus.trigger({
+          message: 'Unable to get key: ' + err,
+          target: session,
+          type: 'mskeyerror'
+        });
+        return;
+      }
 
-        session.update(key);
-      });
+      session.update(key);
+    });
     return;
   }
 

@@ -2,6 +2,7 @@
  * The W3C Working Draft of 22 October 2013 seems to be the best match for
  * the ms-prefixed API. However, it should only be used as a guide; it is
  * doubtful the spec is 100% implemented as described.
+ *
  * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
  */
 import videojs from 'video.js';
@@ -23,8 +24,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   //   [4 byte:certLength]
   //   [certLength byte: cert]
   let offset = 0;
-  const buffer = new ArrayBuffer(
-    initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength);
+  const buffer = new ArrayBuffer(initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength);
   const dataView = new DataView(buffer);
   const initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
 
@@ -65,7 +65,8 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
     try {
       keySession = video.webkitKeys.createSession(
         'video/mp4',
-        concatInitDataIdAndCertificate({id: contentId, initData, cert}));
+        concatInitDataIdAndCertificate({id: contentId, initData, cert})
+      );
     } catch (error) {
       reject('Could not create key session');
       return;
