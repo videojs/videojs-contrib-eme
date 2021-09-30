@@ -386,6 +386,7 @@ player.src({
   },
   keySystems: {
     'org.w3.clearkey': {
+      initDataTypes: ['cenc', 'webm'],
       audioContentType: 'audio/webm; codecs="vorbis"',
       videoContentType: 'video/webm; codecs="vp9"',
       getCertificate: function(emeOptions, callback) {

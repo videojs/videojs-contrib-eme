@@ -3,6 +3,10 @@ import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
+import {defaultGetCertificate as defaultFairplayGetCertificate,
+  defaultGetLicense as defaultFairplayGetLicense } from './fairplay';
+
+const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
 
 /**
  * Returns an array of MediaKeySystemConfigurationObjects provided in the keySystem
@@ -15,16 +19,21 @@ import {httpResponseHandler} from './http-handler.js';
  * @return {Object[]}
  *         Array of MediaKeySystemConfigurationObjects
  */
-export const getSupportedConfigurations = (keySystemOptions) => {
+export const getSupportedConfigurations = (keySystem, keySystemOptions) => {
   if (keySystemOptions.supportedConfigurations) {
     return keySystemOptions.supportedConfigurations;
   }
 
-  // TODO use initDataTypes when appropriate
+  const isFairplay = isFairplayKeySystem(keySystem);
   const supportedConfiguration = {};
+  const initDataTypes = keySystemOptions.initDataTypes ||
+    // fairplay requires an explicit initDataTypes
+    (isFairplay ? ['sinf'] : null);
   const audioContentType = keySystemOptions.audioContentType;
   const audioRobustness = keySystemOptions.audioRobustness;
-  const videoContentType = keySystemOptions.videoContentType;
+  const videoContentType = keySystemOptions.videoContentType ||
+    // fairplay requires an explicit videoCapabilities/videoContentType
+    (isFairplay ? 'video/mp4' : null);
   const videoRobustness = keySystemOptions.videoRobustness;
   const persistentState = keySystemOptions.persistentState;
 
@@ -52,6 +61,10 @@ export const getSupportedConfigurations = (keySystemOptions) => {
     supportedConfiguration.persistentState = persistentState;
   }
 
+  if (initDataTypes) {
+    supportedConfiguration.initDataTypes = initDataTypes;
+  }
+
   return [supportedConfiguration];
 };
 
@@ -62,7 +75,7 @@ export const getSupportedKeySystem = (keySystems) => {
   let promise;
 
   Object.keys(keySystems).forEach((keySystem) => {
-    const supportedConfigurations = getSupportedConfigurations(keySystems[keySystem]);
+    const supportedConfigurations = getSupportedConfigurations(keySystem, keySystems[keySystem]);
 
     if (!promise) {
       promise =
@@ -292,10 +305,10 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
   }, httpResponseHandler(callback, true));
 };
 
-const promisifyGetLicense = (getLicenseFn, eventBus) => {
+const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
   return (emeOptions, keyMessage) => {
     return new Promise((resolve, reject) => {
-      getLicenseFn(emeOptions, keyMessage, (err, license) => {
+      const callback = function(err, license) {
         if (eventBus) {
           eventBus.trigger('licenserequestattempted');
         }
@@ -305,7 +318,13 @@ const promisifyGetLicense = (getLicenseFn, eventBus) => {
         }
 
         resolve(license);
-      });
+      };
+
+      if (isFairplayKeySystem(keySystem)) {
+        getLicenseFn(emeOptions, null, keyMessage, callback);
+      } else {
+        getLicenseFn(emeOptions, keyMessage, callback);
+      }
     });
   };
 };
@@ -315,14 +334,32 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     keySystemOptions = { url: keySystemOptions };
   }
 
-  if (!keySystemOptions.url && !keySystemOptions.getLicense) {
-    throw new Error('Neither URL nor getLicense function provided to get license');
+  if (!keySystemOptions.url && keySystemOptions.licenseUri) {
+    keySystemOptions.url = keySystemOptions.licenseUri;
   }
 
+  if (!keySystemOptions.url && !keySystemOptions.getLicense) {
+    throw new Error(`Missing url/licenseUri or getLicense in ${keySystem} keySystem configuration.`);
+  }
+
+  if (keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
+    keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
+  }
+
+  const isFairplay = isFairplayKeySystem(keySystem);
+
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
-    keySystemOptions.getLicense = keySystem === 'com.microsoft.playready' ?
-      defaultPlayreadyGetLicense(keySystemOptions) :
-      defaultGetLicense(keySystemOptions);
+    if (keySystem === 'com.microsoft.playready') {
+      keySystemOptions.getLicense = defaultPlayreadyGetLicense(keySystemOptions);
+    } else if (isFairplay) {
+      keySystemOptions.getLicense = defaultFairplayGetLicense(keySystemOptions);
+    } else {
+      keySystemOptions.getLicense = defaultGetLicense(keySystemOptions);
+    }
+  }
+
+  if (isFairplay && !keySystemOptions.getCertificate) {
+    throw new Error(`Missing getCertificate or certificateUri in ${keySystem} keySystem configuration.`);
   }
 
   return keySystemOptions;
@@ -338,6 +375,7 @@ export const standard5July2016 = ({
   eventBus
 }) => {
   let keySystemPromise = Promise.resolve();
+  const keySystem = keySystemAccess.keySystem;
 
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
@@ -351,11 +389,11 @@ export const standard5July2016 = ({
 
     keySystemPromise = new Promise((resolve, reject) => {
       // save key system for adding sessions
-      video.keySystem = keySystemAccess.keySystem;
+      video.keySystem = keySystem;
 
       keySystemOptions = standardizeKeySystemOptions(
-        keySystemAccess.keySystem,
-        options.keySystems[keySystemAccess.keySystem]
+        keySystem,
+        options.keySystems[keySystem]
       );
 
       if (!keySystemOptions.getCertificate) {
@@ -392,18 +430,24 @@ export const standard5July2016 = ({
   }
 
   return keySystemPromise.then(() => {
-    const {getLicense} = standardizeKeySystemOptions(
-      video.keySystem,
-      options.keySystems[video.keySystem]
-    );
+    let getLicenseFn = null;
+
+    // if key system has not been determined then addSession doesn't need getLicense
+    if (video.keySystem) {
+      const {getLicense} = standardizeKeySystemOptions(
+        keySystem,
+        options.keySystems[video.keySystem]
+      );
+
+      getLicenseFn = promisifyGetLicense(keySystem, getLicense, eventBus);
+    }
 
     return addSession({
       video,
       initDataType,
       initData,
       options,
-      // if key system has not been determined then addSession doesn't need getLicense
-      getLicense: video.keySystem ? promisifyGetLicense(getLicense, eventBus) : null,
+      getLicense: getLicenseFn,
       removeSession,
       eventBus
     });
