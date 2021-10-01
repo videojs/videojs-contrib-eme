@@ -5,7 +5,8 @@ import {mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 import {
   defaultGetCertificate as defaultFairplayGetCertificate,
-  defaultGetLicense as defaultFairplayGetLicense
+  defaultGetLicense as defaultFairplayGetLicense,
+  defaultGetContentId as defaultFairplayGetContentId
 } from './fairplay';
 
 const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
@@ -99,8 +100,10 @@ export const makeNewRequest = (requestOptions) => {
     options,
     getLicense,
     removeSession,
-    eventBus
+    eventBus,
+    getContentId
   } = requestOptions;
+
   const keySession = mediaKeys.createSession();
 
   eventBus.trigger('keysessioncreated');
@@ -112,7 +115,9 @@ export const makeNewRequest = (requestOptions) => {
       if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
         return;
       }
-      getLicense(options, event.message, initData)
+      const contentId = getContentId ? getContentId(initData) : null;
+
+      getLicense(options, event.message, contentId)
         .then((license) => {
           resolve(keySession.update(license));
         })
@@ -207,6 +212,7 @@ export const addSession = ({
   initData,
   options,
   getLicense,
+  getContentId,
   removeSession,
   eventBus
 }) => {
@@ -218,6 +224,7 @@ export const addSession = ({
       options,
       getLicense,
       removeSession,
+      getContentId,
       eventBus
     });
   }
@@ -228,6 +235,7 @@ export const addSession = ({
     options,
     getLicense,
     removeSession,
+    getContentId,
     eventBus
   });
   return Promise.resolve();
@@ -276,7 +284,8 @@ export const addPendingSessions = ({
       options: data.options,
       getLicense: data.getLicense,
       removeSession: data.removeSession,
-      eventBus: data.eventBus
+      eventBus: data.eventBus,
+      getContentId: data.getContentId
     }));
   }
 
@@ -308,7 +317,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
 };
 
 const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
-  return (emeOptions, keyMessage, initData) => {
+  return (emeOptions, keyMessage, contentId) => {
     return new Promise((resolve, reject) => {
       const callback = function(err, license) {
         if (eventBus) {
@@ -323,8 +332,6 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
       };
 
       if (isFairplayKeySystem(keySystem)) {
-        const contentId = String.fromCharCode.apply(null, new Uint8Array(initData));
-
         getLicenseFn(emeOptions, contentId, keyMessage, callback);
       } else {
         getLicenseFn(emeOptions, keyMessage, callback);
@@ -350,6 +357,10 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 
   if (isFairplay && keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
     keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
+  }
+
+  if (isFairplay && !keySystemOptions.getContentId) {
+    keySystemOptions.getContentId = defaultFairplayGetContentId(keySystemOptions);
   }
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
@@ -421,7 +432,8 @@ export const standard5July2016 = ({
       return addPendingSessions({
         video,
         certificate,
-        createdMediaKeys
+        createdMediaKeys,
+        getContentId: keySystemOptions.getContentId
       });
     }).catch((err) => {
       // if we have a specific error message, use it, otherwise show a more
@@ -435,15 +447,17 @@ export const standard5July2016 = ({
 
   return keySystemPromise.then(() => {
     let getLicenseFn = null;
+    let getContentIdFn = null;
 
     // if key system has not been determined then addSession doesn't need getLicense
     if (video.keySystem) {
-      const {getLicense} = standardizeKeySystemOptions(
+      const {getLicense, getContentId} = standardizeKeySystemOptions(
         keySystem,
         options.keySystems[video.keySystem]
       );
 
       getLicenseFn = promisifyGetLicense(keySystem, getLicense, eventBus);
+      getContentIdFn = getContentId;
     }
 
     return addSession({
@@ -452,6 +466,7 @@ export const standard5July2016 = ({
       initData,
       options,
       getLicense: getLicenseFn,
+      getContentId: getContentIdFn,
       removeSession,
       eventBus
     });

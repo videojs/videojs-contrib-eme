@@ -1,4 +1,3 @@
-import document from 'global/document';
 import videojs from 'video.js';
 
 export const stringToUint16Array = (string) => {
@@ -14,14 +13,7 @@ export const stringToUint16Array = (string) => {
 };
 
 export const uint8ArrayToString = (array) => {
-  return String.fromCharCode.apply(null, new Uint8Array(array.buffer));
-};
-
-export const getHostnameFromUri = (uri) => {
-  const link = document.createElement('a');
-
-  link.href = uri;
-  return link.hostname;
+  return String.fromCharCode.apply(null, new Uint8Array(array.buffer || array));
 };
 
 export const arrayBuffersEqual = (arrayBuffer1, arrayBuffer2) => {

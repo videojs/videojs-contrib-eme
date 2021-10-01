@@ -7,7 +7,7 @@
  */
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
+import {stringToUint16Array, uint8ArrayToString, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
@@ -128,8 +128,10 @@ export const defaultGetCertificate = (fairplayOptions) => {
   };
 };
 
-export const defaultGetContentId = (emeOptions, initData) => {
-  return getHostnameFromUri(uint8ArrayToString(initData));
+export const defaultGetContentId = (emeOptions) => {
+  return (initData) => {
+    return uint8ArrayToString(initData).replace('skd://', '');
+  };
 };
 
 export const defaultGetLicense = (fairplayOptions) => {
