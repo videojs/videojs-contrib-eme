@@ -5,8 +5,7 @@ import {mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 import {
   defaultGetCertificate as defaultFairplayGetCertificate,
-  defaultGetLicense as defaultFairplayGetLicense,
-  defaultGetContentId as fairplayGetContentId
+  defaultGetLicense as defaultFairplayGetLicense
 } from './fairplay';
 
 const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
@@ -324,7 +323,7 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
       };
 
       if (isFairplayKeySystem(keySystem)) {
-        const contentId = fairplayGetContentId(emeOptions, initData);
+        const contentId = String.fromCharCode.apply(null, new Uint8Array(initData));
 
         getLicenseFn(emeOptions, contentId, keyMessage, callback);
       } else {
