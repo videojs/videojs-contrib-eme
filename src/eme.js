@@ -3,8 +3,11 @@ import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
-import {defaultGetCertificate as defaultFairplayGetCertificate,
-  defaultGetLicense as defaultFairplayGetLicense } from './fairplay';
+import {
+  defaultGetCertificate as defaultFairplayGetCertificate,
+  defaultGetLicense as defaultFairplayGetLicense,
+  defaultGetContentId as fairplayGetContentId
+} from './fairplay';
 
 const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
 
@@ -110,7 +113,7 @@ export const makeNewRequest = (requestOptions) => {
       if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
         return;
       }
-      getLicense(options, event.message)
+      getLicense(options, event.message, initData)
         .then((license) => {
           resolve(keySession.update(license));
         })
@@ -306,7 +309,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
 };
 
 const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
-  return (emeOptions, keyMessage) => {
+  return (emeOptions, keyMessage, initData) => {
     return new Promise((resolve, reject) => {
       const callback = function(err, license) {
         if (eventBus) {
@@ -321,7 +324,7 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
       };
 
       if (isFairplayKeySystem(keySystem)) {
-        getLicenseFn(emeOptions, null, keyMessage, callback);
+        getLicenseFn(emeOptions, fairplayGetContentId(initData), keyMessage, callback);
       } else {
         getLicenseFn(emeOptions, keyMessage, callback);
       }
@@ -342,11 +345,11 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     throw new Error(`Missing url/licenseUri or getLicense in ${keySystem} keySystem configuration.`);
   }
 
-  if (keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
+  const isFairplay = isFairplayKeySystem(keySystem);
+
+  if (isFairplay && keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
     keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
   }
-
-  const isFairplay = isFairplayKeySystem(keySystem);
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
     if (keySystem === 'com.microsoft.playready') {
