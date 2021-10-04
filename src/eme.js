@@ -115,7 +115,7 @@ export const makeNewRequest = (requestOptions) => {
       if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
         return;
       }
-      const contentId = getContentId ? getContentId(initData) : null;
+      const contentId = getContentId ? getContentId(options, initData) : null;
 
       getLicense(options, event.message, contentId)
         .then((license) => {
@@ -229,15 +229,21 @@ export const addSession = ({
     });
   }
 
-  video.pendingSessionData.push({
+  const sessionData = {
     initDataType,
     initData,
     options,
     getLicense,
     removeSession,
-    getContentId,
     eventBus
-  });
+  };
+
+  if (getContentId) {
+    sessionData.getContentId = getContentId;
+  }
+
+  video.pendingSessionData.push(sessionData);
+
   return Promise.resolve();
 };
 
@@ -360,7 +366,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   }
 
   if (isFairplay && !keySystemOptions.getContentId) {
-    keySystemOptions.getContentId = defaultFairplayGetContentId(keySystemOptions);
+    keySystemOptions.getContentId = defaultFairplayGetContentId;
   }
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
