@@ -338,7 +338,7 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
       };
 
       if (isFairplayKeySystem(keySystem)) {
-        getLicenseFn(emeOptions, contentId, keyMessage, callback);
+        getLicenseFn(emeOptions, contentId, new Uint8Array(keyMessage), callback);
       } else {
         getLicenseFn(emeOptions, keyMessage, callback);
       }
