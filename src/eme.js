@@ -365,6 +365,10 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
   }
 
+  if (isFairplay && !keySystemOptions.getCertificate) {
+    throw new Error(`Missing getCertificate or certificateUri in ${keySystem} keySystem configuration.`);
+  }
+
   if (isFairplay && !keySystemOptions.getContentId) {
     keySystemOptions.getContentId = defaultFairplayGetContentId;
   }
@@ -377,10 +381,6 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     } else {
       keySystemOptions.getLicense = defaultGetLicense(keySystemOptions);
     }
-  }
-
-  if (isFairplay && !keySystemOptions.getCertificate) {
-    throw new Error(`Missing getCertificate or certificateUri in ${keySystem} keySystem configuration.`);
   }
 
   return keySystemOptions;
