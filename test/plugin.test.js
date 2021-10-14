@@ -315,7 +315,7 @@ QUnit.test('tech error listener is removed on dispose', function(assert) {
   this.clock.tick(1);
 });
 
-QUnit.test('only registers for spec-compliant events if legacy APIs are available', function(assert) {
+QUnit.test('only registers for spec-compliant events even if legacy APIs are available', function(assert) {
   const done = assert.async(1);
 
   const origMediaKeys = window.MediaKeys;
