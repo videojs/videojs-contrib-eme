@@ -1144,9 +1144,11 @@ QUnit.test('addSession saves options', function(assert) {
   const getLicense = () => '';
   const removeSession = () => '';
   const eventBus = { trigger: () => {} };
+  const contentId = null;
 
   addSession({
     video,
+    contentId,
     initDataType,
     initData,
     options,
@@ -1163,7 +1165,8 @@ QUnit.test('addSession saves options', function(assert) {
       options,
       getLicense,
       removeSession,
-      eventBus
+      eventBus,
+      contentId
     }],
     'saved options into pendingSessionData array'
   );

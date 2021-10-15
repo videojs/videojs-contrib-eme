@@ -101,7 +101,7 @@ export const makeNewRequest = (requestOptions) => {
     getLicense,
     removeSession,
     eventBus,
-    getContentId
+    contentId
   } = requestOptions;
 
   const keySession = mediaKeys.createSession();
@@ -115,7 +115,6 @@ export const makeNewRequest = (requestOptions) => {
       if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
         return;
       }
-      const contentId = getContentId ? getContentId(options, initData) : null;
 
       getLicense(options, event.message, contentId)
         .then((license) => {
@@ -212,34 +211,23 @@ export const addSession = ({
   initData,
   options,
   getLicense,
-  getContentId,
+  contentId,
   removeSession,
   eventBus
 }) => {
-  if (video.mediaKeysObject) {
-    return makeNewRequest({
-      mediaKeys: video.mediaKeysObject,
-      initDataType,
-      initData,
-      options,
-      getLicense,
-      removeSession,
-      getContentId,
-      eventBus
-    });
-  }
-
   const sessionData = {
     initDataType,
     initData,
     options,
     getLicense,
     removeSession,
-    eventBus
+    eventBus,
+    contentId
   };
 
-  if (getContentId) {
-    sessionData.getContentId = getContentId;
+  if (video.mediaKeysObject) {
+    sessionData.mediaKeys = video.mediaKeysObject;
+    return makeNewRequest(sessionData);
   }
 
   video.pendingSessionData.push(sessionData);
@@ -453,7 +441,7 @@ export const standard5July2016 = ({
 
   return keySystemPromise.then(() => {
     let getLicenseFn = null;
-    let getContentIdFn = null;
+    let contentId = null;
 
     // if key system has not been determined then addSession doesn't need getLicense
     if (video.keySystem) {
@@ -463,7 +451,7 @@ export const standard5July2016 = ({
       );
 
       getLicenseFn = promisifyGetLicense(keySystem, getLicense, eventBus);
-      getContentIdFn = getContentId;
+      contentId = getContentId ? getContentId(initData) : null;
     }
 
     return addSession({
@@ -472,7 +460,7 @@ export const standard5July2016 = ({
       initData,
       options,
       getLicense: getLicenseFn,
-      getContentId: getContentIdFn,
+      contentId,
       removeSession,
       eventBus
     });
