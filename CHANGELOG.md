@@ -1,3 +1,14 @@
+<a name="3.10.0"></a>
+# [3.10.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.9.0...v3.10.0) (2021-10-15)
+
+### Bug Fixes
+
+* use in-spec EME for versions of Safari which support it (#142) ([5897655](https://github.com/videojs/videojs-contrib-eme/commit/5897655)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#87](https://github.com/videojs/videojs-contrib-eme/issues/87)
+
+### Chores
+
+* update linter, run --fix on files, and manually lint when needed (#141) ([a794ea9](https://github.com/videojs/videojs-contrib-eme/commit/a794ea9)), closes [#141](https://github.com/videojs/videojs-contrib-eme/issues/141)
+
 <a name="3.9.0"></a>
 # [3.9.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.1...v3.9.0) (2021-07-27)
 
