@@ -279,7 +279,7 @@ export const addPendingSessions = ({
       getLicense: data.getLicense,
       removeSession: data.removeSession,
       eventBus: data.eventBus,
-      getContentId: data.getContentId
+      contentId: data.contentId
     }));
   }
 
@@ -385,6 +385,20 @@ export const standard5July2016 = ({
 }) => {
   let keySystemPromise = Promise.resolve();
   const keySystem = keySystemAccess.keySystem;
+  let keySystemOptions;
+
+  // try catch so that we return a promise rejection
+  try {
+    keySystemOptions = standardizeKeySystemOptions(
+      keySystem,
+      options.keySystems[keySystem]
+    );
+  } catch (e) {
+    return Promise.reject(e);
+  }
+
+  const contentId = keySystemOptions.getContentId ?
+    keySystemOptions.getContentId(options, initData) : null;
 
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
@@ -394,16 +408,10 @@ export const standard5July2016 = ({
     video.pendingSessionData = [];
 
     let certificate;
-    let keySystemOptions;
 
     keySystemPromise = new Promise((resolve, reject) => {
       // save key system for adding sessions
       video.keySystem = keySystem;
-
-      keySystemOptions = standardizeKeySystemOptions(
-        keySystem,
-        options.keySystems[keySystem]
-      );
 
       if (!keySystemOptions.getCertificate) {
         resolve(keySystemAccess);
@@ -426,8 +434,7 @@ export const standard5July2016 = ({
       return addPendingSessions({
         video,
         certificate,
-        createdMediaKeys,
-        getContentId: keySystemOptions.getContentId
+        createdMediaKeys
       });
     }).catch((err) => {
       // if we have a specific error message, use it, otherwise show a more
@@ -440,26 +447,16 @@ export const standard5July2016 = ({
   }
 
   return keySystemPromise.then(() => {
-    let getLicenseFn = null;
-    let contentId = null;
-
     // if key system has not been determined then addSession doesn't need getLicense
-    if (video.keySystem) {
-      const {getLicense, getContentId} = standardizeKeySystemOptions(
-        keySystem,
-        options.keySystems[video.keySystem]
-      );
-
-      getLicenseFn = promisifyGetLicense(keySystem, getLicense, eventBus);
-      contentId = getContentId ? getContentId(initData) : null;
-    }
+    const getLicense = video.keySystem ?
+      promisifyGetLicense(keySystem, keySystemOptions.getLicense, eventBus) : null;
 
     return addSession({
       video,
       initDataType,
       initData,
       options,
-      getLicense: getLicenseFn,
+      getLicense,
       contentId,
       removeSession,
       eventBus
