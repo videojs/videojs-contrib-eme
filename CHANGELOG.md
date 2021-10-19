@@ -1,3 +1,10 @@
+<a name="3.10.1"></a>
+## [3.10.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.0...v3.10.1) (2021-10-19)
+
+### Reverts
+
+* fix: use in-spec EME for versions of Safari which support it (#142) (#145) ([fdb57e3](https://github.com/videojs/videojs-contrib-eme/commit/fdb57e3)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#145](https://github.com/videojs/videojs-contrib-eme/issues/145)
+
 <a name="3.10.0"></a>
 # [3.10.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.9.0...v3.10.0) (2021-10-15)
 
