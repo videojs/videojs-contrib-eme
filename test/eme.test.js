@@ -1,6 +1,5 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
-import window from 'global/window';
 import {
   defaultGetLicense,
   standard5July2016,
@@ -574,7 +573,7 @@ if (!videojs.browser.IS_ANY_SAFARI) {
   });
 }
 
-QUnit.test('errors when missing url/licenseUri or getLicense', function(assert) {
+QUnit.test('errors when neither url nor getLicense is given', function(assert) {
   const options = {
     keySystems: {
       'com.widevine.alpha': {}
@@ -593,32 +592,7 @@ QUnit.test('errors when missing url/licenseUri or getLicense', function(assert) 
   }).catch((err) => {
     assert.equal(
       err,
-      'Error: Missing url/licenseUri or getLicense in com.widevine.alpha keySystem configuration.',
-      'correct error message'
-    );
-    done();
-  });
-});
-
-QUnit.test('errors when missing certificateUri and getCertificate for fairplay', function(assert) {
-  const options = {
-    keySystems: {
-      'com.apple.fps': {url: 'fake-url'}
-    }
-  };
-  const keySystemAccess = {
-    keySystem: 'com.apple.fps'
-  };
-  const done = assert.async();
-
-  standard5July2016({
-    video: {},
-    keySystemAccess,
-    options
-  }).catch((err) => {
-    assert.equal(
-      err,
-      'Error: Missing getCertificate or certificateUri in com.apple.fps keySystem configuration.',
+      'Error: Neither URL nor getLicense function provided to get license',
       'correct error message'
     );
     done();
@@ -1113,25 +1087,6 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
   });
 });
 
-QUnit.test('sets required fairplay defaults if not explicitly configured', function(assert) {
-  const origRequestMediaKeySystemAccess = window.navigator.requestMediaKeySystemAccess;
-
-  window.navigator.requestMediaKeySystemAccess = (keySystem, systemOptions) => {
-    assert.ok(
-      systemOptions[0].initDataTypes.indexOf('sinf') !== -1,
-      'includes required initDataType'
-    );
-    assert.ok(
-      systemOptions[0].videoCapabilities[0].contentType.indexOf('video/mp4') !== -1,
-      'includes required video contentType'
-    );
-  };
-
-  getSupportedKeySystem({'com.apple.fps': {}});
-
-  window.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
-});
-
 QUnit.module('session management');
 
 QUnit.test('addSession saves options', function(assert) {
@@ -1144,11 +1099,9 @@ QUnit.test('addSession saves options', function(assert) {
   const getLicense = () => '';
   const removeSession = () => '';
   const eventBus = { trigger: () => {} };
-  const contentId = null;
 
   addSession({
     video,
-    contentId,
     initDataType,
     initData,
     options,
@@ -1165,8 +1118,7 @@ QUnit.test('addSession saves options', function(assert) {
       options,
       getLicense,
       removeSession,
-      eventBus,
-      contentId
+      eventBus
     }],
     'saved options into pendingSessionData array'
   );
@@ -1238,7 +1190,7 @@ QUnit.module('videojs-contrib-eme getSupportedConfigurations');
 
 QUnit.test('includes audio and video content types', function(assert) {
   assert.deepEqual(
-    getSupportedConfigurations('com.widevine.alpha', {
+    getSupportedConfigurations({
       audioContentType: 'audio/mp4; codecs="mp4a.40.2"',
       videoContentType: 'video/mp4; codecs="avc1.42E01E"'
     }),
@@ -1256,7 +1208,7 @@ QUnit.test('includes audio and video content types', function(assert) {
 
 QUnit.test('includes audio and video robustness', function(assert) {
   assert.deepEqual(
-    getSupportedConfigurations('com.widevine.alpha', {
+    getSupportedConfigurations({
       audioRobustness: 'SW_SECURE_CRYPTO',
       videoRobustness: 'SW_SECURE_CRYPTO'
     }),
@@ -1274,7 +1226,7 @@ QUnit.test('includes audio and video robustness', function(assert) {
 
 QUnit.test('includes audio and video content types and robustness', function(assert) {
   assert.deepEqual(
-    getSupportedConfigurations('com.widevine.alpha', {
+    getSupportedConfigurations({
       audioContentType: 'audio/mp4; codecs="mp4a.40.2"',
       audioRobustness: 'SW_SECURE_CRYPTO',
       videoContentType: 'video/mp4; codecs="avc1.42E01E"',
@@ -1296,7 +1248,7 @@ QUnit.test('includes audio and video content types and robustness', function(ass
 
 QUnit.test('includes persistentState', function(assert) {
   assert.deepEqual(
-    getSupportedConfigurations('com.widevine.alpha', { persistentState: 'optional' }),
+    getSupportedConfigurations({ persistentState: 'optional' }),
     [{ persistentState: 'optional' }],
     'included persistentState'
   );
@@ -1304,7 +1256,7 @@ QUnit.test('includes persistentState', function(assert) {
 
 QUnit.test('uses supportedConfigurations directly if provided', function(assert) {
   assert.deepEqual(
-    getSupportedConfigurations('com.widevine.alpha', {
+    getSupportedConfigurations({
       supportedConfigurations: [{
         initDataTypes: ['cenc'],
         audioCapabilities: [{
