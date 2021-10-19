@@ -398,7 +398,7 @@ export const standard5July2016 = ({
   }
 
   const contentId = keySystemOptions.getContentId ?
-    keySystemOptions.getContentId(options, initData) : null;
+    keySystemOptions.getContentId(options, new Uint8Array(initData.buffer || initData)) : null;
 
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
