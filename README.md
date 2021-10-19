@@ -137,7 +137,7 @@ or
 You can control the license and certificate request processes by providing the following methods instead of the properties discussed above:
 
 * `getCertificate()` - Allows asynchronous retrieval of a certificate.
-* `getContentId()` - Allows synchronous retrieval of a content ID.
+* `getContentId()` - Allows synchronous retrieval of a content ID. It takes `emeOptions`, as well as the `initData` converted into a String.
 * `getLicense()` - Allows asynchronous retrieval of a license.
 
 ```js
@@ -149,7 +149,7 @@ You can control the license and certificate request processes by providing the f
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getContentId: function(emeOptions, initData) {
+      getContentId: function(emeOptions, contentId) {
         // return content ID
       },
       getLicense: function(emeOptions, contentId, keyMessage, callback) {

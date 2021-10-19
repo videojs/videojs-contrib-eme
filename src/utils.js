@@ -17,6 +17,10 @@ export const uint8ArrayToString = (array) => {
   return String.fromCharCode.apply(null, new Uint8Array(array.buffer || array));
 };
 
+export const uint16ArrayToString = (array) => {
+  return String.fromCharCode.apply(null, new Uint16Array(array.buffer || array));
+};
+
 export const getHostnameFromUri = (uri) => {
   const link = document.createElement('a');
 
