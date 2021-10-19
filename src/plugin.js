@@ -225,18 +225,7 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  if (window.MediaKeys) {
-    // Support EME 05 July 2016
-    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
-    player.tech_.el_.addEventListener('encrypted', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'encrypted\' event');
-      setupSessions(player);
-      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
-        .catch(emeError);
-    });
-  } else if (window.WebKitMediaKeys) {
+  if (window.WebKitMediaKeys) {
     const handleFn = (event) => {
       // TODO convert to videojs.log.debug and add back in
       // https://github.com/videojs/video.js/pull/4780
@@ -287,6 +276,18 @@ const onPlayerReady = (player, emeError) => {
       } else {
         handleFn(event);
       }
+    });
+
+  } else if (window.MediaKeys) {
+    // Support EME 05 July 2016
+    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
+    player.tech_.el_.addEventListener('encrypted', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received an \'encrypted\' event');
+      setupSessions(player);
+      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+        .catch(emeError);
     });
 
   } else if (window.MSMediaKeys) {
@@ -363,7 +364,7 @@ const eme = function(options = {}) {
 
       setupSessions(player);
 
-      if (window.MediaKeys) {
+      if (player.tech_.el_.setMediaKeys) {
         handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
           .catch((error) => {
@@ -372,7 +373,7 @@ const eme = function(options = {}) {
               emeError(error);
             }
           });
-      } else if (window.MSMediaKeys) {
+      } else if (player.tech_.el_.msSetMediaKeys) {
         const msKeyHandler = (event) => {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);

@@ -128,7 +128,7 @@ export const defaultGetCertificate = (fairplayOptions) => {
   };
 };
 
-export const defaultGetContentId = (emeOptions, initData) => {
+const defaultGetContentId = (emeOptions, initData) => {
   return getHostnameFromUri(uint8ArrayToString(initData));
 };
 
