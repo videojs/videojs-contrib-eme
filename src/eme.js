@@ -1,7 +1,7 @@
 import videojs from 'video.js';
 import { requestPlayreadyLicense } from './playready';
 import window from 'global/window';
-import {mergeAndRemoveNull} from './utils';
+import {uint8ArrayToString, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 import {
   defaultGetCertificate as defaultFairplayGetCertificate,
@@ -398,7 +398,7 @@ export const standard5July2016 = ({
   }
 
   const contentId = keySystemOptions.getContentId ?
-    keySystemOptions.getContentId(options, initData) : null;
+    keySystemOptions.getContentId(options, uint8ArrayToString(initData)) : null;
 
   if (typeof video.mediaKeysObject === 'undefined') {
     // Prevent entering this path again.
