@@ -1,3 +1,20 @@
+<a name="4.0.0"></a>
+# [4.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.1...v4.0.0) (2021-10-20)
+
+### Bug Fixes
+
+* convert initData to a string (#147) ([922e5eb](https://github.com/videojs/videojs-contrib-eme/commit/922e5eb)), closes [#147](https://github.com/videojs/videojs-contrib-eme/issues/147)
+
+### Reverts
+
+* "revert: fix: use in-spec EME for versions of Safari which support it (#142) (#145)" (#146) ([c912bda](https://github.com/videojs/videojs-contrib-eme/commit/c912bda)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#145](https://github.com/videojs/videojs-contrib-eme/issues/145) [#146](https://github.com/videojs/videojs-contrib-eme/issues/146)
+
+
+### BREAKING CHANGES
+
+* getContentId will now receive a string representation
+of the initData
+
 <a name="3.10.1"></a>
 ## [3.10.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.0...v3.10.1) (2021-10-19)
 
