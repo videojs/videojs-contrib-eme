@@ -128,8 +128,8 @@ export const defaultGetCertificate = (fairplayOptions) => {
   };
 };
 
-export const defaultGetContentId = (emeOptions, contentId) => {
-  return getHostnameFromUri(contentId);
+export const defaultGetContentId = (emeOptions, initDataString) => {
+  return getHostnameFromUri(initDataString);
 };
 
 export const defaultGetLicense = (fairplayOptions) => {
