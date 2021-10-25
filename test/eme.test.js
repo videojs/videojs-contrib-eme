@@ -593,7 +593,7 @@ QUnit.test('errors when missing url/licenseUri or getLicense', function(assert) 
   }).catch((err) => {
     assert.equal(
       err,
-      'Error: Missing url/licenseUri or getLicense in com.widevine.alpha keySystem configuration.',
+      'Error: Missing url/urls/licenseUri or getLicense in com.widevine.alpha keySystem configuration.',
       'correct error message'
     );
     done();

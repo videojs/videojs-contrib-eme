@@ -327,7 +327,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
       body: keyMessage,
       headers
     }));
-  } else {
+  } else if (keySystemOptions.urls) {
     keySystemOptions.urls.forEach(function(url) {
       promises.push(requestLicense({
         uri: url,
