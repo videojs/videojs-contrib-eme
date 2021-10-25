@@ -339,7 +339,11 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     });
   }
 
-  return Promise.all(promises);
+  Promise.all(promises).then(function(results) {
+    callback(null, results);
+  }).catch(function(error) {
+    callback(error, null);
+  });
 };
 
 const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {

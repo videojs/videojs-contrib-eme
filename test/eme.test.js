@@ -11,7 +11,6 @@ import {
   getSupportedConfigurations
 } from '../src/eme';
 import { getMockEventBus } from './utils';
-import sinon from 'sinon';
 
 // mock session to make testing easier (so we can trigger events)
 const getMockSession = () => {
@@ -872,8 +871,15 @@ QUnit.test('getLicense promise rejection', function(assert) {
 });
 
 QUnit.test('getLicense calls back with error for 400 and 500 status codes', function(assert) {
-  const getLicenseCallback = sinon.spy();
-  const getLicense = defaultGetLicense({});
+  assert.expect(9);
+  const done = assert.async(3);
+  const getLicenseCallback = function(error, result) {
+    assert.deepEqual(error, {cause: '{"body":"some-body"}'}, 'expected error');
+    assert.notOk(result, 'no result');
+    done();
+  };
+  const getLicense = defaultGetLicense({url: 'foo'});
+  const origXhr = videojs.xhr;
 
   function toArrayBuffer(obj) {
     const json = JSON.stringify(obj);
@@ -887,53 +893,62 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
   }
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, 'sent statusCode 400');
     return callback(null, {statusCode: 400}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, 'sent statusCode 500');
     return callback(null, {statusCode: 500}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, 'sent statusCode 599');
     return callback(null, {statusCode: 599}, toArrayBuffer({body: 'some-body'}));
   };
 
   getLicense({}, null, getLicenseCallback);
 
-  assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
-  assert.ok(getLicenseCallback.alwaysCalledWith({
-    cause: JSON.stringify({body: 'some-body'})
-  }), 'getLicense callback called with correct error');
+  videojs.xhr = origXhr;
 });
 
 QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
-  const getLicenseCallback = sinon.spy();
-  const getLicense = defaultGetLicense({});
+  assert.expect(9);
+  const done = assert.async(3);
+  const getLicenseCallback = function(error, result) {
+    assert.notOk(error, 'no error');
+    assert.deepEqual(result, [{body: 'some-body'}], 'expected result');
+    done();
+  };
+  const getLicense = defaultGetLicense({url: 'foo'});
+  const origXhr = videojs.xhr;
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, '200 statuscode');
     return callback(null, {statusCode: 200}, {body: 'some-body'});
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, '399 statuscode');
     return callback(null, {statusCode: 399}, {body: 'some-body'});
   };
 
   getLicense({}, null, getLicenseCallback);
 
   videojs.xhr = (params, callback) => {
+    assert.ok(true, '600 statuscode');
     return callback(null, {statusCode: 600}, {body: 'some-body'});
   };
 
   getLicense({}, null, getLicenseCallback);
 
-  assert.equal(getLicenseCallback.callCount, 3, 'correct callcount');
-  assert.equal(getLicenseCallback.alwaysCalledWith(null, {body: 'some-body'}), true, 'getLicense callback called with correct args');
+  videojs.xhr = origXhr;
 });
 
 QUnit.test('keySession.update promise rejection', function(assert) {
