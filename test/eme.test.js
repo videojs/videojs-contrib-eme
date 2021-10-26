@@ -886,7 +886,6 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
     done();
   };
   const getLicense = defaultGetLicense({url: 'foo'});
-  const origXhr = videojs.xhr;
 
   function toArrayBuffer(obj) {
     const json = JSON.stringify(obj);
@@ -920,7 +919,6 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
 
   getLicense({}, null, getLicenseCallback);
 
-  videojs.xhr = origXhr;
 });
 
 QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
@@ -932,7 +930,6 @@ QUnit.test('getLicense calls back with response body for non-400/500 status code
     done();
   };
   const getLicense = defaultGetLicense({url: 'foo'});
-  const origXhr = videojs.xhr;
 
   videojs.xhr = (params, callback) => {
     assert.ok(true, '200 statuscode');
@@ -955,7 +952,6 @@ QUnit.test('getLicense calls back with response body for non-400/500 status code
 
   getLicense({}, null, getLicenseCallback);
 
-  videojs.xhr = origXhr;
 });
 
 QUnit.test('keySession.update promise rejection', function(assert) {

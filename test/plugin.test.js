@@ -620,7 +620,6 @@ QUnit.test('handleWebKitNeedKeyEvent checks for required options', function(asse
     done();
   });
   assert.ok(promise, 'returns promise when proper FairPlay key system');
-
 });
 
 QUnit.test('handleWebKitNeedKeyEvent checks for required init data', function(assert) {
