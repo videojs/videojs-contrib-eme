@@ -45,7 +45,14 @@ const resolveReject = (rejectVariable, rejectMessage) => {
   });
 };
 
-QUnit.module('videojs-contrib-eme eme');
+QUnit.module('videojs-contrib-eme eme', {
+  beforeEach() {
+    this.origXhr = videojs.xhr;
+  },
+  afterEach() {
+    videojs.xhr = this.origXhr;
+  }
+});
 
 QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key', function(assert) {
   const callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
