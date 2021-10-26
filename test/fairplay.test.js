@@ -9,7 +9,18 @@ import videojs from 'video.js';
 import window from 'global/window';
 import { getMockEventBus } from './utils';
 
-QUnit.module('videojs-contrib-eme fairplay');
+QUnit.module('videojs-contrib-eme fairplay', {
+  beforeEach() {
+    this.origXhr = videojs.xhr;
+
+    videojs.xhr = (params, callback) => {
+      return callback(null, {statusCode: 200}, new Uint8Array([0, 1, 2, 3]).buffer);
+    };
+  },
+  afterEach() {
+    videojs.xhr = this.origXhr;
+  }
+});
 
 QUnit.test('lifecycle', function(assert) {
   assert.expect(23);
