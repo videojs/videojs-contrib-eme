@@ -362,6 +362,12 @@ QUnit.module('plugin guard functions', {
       }
     };
 
+    this.origXhr = videojs.xhr;
+
+    videojs.xhr = (params, callback) => {
+      return callback(null, {statusCode: 200}, new Uint8Array([0, 1, 2, 3]).buffer);
+    };
+
     this.initData1 = new Uint8Array([1, 2, 3]).buffer;
     this.initData2 = new Uint8Array([4, 5, 6]).buffer;
 
@@ -398,6 +404,7 @@ QUnit.module('plugin guard functions', {
   },
   afterEach() {
     window.navigator.requestMediaKeySystemAccess = this.origRequestMediaKeySystemAccess;
+    videojs.xhr = this.origXhr;
   }
 });
 
