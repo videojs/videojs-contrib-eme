@@ -20,6 +20,6 @@ stages:
       clean: all
     steps:
     
-    - template: /frontend/steps-npm-publish.yaml
+    - template: /frontend/steps-npm-publish.yaml@pipeline-template
       parameters:
         publishTag: next
