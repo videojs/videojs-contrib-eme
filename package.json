@@ -7,7 +7,7 @@
     "scripts": {
         "prebuild": "npm run clean",
         "build": "npm-run-all -p build:*",
-        "build-lib": "npm build",
+        "build-lib": "npm run build",
         "build:js": "rollup -c scripts/rollup.config.js",
         "clean": "shx rm -rf ./dist ./test/dist",
         "postclean": "shx mkdir -p ./dist ./test/dist",
