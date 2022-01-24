@@ -2,26 +2,26 @@ trigger:
 - develop
 - master
 
-stages: 
-- stage: publish_artifact_develop
-  displayName: Publish npm package on Azure DevOps Artifact with next tag
-  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-  jobs:
-  - job: BuildJob
-    pool:
-      vmImage: 'ubuntu-latest'
-    workspace:
-      clean: all
-    steps:
-    - task: Npm@1
-      displayName: 'install'
-      inputs:
-        command: 'install'
-    - task: Npm@1
-      displayName: 'publish next version'
-      inputs:
-          command: 'custom'
-          customCommand: 'publish --tag next'
-          publishRegistry: 'useFeed'
-          publishFeed: 'elitemobile-feed'
-          workingDir: '.'
+variables:
+  publicCdnAccountStorageName: 'emobtstcdnstorage'
+  publicCdnAccountStorageKey: $(tst_storage_key)
+  privateCdnAccountStorageName: 'emobdevcdnstorage'
+  privateCdnAccountStorageKey: $(dev_storage_key)
+  packageName: 'videojs-contrib-eme'
+  exposeStyleGuide: true
+
+resources:
+  repositories:
+  - repository: pipeline-template
+    type: git
+    name: "EliteMobile/devops-pipeline-template"
+
+stages:
+- template: /frontend/default-artifact-pipeline.yaml@pipeline-template
+  parameters:
+    publicCdnAccountStorageName: ${{ variables.publicCdnAccountStorageName }}
+    publicCdnAccountStorageKey: ${{ variables.publicCdnAccountStorageKey }}
+    privateCdnAccountStorageName: ${{ variables.privateCdnAccountStorageName }}
+    privateCdnAccountStorageKey: ${{ variables.privateCdnAccountStorageKey }}
+    packageName: ${{ variables.packageName }}
+    exposeStyleGuide: ${{ variables.exposeStyleGuide }}
