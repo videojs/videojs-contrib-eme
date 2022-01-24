@@ -2,12 +2,6 @@ trigger:
 - develop
 - master
 
-resources:
-  repositories:
-  - repository: pipeline-template
-    type: git
-    name: "EliteMobile/devops-pipeline-template"
-
 stages: 
 - stage: publish_artifact_develop
   displayName: Publish npm package on Azure DevOps Artifact with next tag
@@ -20,6 +14,11 @@ stages:
       clean: all
     steps:
     
-    - template: /frontend/steps-npm-publish.yaml@pipeline-template
-      parameters:
-        publishTag: next
+    - task: Npm@1
+      displayName: 'publish next version'
+      inputs:
+          command: 'custom'
+          customCommand: 'publish --tag next'
+          publishRegistry: 'useFeed'
+          publishFeed: 'elitemobile-feed'
+          workingDir: '.'
