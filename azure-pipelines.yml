@@ -13,7 +13,10 @@ stages:
     workspace:
       clean: all
     steps:
-    
+    - task: Npm@1
+      displayName: 'install'
+      inputs:
+        command: 'install'
     - task: Npm@1
       displayName: 'publish next version'
       inputs:
