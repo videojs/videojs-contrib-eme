@@ -1,0 +1,18 @@
+trigger:
+- develop
+- master
+
+resources:
+  repositories:
+  - repository: pipeline-template
+    type: git
+    name: "EliteMobile/devops-pipeline-template"
+
+stages: 
+- stage: publish_artifact_develop
+  displayName: Publish npm package on Azure DevOps Artifact with next tag
+  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+  jobs:
+  - template: default-npm-publish.yaml
+    parameters:
+      publishTag: 'next'
