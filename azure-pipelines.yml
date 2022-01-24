@@ -8,7 +8,6 @@ variables:
   privateCdnAccountStorageName: 'emobdevcdnstorage'
   privateCdnAccountStorageKey: $(dev_storage_key)
   packageName: 'videojs-contrib-eme'
-  exposeStyleGuide: true
 
 resources:
   repositories:
@@ -24,4 +23,3 @@ stages:
     privateCdnAccountStorageName: ${{ variables.privateCdnAccountStorageName }}
     privateCdnAccountStorageKey: ${{ variables.privateCdnAccountStorageKey }}
     packageName: ${{ variables.packageName }}
-    exposeStyleGuide: ${{ variables.exposeStyleGuide }}
