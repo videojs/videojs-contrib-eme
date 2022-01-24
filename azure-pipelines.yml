@@ -20,6 +20,6 @@ stages:
       clean: all
     steps:
     
-    - template: steps-npm-publish.yaml
+    - template: frontend/steps-npm-publish.yaml
       parameters:
         publishTag: next
