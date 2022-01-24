@@ -5,12 +5,9 @@
     "main": "dist/videojs-contrib-eme.cjs.js",
     "module": "dist/videojs-contrib-eme.es.js",
     "scripts": {
-        "prebuild": "npm run clean",
         "build": "npm-run-all -p build:*",
         "build-lib": "npm run build",
         "build:js": "rollup -c scripts/rollup.config.js",
-        "clean": "shx rm -rf ./dist ./test/dist",
-        "postclean": "shx mkdir -p ./dist ./test/dist",
         "docs": "npm-run-all docs:*",
         "docs:api": "jsdoc src -g plugins/markdown -r -d docs/api",
         "docs:toc": "doctoc README.md",
@@ -19,13 +16,11 @@
         "start": "npm-run-all -p server watch",
         "pretest": "npm-run-all lint build",
         "test": "karma start scripts/karma.conf.js",
-        "posttest": "shx cat test/dist/coverage/text.txt",
         "update-changelog": "conventional-changelog -p videojs -i CHANGELOG.md -s",
         "preversion": "npm test",
         "version": "is-prerelease || npm run update-changelog && git add CHANGELOG.md",
         "watch": "npm-run-all -p watch:*",
-        "watch:js": "npm run build:js -- -w",
-        "prepublishOnly": "npm run build && vjsverify"
+        "watch:js": "npm run build:js -- -w"
     },
     "keywords": [
         "videojs",
