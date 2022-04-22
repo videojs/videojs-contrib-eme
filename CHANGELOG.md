@@ -1,3 +1,14 @@
+<a name="4.0.1"></a>
+## [4.0.1](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v4.0.1) (2022-04-22)
+
+### Chores
+
+* update jsdoc ([01e887f](https://github.com/videojs/videojs-contrib-eme/commit/01e887f))
+
+### Tests
+
+* cleanup xhr correctly (#150) ([b992167](https://github.com/videojs/videojs-contrib-eme/commit/b992167)), closes [#150](https://github.com/videojs/videojs-contrib-eme/issues/150)
+
 <a name="4.0.0"></a>
 # [4.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.1...v4.0.0) (2021-10-20)
 
