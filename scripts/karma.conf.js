@@ -4,14 +4,7 @@ module.exports = function(config) {
 
   // see https://github.com/videojs/videojs-generate-karma-config
   // for options
-  const options = {
-    browserstackLaunchers(defaults) {
-      delete defaults.bsSafariElCapitan;
-      delete defaults.bsEdgeWin10;
-      delete defaults.bsIE11Win10;
-      return defaults;
-    }
-  };
+  const options = {};
 
   config = generate(config, options);
 

@@ -179,7 +179,7 @@ QUnit.test('initializeMediaKeys ms-prefix', function(assert) {
   window.WebKitMediaKeys = undefined;
 
   if (!window.MSMediaKeys) {
-    window.MSMediaKeys = () => {};
+    window.MSMediaKeys = function() {};
   }
 
   this.player.tech_.el_.setMediaKeys = null;
