@@ -10,6 +10,7 @@ import {
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
 import { arrayBuffersEqual, arrayBufferFrom } from './utils';
+import {version as VERSION} from '../package.json';
 
 export const hasSession = (sessions, initData) => {
   for (let i = 0; i < sessions.length; i++) {
@@ -409,5 +410,8 @@ const eme = function(options = {}) {
 const registerPlugin = videojs.registerPlugin || videojs.plugin;
 
 registerPlugin('eme', eme);
+
+// Include the version number.
+eme.VERSION = VERSION;
 
 export default eme;
