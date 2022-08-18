@@ -17,7 +17,7 @@ import {
 QUnit.module('videojs-contrib-eme ms-prefixed', {
   beforeEach() {
     this.origMSMediaKeys = window.MSMediaKeys;
-    window.MSMediaKeys = () => {};
+    window.MSMediaKeys = function() {};
 
     const session = new videojs.EventTarget();
 
@@ -61,7 +61,7 @@ QUnit.test('overwrites msKeys', function(assert) {
 });
 
 QUnit.test('error thrown when creating keys bubbles up', function(assert) {
-  window.MSMediaKeys = () => {
+  window.MSMediaKeys = function() {
     throw new Error('error');
   };
 

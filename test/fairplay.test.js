@@ -219,7 +219,7 @@ QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
@@ -249,7 +249,7 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
@@ -288,7 +288,7 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
@@ -334,7 +334,7 @@ QUnit.test('keysessioncreated fired on key session created', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     licenseUri: 'some-url',
@@ -374,7 +374,7 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
