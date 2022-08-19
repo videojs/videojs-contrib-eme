@@ -59,7 +59,7 @@ jobs:
       if: ${{startsWith(matrix.os, 'ubuntu') && !env.BROWSER_STACK_USERNAME}}
 
     - name: setup node
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
         node-version: '${{steps.nvm.outputs.NVMRC}}'
 
