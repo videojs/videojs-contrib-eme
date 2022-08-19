@@ -1,3 +1,25 @@
+<a name="5.0.0"></a>
+# [5.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v5.0.0) (2022-08-19)
+
+### Features
+
+* expose plugin version (#163) ([5f9a1ea](https://github.com/videojs/videojs-contrib-eme/commit/5f9a1ea)), closes [#163](https://github.com/videojs/videojs-contrib-eme/issues/163)
+
+### Chores
+
+* **package:** update to Node 16 and run npm audit (#170) ([0f68f21](https://github.com/videojs/videojs-contrib-eme/commit/0f68f21)), closes [#170](https://github.com/videojs/videojs-contrib-eme/issues/170)
+* update jsdoc ([01e887f](https://github.com/videojs/videojs-contrib-eme/commit/01e887f))
+* update tooling to remove ie transpiling, update broken tests (#169) ([4b330d5](https://github.com/videojs/videojs-contrib-eme/commit/4b330d5)), closes [#169](https://github.com/videojs/videojs-contrib-eme/issues/169)
+
+### Tests
+
+* cleanup xhr correctly (#150) ([b992167](https://github.com/videojs/videojs-contrib-eme/commit/b992167)), closes [#150](https://github.com/videojs/videojs-contrib-eme/issues/150)
+
+
+### BREAKING CHANGES
+
+* Internet Explorer will no longer work.
+
 <a name="4.0.1"></a>
 ## [4.0.1](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v4.0.1) (2022-04-22)
 
