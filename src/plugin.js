@@ -9,7 +9,7 @@ import {
   default as msPrefixed,
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
-import { arrayBuffersEqual, arrayBufferFrom } from './utils';
+import { arrayBuffersEqual, arrayBufferFrom, merge } from './utils';
 
 export const hasSession = (sessions, initData) => {
   for (let i = 0; i < sessions.length; i++) {
@@ -155,7 +155,7 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
 };
 
 export const getOptions = (player) => {
-  return videojs.mergeOptions(player.currentSource(), player.eme.options);
+  return merge(player.currentSource(), player.eme.options);
 };
 
 /**
@@ -349,7 +349,7 @@ const eme = function(options = {}) {
     initializeMediaKeys(emeOptions = {}, callback = function() {}, suppressErrorIfPossible = false) {
       // TODO: this should be refactored and renamed to be less tied
       // to encrypted events
-      const mergedEmeOptions = videojs.mergeOptions(
+      const mergedEmeOptions = merge(
         player.currentSource(),
         options,
         emeOptions
@@ -406,8 +406,6 @@ const eme = function(options = {}) {
 };
 
 // Register the plugin with video.js.
-const registerPlugin = videojs.registerPlugin || videojs.plugin;
-
-registerPlugin('eme', eme);
+videojs.registerPlugin('eme', eme);
 
 export default eme;
