@@ -54,8 +54,16 @@ export const arrayBufferFrom = (bufferOrTypedArray) => {
   return bufferOrTypedArray;
 };
 
+// Normalize between Video.js 6/7 (videojs.mergeOptions) and 8 (videojs.obj.merge).
+export const merge = (...args) => {
+  const context = videojs.obj || videojs;
+  const fn = context.merge || context.mergeOptions;
+
+  return fn.apply(context, args);
+};
+
 export const mergeAndRemoveNull = (...args) => {
-  const result = videojs.mergeOptions(...args);
+  const result = merge(...args);
 
   // Any header whose value is `null` will be removed.
   Object.keys(result).forEach(k => {
