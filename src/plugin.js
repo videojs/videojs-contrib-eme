@@ -311,6 +311,7 @@ const onPlayerReady = (player, emeError) => {
     // TODO: refactor this plugin so it can use a plugin dispose
     player.on('dispose', () => {
       player.tech_.off('mskeyerror', emeError);
+      keySession.close();
     });
   }
 };
