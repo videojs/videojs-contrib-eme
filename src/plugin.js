@@ -49,7 +49,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
+export const handleEncryptedEvent = (player, event, options, sessions, eventBus) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -82,6 +82,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
     sessions.push({ initData });
 
     return standard5July2016({
+      player,
       video: event.target,
       initDataType: event.initDataType,
       initData,
@@ -234,7 +235,7 @@ const onPlayerReady = (player, emeError) => {
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
         .catch(emeError);
     });
   } else if (window.WebKitMediaKeys) {
@@ -365,7 +366,7 @@ const eme = function(options = {}) {
       setupSessions(player);
 
       if (window.MediaKeys) {
-        handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
           .catch((error) => {
             callback(error);
