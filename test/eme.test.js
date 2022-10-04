@@ -61,7 +61,6 @@ QUnit.module('videojs-contrib-eme eme', {
   }
 });
 
-// ALEX
 QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key', function(assert) {
   const callCount = {total: 0, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
   const initData = new Uint8Array([1, 2, 3]);
