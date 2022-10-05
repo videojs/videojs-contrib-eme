@@ -1182,6 +1182,44 @@ QUnit.test('sets required fairplay defaults if not explicitly configured', funct
   window.requestMediaKeySystemAccess = origRequestMediaKeySystemAccess;
 });
 
+QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
+  const done = assert.async();
+  const mockSession = getMockSession();
+
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: (eventName) => {
+        if (eventName === 'keysessioncreated') {
+          assert.ok(true, 'got a keysessioncreated event');
+          done();
+        }
+      }
+    }
+  });
+});
+
+QUnit.test('keySession is closed when player is disposed', function(assert) {
+  const mockSession = getMockSession();
+
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: (eventName) => {}
+    }
+  });
+
+  assert.equal(mockSession.numCloses, 0, 'no close() calls initially');
+
+  this.player.dispose();
+
+  assert.equal(mockSession.numCloses, 1, 'close() called once after dipose');
+});
+
 QUnit.module('session management', {
   beforeEach() {
     this.fixture = document.getElementById('qunit-fixture');
@@ -1405,23 +1443,4 @@ QUnit.test('uses supportedConfigurations directly if provided', function(assert)
     }],
     'used supportedConfigurations directly'
   );
-});
-
-QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
-  const done = assert.async();
-  const mockSession = getMockSession();
-
-  makeNewRequest(this.player, {
-    mediaKeys: {
-      createSession: () => mockSession
-    },
-    eventBus: {
-      trigger: (eventName) => {
-        if (eventName === 'keysessioncreated') {
-          assert.ok(true, 'got a keysessioncreated event');
-          done();
-        }
-      }
-    }
-  });
 });
