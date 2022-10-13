@@ -76,7 +76,7 @@ export const getSupportedKeySystem = (keySystems) => {
   return promise;
 };
 
-export const makeNewRequest = (requestOptions) => {
+export const makeNewRequest = (player, requestOptions) => {
   const {
     mediaKeys,
     initDataType,
@@ -90,8 +90,11 @@ export const makeNewRequest = (requestOptions) => {
 
   eventBus.trigger('keysessioncreated');
 
-  return new Promise((resolve, reject) => {
+  player.on('dispose', () => {
+    keySession.close();
+  });
 
+  return new Promise((resolve, reject) => {
     keySession.addEventListener('message', (event) => {
       // all other types will be handled by keystatuseschange
       if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
@@ -148,7 +151,7 @@ export const makeNewRequest = (requestOptions) => {
         // videojs.log.debug('Session expired, closing the session.');
         keySession.close().then(() => {
           removeSession(initData);
-          makeNewRequest(requestOptions);
+          makeNewRequest(player, requestOptions);
         });
       }
     }, false);
@@ -187,6 +190,7 @@ export const makeNewRequest = (requestOptions) => {
  *         session creation if media keys are available
  */
 export const addSession = ({
+  player,
   video,
   initDataType,
   initData,
@@ -196,7 +200,7 @@ export const addSession = ({
   eventBus
 }) => {
   if (video.mediaKeysObject) {
-    return makeNewRequest({
+    return makeNewRequest(player, {
       mediaKeys: video.mediaKeysObject,
       initDataType,
       initData,
@@ -238,6 +242,7 @@ export const addSession = ({
  *         video object
  */
 export const addPendingSessions = ({
+  player,
   video,
   certificate,
   createdMediaKeys
@@ -254,7 +259,7 @@ export const addPendingSessions = ({
   for (let i = 0; i < video.pendingSessionData.length; i++) {
     const data = video.pendingSessionData[i];
 
-    promises.push(makeNewRequest({
+    promises.push(makeNewRequest(player, {
       mediaKeys: video.mediaKeysObject,
       initDataType: data.initDataType,
       initData: data.initData,
@@ -329,6 +334,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 };
 
 export const standard5July2016 = ({
+  player,
   video,
   initDataType,
   initData,
@@ -377,6 +383,7 @@ export const standard5July2016 = ({
       return keySystemAccess.createMediaKeys();
     }).then((createdMediaKeys) => {
       return addPendingSessions({
+        player,
         video,
         certificate,
         createdMediaKeys
@@ -398,6 +405,7 @@ export const standard5July2016 = ({
     );
 
     return addSession({
+      player,
       video,
       initDataType,
       initData,
