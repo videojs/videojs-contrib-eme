@@ -356,6 +356,10 @@ QUnit.test('only registers for spec-compliant events even if legacy APIs are ava
 
 QUnit.module('plugin guard functions', {
   beforeEach() {
+    this.fixture = document.getElementById('qunit-fixture');
+    this.video = document.createElement('video');
+    this.fixture.appendChild(this.video);
+    this.player = videojs(this.video);
     this.options = {
       keySystems: {
         'org.w3.clearkey': {url: 'some-url'}
@@ -412,7 +416,7 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
   const done = assert.async();
   const sessions = [];
 
-  handleEncryptedEvent(this.event1, {}, sessions).then(() => {
+  handleEncryptedEvent(this.player, this.event1, {}, sessions).then(() => {
     assert.equal(sessions.length, 0, 'did not create a session when no options');
     done();
   });
@@ -422,7 +426,7 @@ QUnit.test('handleEncryptedEvent checks for required init data', function(assert
   const done = assert.async();
   const sessions = [];
 
-  handleEncryptedEvent({ target: {}, initData: null }, this.options, sessions).then(() => {
+  handleEncryptedEvent(this.player, { target: {}, initData: null }, this.options, sessions).then(() => {
     assert.equal(sessions.length, 0, 'did not create a session when no init data');
     done();
   });
@@ -433,7 +437,7 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
   const sessions = [];
 
   // testing the rejection path because this isn't a real session
-  handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
+  handleEncryptedEvent(this.player, this.event1, this.options, sessions).catch(() => {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.equal(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
@@ -445,8 +449,8 @@ QUnit.test('handleEncryptedEvent creates new session for new init data', functio
   const sessions = [];
 
   // testing the rejection path because this isn't a real session
-  handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
-    return handleEncryptedEvent(this.event2, this.options, sessions).catch(() => {
+  handleEncryptedEvent(this.player, this.event1, this.options, sessions).catch(() => {
+    return handleEncryptedEvent(this.player, this.event2, this.options, sessions).catch(() => {
       assert.equal(sessions.length, 2, 'created a new session when new init data');
       assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
       assert.equal(sessions[1].initData, this.initData2, 'added new session init data');
@@ -460,9 +464,9 @@ QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(a
   const sessions = [];
 
   // testing the rejection path because this isn't a real session
-  handleEncryptedEvent(this.event1, this.options, sessions).catch(() => {
-    return handleEncryptedEvent(this.event2, this.options, sessions).catch(() => {
-      return handleEncryptedEvent(this.event2, this.options, sessions).then(() => {
+  handleEncryptedEvent(this.player, this.event1, this.options, sessions).catch(() => {
+    return handleEncryptedEvent(this.player, this.event2, this.options, sessions).catch(() => {
+      return handleEncryptedEvent(this.player, this.event2, this.options, sessions).then(() => {
         assert.equal(sessions.length, 2, 'no new session when same init data');
         assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
         assert.equal(sessions[1].initData, this.initData2, 'retained session init data');
@@ -484,7 +488,7 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
   const sessions = [];
 
   // testing the rejection path because this isn't a real session
-  handleEncryptedEvent(this.event2, options, sessions).catch(() => {
+  handleEncryptedEvent(this.player, this.event2, options, sessions).catch(() => {
     assert.equal(sessions.length, 1, 'created a session when keySystems in options');
     assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
