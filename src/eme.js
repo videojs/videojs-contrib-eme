@@ -108,7 +108,9 @@ export const makeNewRequest = (player, requestOptions) => {
 
   eventBus.trigger('keysessioncreated');
 
-  player.on('dispose', keySession.close);
+  player.on('dispose', () => {
+    keySession.close();
+  });
 
   return new Promise((resolve, reject) => {
     keySession.addEventListener('message', (event) => {
