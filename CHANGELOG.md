@@ -1,3 +1,26 @@
+<a name="3.11.0"></a>
+# [3.11.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.1...v3.11.0) (2022-11-29)
+
+### Features
+
+* expose plugin version (#163) ([bc9ccf1](https://github.com/videojs/videojs-contrib-eme/commit/bc9ccf1)), closes [#163](https://github.com/videojs/videojs-contrib-eme/issues/163)
+
+### Bug Fixes
+
+* Close keySession when player is disposed ([a795519](https://github.com/videojs/videojs-contrib-eme/commit/a795519))
+
+### Chores
+
+* update jsdoc ([487b289](https://github.com/videojs/videojs-contrib-eme/commit/487b289))
+
+### Code Refactoring
+
+* add support for future Video.js 8.x (#172) ([7206cc6](https://github.com/videojs/videojs-contrib-eme/commit/7206cc6)), closes [#172](https://github.com/videojs/videojs-contrib-eme/issues/172)
+
+### Tests
+
+* cleanup xhr correctly (#150) ([508da71](https://github.com/videojs/videojs-contrib-eme/commit/508da71)), closes [#150](https://github.com/videojs/videojs-contrib-eme/issues/150)
+
 <a name="3.10.1"></a>
 ## [3.10.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.0...v3.10.1) (2021-10-19)
 
