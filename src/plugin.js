@@ -288,7 +288,7 @@ const onPlayerReady = (player, emeError) => {
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
         .catch(emeError);
     });
 
