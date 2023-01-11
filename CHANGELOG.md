@@ -1,3 +1,10 @@
+<a name="3.11.1"></a>
+## [3.11.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.11.0...v3.11.1) (2023-01-11)
+
+### Bug Fixes
+
+* missing player argument (#185) ([00e2f23](https://github.com/videojs/videojs-contrib-eme/commit/00e2f23)), closes [#185](https://github.com/videojs/videojs-contrib-eme/issues/185)
+
 <a name="3.11.0"></a>
 # [3.11.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.1...v3.11.0) (2022-11-29)
 
