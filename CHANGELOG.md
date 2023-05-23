@@ -1,3 +1,132 @@
+<a name="5.0.0"></a>
+# [5.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v5.0.0) (2022-08-19)
+
+### Features
+
+* expose plugin version (#163) ([5f9a1ea](https://github.com/videojs/videojs-contrib-eme/commit/5f9a1ea)), closes [#163](https://github.com/videojs/videojs-contrib-eme/issues/163)
+
+### Chores
+
+* **package:** update to Node 16 and run npm audit (#170) ([0f68f21](https://github.com/videojs/videojs-contrib-eme/commit/0f68f21)), closes [#170](https://github.com/videojs/videojs-contrib-eme/issues/170)
+* update jsdoc ([01e887f](https://github.com/videojs/videojs-contrib-eme/commit/01e887f))
+* update tooling to remove ie transpiling, update broken tests (#169) ([4b330d5](https://github.com/videojs/videojs-contrib-eme/commit/4b330d5)), closes [#169](https://github.com/videojs/videojs-contrib-eme/issues/169)
+
+### Tests
+
+* cleanup xhr correctly (#150) ([b992167](https://github.com/videojs/videojs-contrib-eme/commit/b992167)), closes [#150](https://github.com/videojs/videojs-contrib-eme/issues/150)
+
+
+### BREAKING CHANGES
+
+* Internet Explorer will no longer work.
+
+<a name="4.0.1"></a>
+## [4.0.1](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v4.0.1) (2022-04-22)
+
+### Chores
+
+* update jsdoc ([01e887f](https://github.com/videojs/videojs-contrib-eme/commit/01e887f))
+
+### Tests
+
+* cleanup xhr correctly (#150) ([b992167](https://github.com/videojs/videojs-contrib-eme/commit/b992167)), closes [#150](https://github.com/videojs/videojs-contrib-eme/issues/150)
+
+<a name="4.0.0"></a>
+# [4.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.1...v4.0.0) (2021-10-20)
+
+### Bug Fixes
+
+* convert initData to a string (#147) ([922e5eb](https://github.com/videojs/videojs-contrib-eme/commit/922e5eb)), closes [#147](https://github.com/videojs/videojs-contrib-eme/issues/147)
+
+### Reverts
+
+* "revert: fix: use in-spec EME for versions of Safari which support it (#142) (#145)" (#146) ([c912bda](https://github.com/videojs/videojs-contrib-eme/commit/c912bda)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#145](https://github.com/videojs/videojs-contrib-eme/issues/145) [#146](https://github.com/videojs/videojs-contrib-eme/issues/146)
+
+
+### BREAKING CHANGES
+
+* getContentId will now receive a string representation
+of the initData
+
+<a name="3.10.1"></a>
+## [3.10.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.10.0...v3.10.1) (2021-10-19)
+
+### Reverts
+
+* fix: use in-spec EME for versions of Safari which support it (#142) (#145) ([fdb57e3](https://github.com/videojs/videojs-contrib-eme/commit/fdb57e3)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#145](https://github.com/videojs/videojs-contrib-eme/issues/145)
+
+<a name="3.10.0"></a>
+# [3.10.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.9.0...v3.10.0) (2021-10-15)
+
+### Bug Fixes
+
+* use in-spec EME for versions of Safari which support it (#142) ([5897655](https://github.com/videojs/videojs-contrib-eme/commit/5897655)), closes [#142](https://github.com/videojs/videojs-contrib-eme/issues/142) [#87](https://github.com/videojs/videojs-contrib-eme/issues/87)
+
+### Chores
+
+* update linter, run --fix on files, and manually lint when needed (#141) ([a794ea9](https://github.com/videojs/videojs-contrib-eme/commit/a794ea9)), closes [#141](https://github.com/videojs/videojs-contrib-eme/issues/141)
+
+<a name="3.9.0"></a>
+# [3.9.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.1...v3.9.0) (2021-07-27)
+
+### Features
+
+* on license request errors, return response body as cause (#137) ([a9a5b82](https://github.com/videojs/videojs-contrib-eme/commit/a9a5b82)), closes [#137](https://github.com/videojs/videojs-contrib-eme/issues/137)
+
+<a name="3.8.1"></a>
+## [3.8.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.8.0...v3.8.1) (2021-05-19)
+
+### Bug Fixes
+
+* handle initial duplicate webkitneedskey to prevent error dialog (#134) ([5ded675](https://github.com/videojs/videojs-contrib-eme/commit/5ded675)), closes [#134](https://github.com/videojs/videojs-contrib-eme/issues/134)
+
+### Chores
+
+* update docs for robustness and mention widevine warning (#129) ([9c4f577](https://github.com/videojs/videojs-contrib-eme/commit/9c4f577)), closes [#129](https://github.com/videojs/videojs-contrib-eme/issues/129)
+
+<a name="3.8.0"></a>
+# [3.8.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.7.1...v3.8.0) (2020-11-18)
+
+### Features
+
+* add keysessioncreated event (#124) ([d114979](https://github.com/videojs/videojs-contrib-eme/commit/d114979)), closes [#124](https://github.com/videojs/videojs-contrib-eme/issues/124)
+
+<a name="3.7.1"></a>
+## [3.7.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.7.0...v3.7.1) (2020-09-15)
+
+### Bug Fixes
+
+* only getLicense on license-request or license-renewal (#116) ([c15d1ca](https://github.com/videojs/videojs-contrib-eme/commit/c15d1ca)), closes [#116](https://github.com/videojs/videojs-contrib-eme/issues/116)
+* try to re-request key if the session expired (#120) ([20d6adc](https://github.com/videojs/videojs-contrib-eme/commit/20d6adc)), closes [#120](https://github.com/videojs/videojs-contrib-eme/issues/120)
+
+<a name="3.7.0"></a>
+# [3.7.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.6.0...v3.7.0) (2020-04-01)
+
+### Features
+
+* add support for setting persistentState in supportedConfigurations (#102) ([ef9fa23](https://github.com/videojs/videojs-contrib-eme/commit/ef9fa23)), closes [#102](https://github.com/videojs/videojs-contrib-eme/issues/102)
+
+<a name="3.6.0"></a>
+# [3.6.0](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.6...v3.6.0) (2020-02-12)
+
+### Features
+
+* support setting robustness and supportedConfigurations (#100) ([502c8ea](https://github.com/videojs/videojs-contrib-eme/commit/502c8ea)), closes [#100](https://github.com/videojs/videojs-contrib-eme/issues/100)
+
+<a name="3.5.6"></a>
+## [3.5.6](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.5...v3.5.6) (2020-02-10)
+
+### Bug Fixes
+
+* save session-specific options in pending session data when waiting on media keys (#96) ([6cdbfa8](https://github.com/videojs/videojs-contrib-eme/commit/6cdbfa8)), closes [#96](https://github.com/videojs/videojs-contrib-eme/issues/96)
+
+<a name="3.5.5"></a>
+## [3.5.5](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.4...v3.5.5) (2020-02-06)
+
+### Bug Fixes
+
+* getLicense should pass an error to callback if XHR returns 400/500 (#99) ([498ebaf](https://github.com/videojs/videojs-contrib-eme/commit/498ebaf)), closes [#99](https://github.com/videojs/videojs-contrib-eme/issues/99)
+
 <a name="3.5.4"></a>
 ## [3.5.4](https://github.com/videojs/videojs-contrib-eme/compare/v3.5.3...v3.5.4) (2019-05-08)
 

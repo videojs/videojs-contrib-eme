@@ -7,8 +7,20 @@ import {
 } from '../src/fairplay';
 import videojs from 'video.js';
 import window from 'global/window';
+import { getMockEventBus } from './utils';
 
-QUnit.module('videojs-contrib-eme fairplay');
+QUnit.module('videojs-contrib-eme fairplay', {
+  beforeEach() {
+    this.origXhr = videojs.xhr;
+
+    videojs.xhr = (params, callback) => {
+      return callback(null, {statusCode: 200}, new Uint8Array([0, 1, 2, 3]).buffer);
+    };
+  },
+  afterEach() {
+    videojs.xhr = this.origXhr;
+  }
+});
 
 QUnit.test('lifecycle', function(assert) {
   assert.expect(23);
@@ -95,8 +107,10 @@ QUnit.test('lifecycle', function(assert) {
   assert.equal(callCounts.createSession, 0, 'a key session has not been created');
   assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
   assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-  assert.equal(callCounts.licenseRequestAttempts, 0,
-    'license request event not triggered (since no callback yet)');
+  assert.equal(
+    callCounts.licenseRequestAttempts, 0,
+    'license request event not triggered (since no callback yet)'
+  );
 
   callbacks.getCertificate(null, new Uint16Array([4, 5, 6, 7]).buffer);
 
@@ -106,15 +120,23 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 0, 'getLicense has not been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-    assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered (since no callback yet)');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)'
+    );
 
-    assert.ok(keySessionEventListeners.webkitkeymessage,
-      'added an event listener for webkitkeymessage');
-    assert.ok(keySessionEventListeners.webkitkeyadded,
-      'added an event listener for webkitkeyadded');
-    assert.ok(keySessionEventListeners.webkitkeyerror,
-      'added an event listener for webkitkeyerror');
+    assert.ok(
+      keySessionEventListeners.webkitkeymessage,
+      'added an event listener for webkitkeymessage'
+    );
+    assert.ok(
+      keySessionEventListeners.webkitkeyadded,
+      'added an event listener for webkitkeyadded'
+    );
+    assert.ok(
+      keySessionEventListeners.webkitkeyerror,
+      'added an event listener for webkitkeyerror'
+    );
 
     keySessionEventListeners.webkitkeymessage({});
 
@@ -123,8 +145,10 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 0, 'updateKeySession has not been called');
-    assert.equal(callCounts.licenseRequestAttempts, 0,
-      'license request event not triggered (since no callback yet)');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 0,
+      'license request event not triggered (since no callback yet)'
+    );
 
     callbacks.getLicense(null, []);
 
@@ -133,8 +157,10 @@ QUnit.test('lifecycle', function(assert) {
     assert.equal(callCounts.createSession, 1, 'a key session has been created');
     assert.equal(callCounts.getLicense, 1, 'getLicense has been called');
     assert.equal(callCounts.updateKeySession, 1, 'updateKeySession has been called');
-    assert.equal(callCounts.licenseRequestAttempts, 1,
-      'license request event triggered');
+    assert.equal(
+      callCounts.licenseRequestAttempts, 1,
+      'license request event triggered'
+    );
 
     keySessionEventListeners.webkitkeyadded();
   };
@@ -150,7 +176,7 @@ QUnit.test('error in getCertificate rejects promise', function(assert) {
     }
   };
 
-  fairplay({options: {keySystems}}).catch((err) => {
+  fairplay({options: {keySystems}, eventBus: getMockEventBus() }).catch((err) => {
     assert.equal(err, 'error in getCertificate', 'message is good');
     done();
   });
@@ -171,7 +197,12 @@ QUnit.test('error in WebKitMediaKeys rejects promise', function(assert) {
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
-  fairplay({video, initData, options: {keySystems}}).catch(err => {
+  fairplay({
+    video,
+    initData,
+    options: {keySystems},
+    eventBus: getMockEventBus()
+  }).catch(err => {
     assert.equal(err, 'Could not create MediaKeys', 'message is good');
     done();
   });
@@ -188,11 +219,16 @@ QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
-  fairplay({video, initData, options: {keySystems}}).catch(err => {
+  fairplay({
+    video,
+    initData,
+    options: {keySystems},
+    eventBus: getMockEventBus()
+  }).catch(err => {
     assert.equal(err, 'Could not create MediaKeys', 'message is good');
     done();
   });
@@ -213,13 +249,20 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {};
 
-  fairplay({video, initData, options: {keySystems}}).catch(err => {
-    assert.equal(err, 'Could not create key session',
-      'message is good');
+  fairplay({
+    video,
+    initData,
+    options: {keySystems},
+    eventBus: getMockEventBus()
+  }).catch(err => {
+    assert.equal(
+      err, 'Could not create key session',
+      'message is good'
+    );
     done();
   });
 
@@ -245,7 +288,7 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
@@ -253,11 +296,57 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
     }
   };
 
-  fairplay({video, initData, options: {keySystems}}).catch(err => {
+  fairplay({
+    video,
+    initData,
+    options: {keySystems},
+    eventBus: getMockEventBus()
+  }).catch(err => {
     assert.equal(err, 'error in getLicense', 'message is good');
     done();
   });
 
+});
+
+QUnit.test('keysessioncreated fired on key session created', function(assert) {
+  const keySystems = {};
+  const done = assert.async();
+  const initData = new Uint8Array([1, 2, 3, 4]).buffer;
+  let sessionCreated = false;
+  const video = {
+    webkitSetMediaKeys: () => {
+      video.webkitKeys = {
+        createSession: () => {
+          sessionCreated = true;
+          return {
+            addEventListener: () => {}
+          };
+        }
+      };
+    }
+  };
+  const eventBus = {
+    trigger: (event) => {
+      if (event === 'keysessioncreated') {
+        assert.ok(sessionCreated, 'keysessioncreated fired after session created');
+        done();
+      }
+    }
+  };
+
+  window.WebKitMediaKeys = function() {};
+
+  keySystems[FAIRPLAY_KEY_SYSTEM] = {
+    licenseUri: 'some-url',
+    certificateUri: 'some-other-url'
+  };
+
+  fairplay({
+    video,
+    initData,
+    options: { keySystems },
+    eventBus
+  });
 });
 
 QUnit.test('a webkitkeyerror rejects promise', function(assert) {
@@ -285,7 +374,7 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
     }
   };
 
-  window.WebKitMediaKeys = () => {};
+  window.WebKitMediaKeys = function() {};
 
   keySystems[FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
@@ -294,7 +383,12 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
     }
   };
 
-  fairplay({video, initData, options: {keySystems}}).catch(err => {
+  fairplay({
+    video,
+    initData,
+    options: {keySystems},
+    eventBus: getMockEventBus()
+  }).catch(err => {
     assert.equal(err, 'KeySession error: code 0, systemCode 1', 'message is good');
     done();
   });

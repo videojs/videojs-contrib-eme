@@ -10,7 +10,8 @@ import {
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
 import { getSupportedCDMs, createDetectSupportedCDMsFunc } from './cdm.js';
-import { arrayBuffersEqual, arrayBufferFrom } from './utils';
+import { arrayBuffersEqual, arrayBufferFrom, merge } from './utils';
+import {version as VERSION} from '../package.json';
 
 export const hasSession = (sessions, initData) => {
   for (let i = 0; i < sessions.length; i++) {
@@ -49,7 +50,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
+export const handleEncryptedEvent = (player, event, options, sessions, eventBus) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -82,6 +83,7 @@ export const handleEncryptedEvent = (event, options, sessions, eventBus) => {
     sessions.push({ initData });
 
     return standard5July2016({
+      player,
       video: event.target,
       initDataType: event.initDataType,
       initData,
@@ -156,7 +158,7 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
 };
 
 export const getOptions = (player) => {
-  return videojs.mergeOptions(player.currentSource(), player.eme.options);
+  return merge(player.currentSource(), player.eme.options);
 };
 
 /**
@@ -186,13 +188,25 @@ export const setupSessions = (player) => {
  */
 export const emeErrorHandler = (player) => {
   return (objOrErr) => {
-    const message = objOrErr ? objOrErr.message || objOrErr : null;
-
-    player.error({
+    const error = {
       // MEDIA_ERR_ENCRYPTED is code 5
-      code: 5,
-      message
-    });
+      code: 5
+    };
+
+    if (typeof objOrErr === 'string') {
+      error.message = objOrErr;
+    } else if (objOrErr) {
+      if (objOrErr.message) {
+        error.message = objOrErr.message;
+      }
+      if (objOrErr.cause &&
+          (objOrErr.cause.length ||
+           objOrErr.cause.byteLength)) {
+        error.cause = objOrErr.cause;
+      }
+    }
+
+    player.error(error);
   };
 };
 
@@ -214,10 +228,19 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  if (window.WebKitMediaKeys) {
-    // Support Safari EME with FairPlay
-    // (also used in early Chrome or Chrome with EME disabled flag)
-    player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+  if (window.MediaKeys) {
+    // Support EME 05 July 2016
+    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
+    player.tech_.el_.addEventListener('encrypted', (event) => {
+      // TODO convert to videojs.log.debug and add back in
+      // https://github.com/videojs/video.js/pull/4780
+      // videojs.log('eme', 'Received an \'encrypted\' event');
+      setupSessions(player);
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
+        .catch(emeError);
+    });
+  } else if (window.WebKitMediaKeys) {
+    const handleFn = (event) => {
       // TODO convert to videojs.log.debug and add back in
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme', 'Received a \'webkitneedkey\' event');
@@ -227,18 +250,46 @@ const onPlayerReady = (player, emeError) => {
       setupSessions(player);
       handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
         .catch(emeError);
-    });
+    };
 
-  } else if (window.MediaKeys) {
-    // Support EME 05 July 2016
-    // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
-    player.tech_.el_.addEventListener('encrypted', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'encrypted\' event');
-      setupSessions(player);
-      handleEncryptedEvent(event, getOptions(player), player.eme.sessions, player.tech_)
-        .catch(emeError);
+    // Support Safari EME with FairPlay
+    // (also used in early Chrome or Chrome with EME disabled flag)
+    player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+      const options = getOptions(player);
+      const firstWebkitneedkeyTimeout = options.firstWebkitneedkeyTimeout || 1000;
+      const src = player.src();
+      // on source change or first startup reset webkitneedkey options.
+
+      player.eme.webkitneedkey_ = player.eme.webkitneedkey_ || {};
+
+      // if the source changed we need to handle the first event again.
+      // track source changes internally.
+      if (player.eme.webkitneedkey_.src !== src) {
+        player.eme.webkitneedkey_ = {
+          handledFirstEvent: false,
+          src
+        };
+      }
+      // It's possible that at the start of playback a rendition switch
+      // on a small player in safari's HLS implementation will cause
+      // two webkitneedkey events to occur. We want to make sure to cancel
+      // our first existing request if we get another within 1 second. This
+      // prevents a non-fatal player error from showing up due to a
+      // request failure.
+      if (!player.eme.webkitneedkey_.handledFirstEvent) {
+        // clear the old timeout so that a new one can be created
+        // with the new rendition's event data
+        player.clearTimeout(player.eme.webkitneedkey_.timeout);
+        player.eme.webkitneedkey_.timeout = player.setTimeout(() => {
+          player.eme.webkitneedkey_.handledFirstEvent = true;
+          player.eme.webkitneedkey_.timeout = null;
+          handleFn(event);
+        }, firstWebkitneedkeyTimeout);
+      // after we have a verified first request, we will request on
+      // every other event like normal.
+      } else {
+        handleFn(event);
+      }
     });
 
   } else if (window.MSMediaKeys) {
@@ -300,7 +351,7 @@ const eme = function(options = {}) {
     initializeMediaKeys(emeOptions = {}, callback = function() {}, suppressErrorIfPossible = false) {
       // TODO: this should be refactored and renamed to be less tied
       // to encrypted events
-      const mergedEmeOptions = videojs.mergeOptions(
+      const mergedEmeOptions = merge(
         player.currentSource(),
         options,
         emeOptions
@@ -315,8 +366,8 @@ const eme = function(options = {}) {
 
       setupSessions(player);
 
-      if (player.tech_.el_.setMediaKeys) {
-        handleEncryptedEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+      if (window.MediaKeys) {
+        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
           .then(() => callback())
           .catch((error) => {
             callback(error);
@@ -324,7 +375,7 @@ const eme = function(options = {}) {
               emeError(error);
             }
           });
-      } else if (player.tech_.el_.msSetMediaKeys) {
+      } else if (window.MSMediaKeys) {
         const msKeyHandler = (event) => {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
@@ -361,8 +412,9 @@ const eme = function(options = {}) {
 };
 
 // Register the plugin with video.js.
-const registerPlugin = videojs.registerPlugin || videojs.plugin;
+videojs.registerPlugin('eme', eme);
 
-registerPlugin('eme', eme);
+// Include the version number.
+eme.VERSION = VERSION;
 
 export default eme;

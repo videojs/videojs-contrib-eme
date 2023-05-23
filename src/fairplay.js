@@ -2,11 +2,13 @@
  * The W3C Working Draft of 22 October 2013 seems to be the best match for
  * the ms-prefixed API. However, it should only be used as a guide; it is
  * doubtful the spec is 100% implemented as described.
+ *
  * @see https://www.w3.org/TR/2013/WD-encrypted-media-20131022
  */
 import videojs from 'video.js';
 import window from 'global/window';
-import {stringToUint16Array, uint8ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
+import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -22,8 +24,7 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   //   [4 byte:certLength]
   //   [certLength byte: cert]
   let offset = 0;
-  const buffer = new ArrayBuffer(
-    initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength);
+  const buffer = new ArrayBuffer(initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength);
   const dataView = new DataView(buffer);
   const initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
 
@@ -64,11 +65,14 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
     try {
       keySession = video.webkitKeys.createSession(
         'video/mp4',
-        concatInitDataIdAndCertificate({id: contentId, initData, cert}));
+        concatInitDataIdAndCertificate({id: contentId, initData, cert})
+      );
     } catch (error) {
       reject('Could not create key session');
       return;
     }
+
+    eventBus.trigger('keysessioncreated');
 
     keySession.contentId = contentId;
 
@@ -110,19 +114,22 @@ export const defaultGetCertificate = (fairplayOptions) => {
       uri: fairplayOptions.certificateUri,
       responseType: 'arraybuffer',
       headers
-    }, (err, response, responseBody) => {
+    }, httpResponseHandler((err, license) => {
       if (err) {
         callback(err);
         return;
       }
 
-      callback(null, new Uint8Array(responseBody));
-    });
+      // in this case, license is still the raw ArrayBuffer,
+      // (we don't want httpResponseHandler to decode it)
+      // convert it into Uint8Array as expected
+      callback(null, new Uint8Array(license));
+    }));
   };
 };
 
-const defaultGetContentId = (emeOptions, initData) => {
-  return getHostnameFromUri(uint8ArrayToString(initData));
+export const defaultGetContentId = (emeOptions, initDataString) => {
+  return getHostnameFromUri(initDataString);
 };
 
 export const defaultGetLicense = (fairplayOptions) => {
@@ -139,14 +146,7 @@ export const defaultGetLicense = (fairplayOptions) => {
       responseType: 'arraybuffer',
       body: keyMessage,
       headers
-    }, (err, response, responseBody) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      callback(null, responseBody);
-    });
+    }, httpResponseHandler(callback, true));
   };
 };
 
@@ -174,7 +174,7 @@ const fairplay = ({video, initData, options, eventBus}) => {
       initData,
       getLicense,
       options,
-      contentId: getContentId(options, initData),
+      contentId: getContentId(options, uint16ArrayToString(initData)),
       eventBus
     });
   });

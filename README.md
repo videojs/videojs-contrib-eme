@@ -27,10 +27,16 @@ Maintenance Status: Stable
   - [Other DRM Systems](#other-drm-systems)
     - [Get License By URL](#get-license-by-url)
     - [Get License By Function](#get-license-by-function)
+    - [Get Certificate by function](#get-certificate-by-function)
+  - [audioContentType/videoContentType](#audiocontenttypevideocontenttype)
+  - [audioRobustness/videoRobustness](#audiorobustnessvideorobustness)
+  - [MediaKeySystemConfiguration and supportedConfigurations](#mediakeysystemconfiguration-and-supportedconfigurations)
+  - [Get License Errors](#get-license-errors)
 - [API](#api)
   - [Available Options](#available-options)
     - [`keySystems`](#keysystems)
     - [`emeHeaders`](#emeheaders)
+    - [`firstWebkitneedkeyTimeout`](#firstwebkitneedkeytimeout)
   - [Setting Options per Source](#setting-options-per-source)
   - [Setting Options for All Sources](#setting-options-for-all-sources)
   - [Header Hierarchy and Removal](#header-hierarchy-and-removal)
@@ -39,6 +45,7 @@ Maintenance Status: Stable
   - [Events](#events)
     - [`licenserequestattempted`](#licenserequestattempted)
     - [`keystatuschange`](#keystatuschange)
+  - [`keysessioncreated`](#keysessioncreated)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -130,7 +137,7 @@ or
 You can control the license and certificate request processes by providing the following methods instead of the properties discussed above:
 
 * `getCertificate()` - Allows asynchronous retrieval of a certificate.
-* `getContentId()` - Allows synchronous retrieval of a content ID.
+* `getContentId()` - Allows synchronous retrieval of a content ID. It takes `emeOptions`, as well as the `initData` converted into a String.
 * `getLicense()` - Allows asynchronous retrieval of a license.
 
 ```js
@@ -142,7 +149,7 @@ You can control the license and certificate request processes by providing the f
         // if err, callback(err)
         // if success, callback(null, certificate)
       },
-      getContentId: function(emeOptions, initData) {
+      getContentId: function(emeOptions, contentId) {
         // return content ID
       },
       getLicense: function(emeOptions, contentId, keyMessage, callback) {
@@ -251,32 +258,89 @@ For more complex integrations, you may pass a `getLicense` function to fully con
 }
 ```
 
+
+#### Get Certificate by function
 Although the license acquisition is the only required configuration, `getCertificate()` is also supported if your source needs to retrieve a certificate, similar to the [FairPlay](#fairplay) implementation above.
+
+Example:
+```js
+{
+  'org.w3.clearkey': {
+    getCertificate: function(emeOptions, callback) {
+      // request certificate
+      // if err, callback(err)
+      // if success, callback(null, certificate)
+    },
+  }
+}
+```
+
+
+### audioContentType/videoContentType
 
 The `audioContentType` and `videoContentType` properties for non-FairPlay sources are used to determine if the system supports that codec and to create an appropriate `keySystemAccess` object. If left out, it is possible that the system will create a `keySystemAccess` object for the given key system, but will not be able to play the source due to the browser's inability to use that codec.
 
-Below is an example of using one of these DRM systems and custom `getLicense()` and `getCertificate()` functions:
-
+example:
 ```js
 {
   keySystems: {
     'org.w3.clearkey': {
       audioContentType: 'audio/webm; codecs="vorbis"',
       videoContentType: 'video/webm; codecs="vp9"',
-      getCertificate: function(emeOptions, callback) {
-        // request certificate
-        // if err, callback(err)
-        // if success, callback(null, certificate)
-      },
-      getLicense: function(emeOptions, keyMessage, callback) {
-        // request license
-        // if err, callback(err)
-        // if success, callback(null, license)
-      }
     }
   }
 }
 ```
+
+### audioRobustness/videoRobustness
+> If `audioRobustness`/`videoRobustness` is not passed in for widevine, you will see a warning similar to: `It is recommended that a robustness level be specified. Not specifying the robustness level could result in unexpected behavior`. Possible Options for widevine: `SW_SECURE_CRYPTO`, `SW_SECURE_DECODE`, `HW_SECURE_CRYPTO`, `HW_SECURE_DECODE`, `HW_SECURE_ALL`
+
+The `audioRobustness` and `videoRobustness` properties for non-FairPlay sources are used to determine the robustness level of the DRM you are using.
+
+Example:
+
+```js
+{
+  keySystems: {
+    'com.widevine.alpha': {
+      audioRobustness: 'SW_SECURE_CRYPTO',
+      videoRobustness: 'SW_SECURE_CRYPTO'
+    }
+  }
+}
+```
+
+### MediaKeySystemConfiguration and supportedConfigurations
+
+In addition to key systems options provided above, it is possible to directly provide the `supportedConfigurations` array to use for the `requestMediaKeySystemAccess` call. This allows for the entire range of options specified by the [MediaKeySystemConfiguration] object.
+
+Note that if `supportedConfigurations` is provided, it will override `audioContentType`, `videoContentType`, `audioRobustness`, `videoRobustness`, and `persistentState`.
+
+Example:
+
+```js
+{
+  keySystems: {
+    'org.w3.clearkey': {
+      supportedConfigurations: [{
+        videoCapabilities: [{
+          contentType: 'video/webm; codecs="vp9"',
+          robustness: 'SW_SECURE_CRYPTO'
+        }],
+        audioCapabilities: [{
+          contentType: 'audio/webm; codecs="vorbis"',
+          robustness: 'SW_SECURE_CRYPTO'
+        }]
+      }],
+      'org.w3.clearkey': '<YOUR_LICENSE_URL>'
+    }
+  }
+}
+```
+
+### Get License Errors
+
+The default `getLicense()` functions pass an error to the callback if the license request returns a 4xx or 5xx response code. Depending on how the license server is configured, it is possible in some cases that a valid license could still be returned even if the response code is in that range. If you wish not to pass an error for 4xx and 5xx response codes, you may pass your own `getLicense()` function with the `keySystems` as described above.
 
 ## API
 
@@ -298,6 +362,11 @@ emeHeaders: {
 }
 ```
 
+#### `firstWebkitneedkeyTimeout`
+> Default: 1000
+
+The amount of time in milliseconds to wait on the first `webkitneedkey` event before making the key request. This was implemented due to a bug in Safari where rendition switches at the start of playback can cause `webkitneedkey` to fire multiple times, with only the last one being valid.
+
 ### Setting Options per Source
 
 This is the recommended way of setting most options. Each source may have a different set of requirements; so, it is best to define options on a per source basis.
@@ -317,6 +386,7 @@ player.src({
   },
   keySystems: {
     'org.w3.clearkey': {
+      initDataTypes: ['cenc', 'webm'],
       audioContentType: 'audio/webm; codecs="vorbis"',
       videoContentType: 'video/webm; codecs="vp9"',
       getCertificate: function(emeOptions, callback) {
@@ -490,7 +560,7 @@ When `suppressErrorsIfPossible` is set to `false` (the default) and an error occ
 
 ### Events
 
-There are some events that are specific to this plugin. 
+There are some events that are specific to this plugin.
 
 #### `licenserequestattempted`
 
@@ -518,6 +588,18 @@ player.tech(true).on('keystatuschange', function(event) {
 
 This event is triggered directly from the underlying `keystatuseschange` event, so the statuses should correspond to [those listed in the spec](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
 
+### `keysessioncreated`
+
+When the key session is created, an event of type `keysessioncreated` will be triggered on the Video.js playback tech.
+
+```
+player.tech().on('keysessioncreated', function(event) {
+  // note that there is no event data for keysessioncreated
+});
+```
+
 ## License
 
 Apache License, Version 2.0. [View the license file](LICENSE)
+
+[MediaKeySystemConfiguration]: https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration

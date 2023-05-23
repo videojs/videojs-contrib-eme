@@ -1,6 +1,7 @@
 import videojs from 'video.js';
 import window from 'global/window';
 import {mergeAndRemoveNull} from './utils';
+import {httpResponseHandler} from './http-handler.js';
 
 /**
  * Parses the EME key message XML to extract HTTP headers and the Challenge element to use
@@ -11,10 +12,10 @@ import {mergeAndRemoveNull} from './utils';
  * license request
  */
 export const getMessageContents = (message) => {
-  const xml = (new window.DOMParser()).parseFromString(
-    // TODO do we want to support UTF-8?
-    String.fromCharCode.apply(null, new Uint16Array(message)),
-    'application/xml');
+  // TODO do we want to support UTF-8?
+  const xmlString = String.fromCharCode.apply(null, new Uint16Array(message));
+  const xml = (new window.DOMParser())
+    .parseFromString(xmlString, 'application/xml');
   const headersElement = xml.getElementsByTagName('HttpHeaders')[0];
   const headers = {};
 
@@ -57,12 +58,5 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
     headers,
     body: message,
     responseType: 'arraybuffer'
-  }, (err, response, responseBody) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    callback(null, responseBody);
-  });
+  }, httpResponseHandler(callback, true));
 };
