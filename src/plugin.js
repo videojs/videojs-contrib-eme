@@ -9,7 +9,7 @@ import {
   default as msPrefixed,
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
-import { getSupportedCDMs, createDetectSupportedCDMsFunc } from './cdm.js';
+import {getSupportedCDMs, detectSupportedCDMs } from './cdm.js';
 import { arrayBuffersEqual, arrayBufferFrom, merge } from './utils';
 import {version as VERSION} from '../package.json';
 
@@ -403,9 +403,7 @@ const eme = function(options = {}) {
         }
       }
     },
-    // Pass a promise polyfill from the player options for IE support. If none
-    // exists, native Promises will be used and the function won't be supported in IE
-    detectSupportedCDMs: createDetectSupportedCDMsFunc(player.options().Promise),
+    detectSupportedCDMs,
     getSupportedCDMs,
     options
   };

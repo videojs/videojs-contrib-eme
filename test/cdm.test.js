@@ -1,11 +1,10 @@
 import QUnit from 'qunit';
 import videojs from 'video.js';
-import { getSupportedCDMs, createDetectSupportedCDMsFunc } from '../src/cdm.js';
+import {IS_CHROMIUM, IS_WINDOWS, getSupportedCDMs, detectSupportedCDMs } from '../src/cdm.js';
 
 QUnit.module('videojs-contrib-eme CDM Module');
 
 QUnit.test('detectSupportedCDMs() returns a Promise', function(assert) {
-  const detectSupportedCDMs = createDetectSupportedCDMsFunc();
   const promise = detectSupportedCDMs();
 
   assert.ok(promise.then);
@@ -27,7 +26,6 @@ QUnit.test('getSupportedCDMs() returns an object with correct properties', funct
 // this test may need updating.
 QUnit.test('detectSupportedCDMs() promise resolves correctly on different browsers', function(assert) {
   const done = assert.async();
-  const detectSupportedCDMs = createDetectSupportedCDMsFunc();
   const promise = detectSupportedCDMs();
 
   promise.then((result) => {
@@ -54,19 +52,28 @@ QUnit.test('detectSupportedCDMs() promise resolves correctly on different browse
     if (videojs.browser.IS_ANY_SAFARI) {
       assert.deepEqual(result, {
         fairplay: true,
+        clearkey: true,
         playready: false,
-        widevine: false,
-        clearkey: false
+        widevine: false
       }, 'fairplay support reported in Safari');
     }
 
-    if (videojs.browser.IE_VERSION || videojs.browser.IS_EDGE) {
+    if (videojs.browser.IS_EDGE && IS_CHROMIUM && !IS_WINDOWS) {
+      assert.deepEqual(result, {
+        fairplay: false,
+        playready: false,
+        widevine: true,
+        clearkey: true
+      }, 'widevine support reported in non-Windows Chromium Edge');
+    }
+
+    if (videojs.browser.IS_EDGE && IS_CHROMIUM && IS_WINDOWS) {
       assert.deepEqual(result, {
         fairplay: false,
         playready: true,
-        widevine: false,
-        clearkey: false
-      }, 'playready support reported in IE/Edge');
+        widevine: true,
+        clearkey: true
+      }, 'widevine and playready support reported in Windows Chromium Edge');
     }
 
     done();
