@@ -29,15 +29,25 @@ QUnit.test('detectSupportedCDMs() promise resolves correctly on different browse
   const promise = detectSupportedCDMs();
 
   promise.then((result) => {
-    // Currently, widevine doesn't work in headless Chrome and requires a plugin in Ubuntu Firefox, so
-    // we can't verify widevine support in the remote Video.js test environment. However, it can be verified
-    // if testing locally. Headless Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=788662
-    if (videojs.browser.IS_CHROME || videojs.browser.IS_FIREFOX) {
-      assert.equal(result.fairplay, false, 'fairplay not supported in Chrome and FF');
-      assert.equal(result.playready, false, 'playready not supported in Chrome and FF');
-      assert.equal(result.clearkey, true, 'clearkey is supported in Chrome and FF');
+    // Currently, widevine and clearkey don't work in headless Chrome, so we can't verify cdm support in
+    // the remote Video.js test environment. However, it can be verified if testing locally in a real browser.
+    // Headless Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=788662
+    if (videojs.browser.IS_CHROME) {
+      assert.equal(result.fairplay, false, 'fairplay not supported in Chrome');
+      assert.equal(result.playready, false, 'playready not supported in Chrome');
 
-      // Uncomment if testing locally
+      // Uncomment if testing locally in actual browser
+      // assert.equal(result.clearkey, true, 'clearkey is supported in Chrome');
+      // assert.equal(result.widevine, true, 'widevine is supported in Chrome');
+    }
+
+    // Widevine requires a plugin in Ubuntu Firefox so it also does not work in the remote Video.js test environment
+    if (videojs.browser.IS_FIREFOX) {
+      assert.equal(result.fairplay, false, 'fairplay not supported in FF');
+      assert.equal(result.playready, false, 'playready not supported in FF');
+      assert.equal(result.clearkey, true, 'clearkey is supported in FF');
+
+      // Uncomment if testing locally in actual browser
       // assert.equal(result.widevine, true, 'widevine is supported in Chrome and FF');
     }
 
