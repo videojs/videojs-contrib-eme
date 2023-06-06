@@ -78,6 +78,8 @@ export const detectSupportedCDMs = () => {
   };
 
   if (!window.MediaKeys || !window.navigator.requestMediaKeySystemAccess) {
+    console.log('****** DEBUG:', 'EME not supported'); // eslint-disable-line
+
     latestSupportResults = results;
 
     return Promise.resolve(results);
