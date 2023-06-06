@@ -28,7 +28,7 @@ export const getSupportedCDMs = () => {
 };
 
 const genericConfig = [{
-  initDataTypes: [],
+  initDataTypes: ['cenc'],
   audioCapabilities: [{
     contentType: 'audio/mp4;codecs="mp4a.40.2"'
   }],
