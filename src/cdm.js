@@ -28,7 +28,7 @@ export const getSupportedCDMs = () => {
 };
 
 const genericConfig = [{
-  initDataTypes: ['cenc'],
+  initDataTypes: [],
   audioCapabilities: [{
     contentType: 'audio/mp4;codecs="mp4a.40.2"'
   }],
@@ -78,8 +78,6 @@ export const detectSupportedCDMs = () => {
   };
 
   if (!window.MediaKeys || !window.navigator.requestMediaKeySystemAccess) {
-    console.log('****** DEBUG:', 'EME not supported'); // eslint-disable-line
-
     latestSupportResults = results;
 
     return Promise.resolve(results);
