@@ -1,6 +1,11 @@
 import QUnit from 'qunit';
+import window from 'global/window';
 import videojs from 'video.js';
-import {IS_CHROMIUM, IS_WINDOWS, getSupportedCDMs, detectSupportedCDMs } from '../src/cdm.js';
+import {detectSupportedCDMs } from '../src/cdm.js';
+
+// `IS_CHROMIUM` and `IS_WINDOWS` are newer Video.js features, so add fallback just in case
+const IS_CHROMIUM = videojs.browser.IS_CHROMIUM || (/Chrome|CriOS/i).test(window.navigator.userAgent);
+const IS_WINDOWS = videojs.browser.IS_WINDOWS || (/Windows/i).test(window.navigator.userAgent);
 
 QUnit.module('videojs-contrib-eme CDM Module');
 
@@ -8,17 +13,6 @@ QUnit.test('detectSupportedCDMs() returns a Promise', function(assert) {
   const promise = detectSupportedCDMs();
 
   assert.ok(promise.then);
-});
-
-QUnit.test('getSupportedCDMs() returns an object with correct properties', function(assert) {
-  const cdmResults = getSupportedCDMs();
-  const cdmNames = Object.keys(cdmResults);
-
-  assert.equal(cdmNames.length, 4, 'object contains correct number of properties');
-  assert.equal(cdmNames.includes('fairplay'), true, 'object contains fairplay property');
-  assert.equal(cdmNames.includes('playready'), true, 'object contains playready property');
-  assert.equal(cdmNames.includes('widevine'), true, 'object contains widevine property');
-  assert.equal(cdmNames.includes('clearkey'), true, 'object contains clearkey property');
 });
 
 // NOTE: This test is not future-proof. It verifies that the CDM detect function

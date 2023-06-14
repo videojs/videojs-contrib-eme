@@ -1,31 +1,4 @@
 import window from 'global/window';
-import videojs from 'video.js';
-
-// `IS_CHROMIUM` and `IS_WINDOWS` are newer Video.js features, so add fallback just in case
-export const IS_CHROMIUM = videojs.browser.IS_CHROMIUM || (/Chrome|CriOS/i).test(window.navigator.userAgent);
-export const IS_WINDOWS = videojs.browser.IS_WINDOWS || (/Windows/i).test(window.navigator.userAgent);
-
-// Use a combination of API feature and user agent detection to provide an initial
-// best guess as to which CDMs are supported.
-const hasMediaKeys = Boolean(window.MediaKeys && window.navigator.requestMediaKeySystemAccess);
-const isChromeOrFirefox = videojs.browser.IS_CHROME || videojs.browser.IS_FIREFOX;
-const isChromiumEdge = videojs.browser.IS_EDGE && IS_CHROMIUM;
-const isAnyEdge = videojs.browser.IS_EDGE;
-
-const bestGuessSupport = {
-  fairplay: Boolean(window.WebKitMediaKeys) || (hasMediaKeys && videojs.browser.IS_ANY_SAFARI),
-  playready: hasMediaKeys && (isAnyEdge && (!IS_CHROMIUM || IS_WINDOWS)),
-  widevine: hasMediaKeys && (isChromeOrFirefox || isChromiumEdge),
-  clearkey: hasMediaKeys && (isChromeOrFirefox || isChromiumEdge)
-};
-
-let latestSupportResults = bestGuessSupport;
-
-// Synchronously return the latest list of supported CDMs returned by detectCDMSupport().
-// If none is available, return the best guess
-export const getSupportedCDMs = () => {
-  return latestSupportResults;
-};
 
 const genericConfig = [{
   initDataTypes: ['cenc'],
@@ -39,7 +12,7 @@ const genericConfig = [{
 
 const keySystems = [
   // Fairplay
-  // Needs a different config than the others
+  // Requires different config than other CDMs
   {
     keySystem: 'com.apple.fps',
     supportedConfig: [{
@@ -78,8 +51,6 @@ export const detectSupportedCDMs = () => {
   };
 
   if (!window.MediaKeys || !window.navigator.requestMediaKeySystemAccess) {
-    latestSupportResults = results;
-
     return Promise.resolve(results);
   }
 
@@ -90,8 +61,6 @@ export const detectSupportedCDMs = () => {
     results.playready = Boolean(playready);
     results.widevine = Boolean(widevine);
     results.clearkey = Boolean(clearkey);
-
-    latestSupportResults = results;
 
     return results;
   });
