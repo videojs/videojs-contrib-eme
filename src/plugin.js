@@ -9,6 +9,7 @@ import {
   default as msPrefixed,
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
+import {detectSupportedCDMs } from './cdm.js';
 import { arrayBuffersEqual, arrayBufferFrom, merge } from './utils';
 import {version as VERSION} from '../package.json';
 
@@ -402,6 +403,7 @@ const eme = function(options = {}) {
         }
       }
     },
+    detectSupportedCDMs,
     options
   };
 };

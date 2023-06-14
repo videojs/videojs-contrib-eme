@@ -107,6 +107,14 @@ QUnit.test('exposes options', function(assert) {
   );
 });
 
+QUnit.test('exposes detectSupportedCDMs()', function(assert) {
+  assert.notOk(this.player.eme.detectSupportedCDMs, 'detectSupportedCDMs is unavailable at start');
+
+  this.player.eme();
+
+  assert.ok(this.player.eme.detectSupportedCDMs, 'detectSupportedCDMs is available after initialization');
+});
+
 // skip test for prefix-only Safari
 if (!window.MediaKeys) {
   QUnit.test('initializeMediaKeys standard', function(assert) {

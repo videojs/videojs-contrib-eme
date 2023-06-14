@@ -42,6 +42,7 @@ Maintenance Status: Stable
   - [Header Hierarchy and Removal](#header-hierarchy-and-removal)
   - [`emeOptions`](#emeoptions)
   - [`initializeMediaKeys()`](#initializemediakeys)
+  - [`detectSupportedCDMs()`](#detectsupportedcdms)
   - [Events](#events)
     - [`licenserequestattempted`](#licenserequestattempted)
     - [`keystatuschange`](#keystatuschange)
@@ -557,6 +558,22 @@ player.eme.initializeMediaKeys(emeOptions, emeCallback, suppressErrorsIfPossible
 ```
 
 When `suppressErrorsIfPossible` is set to `false` (the default) and an error occurs, the error handler will be invoked after the callback finishes and `error()` will be called on the player. When set to `true` and an error occurs, the error handler will not be invoked with the exception of `mskeyerror` errors in IE11 since they cannot be suppressed asynchronously.
+
+### `detectSupportedCDMs()`
+
+`player.eme.detectSupportedCDMs()` is used to asynchronously detect and return a list of supported Content Decryption Modules (CDMs) in the current browser. It uses the EME API to request access to each key system and determine its availability. This function checks for the support of the following key systems: FairPlay, PlayReady, Widevine, and ClearKey.
+
+Please use this function sparingly, as side-effects (namely calling `navigator.requestMediaKeySystemAccess()`) can have user-visible effects, such as prompting for system resource permissions, which could be disruptive if invoked at inappropriate times. See [requestMediaKeySystemAccess()](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/requestMediaKeySystemAccess) documentation for more information.
+
+```js
+player.eme.detectSupportedCDMs()
+  .then(supportedCDMs => {
+    // Sample output: {fairplay: false, playready: false, widevine: true, clearkey: true}
+    console.log(supportedCDMs);
+  });
+```
+
+_________________________________________________________
 
 ### Events
 
