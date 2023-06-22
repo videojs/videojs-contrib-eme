@@ -124,7 +124,7 @@ export const defaultGetCertificate = (fairplayOptions) => {
       // (we don't want httpResponseHandler to decode it)
       // convert it into Uint8Array as expected
       callback(null, new Uint8Array(license));
-    }));
+    }, true));
   };
 };
 

@@ -120,8 +120,13 @@ export const makeNewRequest = (player, requestOptions) => {
       }
 
       getLicense(options, event.message, contentId)
-        .then((license) => {
-          resolve(keySession.update(license));
+        .then((licenses) => {
+          if (!Array.isArray(licenses)) {
+            licenses = [licenses];
+          }
+          return Promise.all(licenses.map(function(license) {
+            return keySession.update(license);
+          })).then(resolve);
         })
         .catch((err) => {
           reject(err);
@@ -299,6 +304,17 @@ const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage
   requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, callback);
 };
 
+const requestLicense = function(options) {
+  return new Promise(function(resolve, reject) {
+    videojs.xhr(options, httpResponseHandler(function(err, body) {
+      if (err) {
+        return reject(err);
+      }
+      resolve(body);
+    }, true));
+  });
+};
+
 export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
   const headers = mergeAndRemoveNull(
     {'Content-type': 'application/octet-stream'},
@@ -306,13 +322,33 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     keySystemOptions.licenseHeaders
   );
 
-  videojs.xhr({
-    uri: keySystemOptions.url,
-    method: 'POST',
-    responseType: 'arraybuffer',
-    body: keyMessage,
-    headers
-  }, httpResponseHandler(callback, true));
+  const promises = [];
+
+  if (keySystemOptions.url) {
+    promises.push(requestLicense({
+      uri: keySystemOptions.url,
+      method: 'POST',
+      responseType: 'arraybuffer',
+      body: keyMessage,
+      headers
+    }));
+  } else if (keySystemOptions.urls) {
+    keySystemOptions.urls.forEach(function(url) {
+      promises.push(requestLicense({
+        uri: url,
+        method: 'POST',
+        responseType: 'arraybuffer',
+        body: keyMessage,
+        headers
+      }));
+    });
+  }
+
+  Promise.all(promises).then(function(results) {
+    callback(null, results);
+  }).catch(function(error) {
+    callback(error, null);
+  });
 };
 
 const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
@@ -348,8 +384,8 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     keySystemOptions.url = keySystemOptions.licenseUri;
   }
 
-  if (!keySystemOptions.url && !keySystemOptions.getLicense) {
-    throw new Error(`Missing url/licenseUri or getLicense in ${keySystem} keySystem configuration.`);
+  if (!keySystemOptions.url && !keySystemOptions.urls && !keySystemOptions.getLicense) {
+    throw new Error(`Missing url/urls/licenseUri or getLicense in ${keySystem} keySystem configuration.`);
   }
 
   const isFairplay = isFairplayKeySystem(keySystem);
@@ -366,7 +402,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
     keySystemOptions.getContentId = defaultFairplayGetContentId;
   }
 
-  if (keySystemOptions.url && !keySystemOptions.getLicense) {
+  if ((keySystemOptions.url || keySystemOptions.urls) && !keySystemOptions.getLicense) {
     if (keySystem === 'com.microsoft.playready') {
       keySystemOptions.getLicense = defaultPlayreadyGetLicense(keySystemOptions);
     } else if (isFairplay) {
