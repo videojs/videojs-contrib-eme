@@ -54,7 +54,8 @@ QUnit.test('emeHeaders sent with license requests', function(assert) {
       'Some-Header': 'some-header-value'
     },
     body: challengeElement,
-    responseType: 'arraybuffer'
+    responseType: 'arraybuffer',
+    requestType: 'license'
   }, 'license request sent with correct headers');
 
   videojs.xhr = origXhr;
@@ -91,7 +92,8 @@ QUnit.test('licenseHeaders property overrides emeHeaders', function(assert) {
       'Some-Header': 'priority-header-value'
     },
     body: challengeElement,
-    responseType: 'arraybuffer'
+    responseType: 'arraybuffer',
+    requestType: 'license'
   }, 'license request sent with correct headers');
 
   videojs.xhr = origXhr;

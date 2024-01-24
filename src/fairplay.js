@@ -113,6 +113,7 @@ export const defaultGetCertificate = (fairplayOptions) => {
     videojs.xhr({
       uri: fairplayOptions.certificateUri,
       responseType: 'arraybuffer',
+      requestType: 'license',
       headers
     }, httpResponseHandler((err, license) => {
       if (err) {
@@ -144,6 +145,7 @@ export const defaultGetLicense = (fairplayOptions) => {
       uri: fairplayOptions.licenseUri,
       method: 'POST',
       responseType: 'arraybuffer',
+      requestType: 'license',
       body: keyMessage,
       headers
     }, httpResponseHandler(callback, true));
