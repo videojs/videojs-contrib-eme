@@ -490,6 +490,7 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
   assert.deepEqual(xhrCalls[1], {
     uri: 'some-other-url',
     responseType: 'arraybuffer',
+    requestType: 'license',
     headers: {
       'Some-Header': 'higher-priority-cert-header'
     }
