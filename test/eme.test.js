@@ -361,6 +361,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
       uri: 'some-url',
       method: 'POST',
       responseType: 'arraybuffer',
+      requestType: 'license',
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream'
@@ -429,6 +430,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
       uri: 'some-url',
       method: 'POST',
       responseType: 'arraybuffer',
+      requestType: 'license',
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream'
@@ -1081,6 +1083,7 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
       uri: 'some-url',
       method: 'POST',
       responseType: 'arraybuffer',
+      requestType: 'license',
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream',
@@ -1150,6 +1153,7 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
       uri: 'some-url',
       method: 'POST',
       responseType: 'arraybuffer',
+      requestType: 'license',
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream',

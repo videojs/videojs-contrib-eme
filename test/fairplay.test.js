@@ -424,6 +424,7 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     uri: 'some-url',
     method: 'POST',
     responseType: 'arraybuffer',
+    requestType: 'license',
     body: undefined,
     headers: {
       'Content-type': 'application/octet-stream',
@@ -434,6 +435,7 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
   assert.deepEqual(xhrCalls[1], {
     uri: 'some-other-url',
     responseType: 'arraybuffer',
+    requestType: 'license',
     headers: {
       'Some-Header': 'some-header-value'
     }
@@ -477,6 +479,7 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     uri: 'some-url',
     method: 'POST',
     responseType: 'arraybuffer',
+    requestType: 'license',
     body: undefined,
     headers: {
       'Content-type': 'application/octet-stream',
