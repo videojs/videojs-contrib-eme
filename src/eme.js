@@ -310,6 +310,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     uri: keySystemOptions.url,
     method: 'POST',
     responseType: 'arraybuffer',
+    requestType: 'license',
     body: keyMessage,
     headers
   }, httpResponseHandler(callback, true));
