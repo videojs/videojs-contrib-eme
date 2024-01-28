@@ -5,7 +5,8 @@ import {
 } from '../src/playready';
 import {
   createMessageBuffer,
-  challengeElement
+  challengeElement,
+  unwrappedPlayreadyMessage
 } from './playready-message';
 import videojs from 'video.js';
 
@@ -23,6 +24,22 @@ QUnit.test('getMessageContents parses message contents', function(assert) {
     'parses headers'
   );
   assert.deepEqual(message, challengeElement, 'parses challenge element');
+});
+
+QUnit.test('getMessageContents parses utf-8 contents', function(assert) {
+  const encoder = new TextEncoder();
+  const encodedMessageData = encoder.encode(unwrappedPlayreadyMessage);
+  const {headers, message} = getMessageContents(encodedMessageData);
+
+  assert.deepEqual(
+    headers,
+    {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+    },
+    'parses headers'
+  );
+  assert.deepEqual(message, encodedMessageData, 'parses challenge element');
 });
 
 QUnit.test('emeHeaders sent with license requests', function(assert) {

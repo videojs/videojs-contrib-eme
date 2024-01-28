@@ -17,7 +17,7 @@ export const getMessageContents = (message) => {
   const xml = (new window.DOMParser())
     .parseFromString(xmlString, 'application/xml');
   const headersElement = xml.getElementsByTagName('HttpHeaders')[0];
-  const headers = {};
+  let headers = {};
 
   if (headersElement) {
     const headerNames = headersElement.getElementsByTagName('name');
@@ -34,6 +34,16 @@ export const getMessageContents = (message) => {
 
   if (challengeElement) {
     challenge = window.atob(challengeElement.childNodes[0].nodeValue);
+  }
+
+  // If we failed to parse the xml the soap message might be encoded already.
+  // set the message data as the challenge and add generic SOAP headers.
+  if (xml.querySelector('parsererror')) {
+    headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+    };
+    challenge = message;
   }
 
   return {
