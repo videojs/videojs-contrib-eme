@@ -10,6 +10,14 @@ module.exports = function(config) {
       delete defaults.bsEdgeWin10;
       delete defaults.bsIE11Win10;
       return defaults;
+    },
+    browsers(aboutToRun) {
+      // TODO - current firefox headless fails to run w karma, blocking the npm version script.
+      // We should look into a better workaround that allows us to still run firefox through karma
+      // See https://github.com/karma-runner/karma-firefox-launcher/issues/328
+      return aboutToRun.filter(function(launcherName) {
+        return launcherName !== 'FirefoxHeadless';
+      });
     }
   };
 
