@@ -1,6 +1,6 @@
 {
   "name": "videojs-contrib-eme",
-  "version": "3.11.1",
+  "version": "3.11.2",
   "description": "Supports Encrypted Media Extensions for playback of encrypted content in Video.js",
   "main": "dist/videojs-contrib-eme.cjs.js",
   "module": "dist/videojs-contrib-eme.es.js",

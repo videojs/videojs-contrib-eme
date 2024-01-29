@@ -1,3 +1,11 @@
+<a name="3.11.2"></a>
+## [3.11.2](https://github.com/videojs/videojs-contrib-eme/compare/v3.11.1...v3.11.2) (2024-01-29)
+
+### Bug Fixes
+
+* disable firefox headless in karma (#203) ([c217b79](https://github.com/videojs/videojs-contrib-eme/commit/c217b79)), closes [#203](https://github.com/videojs/videojs-contrib-eme/issues/203)
+* playready message passthrough (#201) (#202) ([8800888](https://github.com/videojs/videojs-contrib-eme/commit/8800888)), closes [#201](https://github.com/videojs/videojs-contrib-eme/issues/201) [#202](https://github.com/videojs/videojs-contrib-eme/issues/202)
+
 <a name="3.11.1"></a>
 ## [3.11.1](https://github.com/videojs/videojs-contrib-eme/compare/v3.11.0...v3.11.1) (2023-01-11)
 
