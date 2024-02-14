@@ -10,7 +10,9 @@ import window from 'global/window';
 import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 
-export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
+export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps';
+
+export const LEGACY_FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   if (typeof id === 'string') {

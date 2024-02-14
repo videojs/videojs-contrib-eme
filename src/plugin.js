@@ -3,7 +3,7 @@ import window from 'global/window';
 import { standard5July2016, getSupportedKeySystem } from './eme';
 import {
   default as fairplay,
-  FAIRPLAY_KEY_SYSTEM
+  LEGACY_FAIRPLAY_KEY_SYSTEM
 } from './fairplay';
 import {
   default as msPrefixed,
@@ -96,7 +96,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
 };
 
 export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
-  if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM] || !event.initData) {
+  if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
   }
@@ -228,7 +228,10 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  if (window.MediaKeys) {
+  const playerOptions = getOptions(player);
+  const isLegacyFairplay = playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
+
+  if (window.MediaKeys && !isLegacyFairplay) {
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
@@ -236,7 +239,7 @@ const onPlayerReady = (player, emeError) => {
       // https://github.com/videojs/video.js/pull/4780
       // videojs.log('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, playerOptions, player.eme.sessions, player.tech_)
         .catch(emeError);
     });
   } else if (window.WebKitMediaKeys) {
@@ -248,15 +251,14 @@ const onPlayerReady = (player, emeError) => {
       // TODO it's possible that the video state must be cleared if reusing the same video
       // element between sources
       setupSessions(player);
-      handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
+      handleWebKitNeedKeyEvent(event, playerOptions, player.tech_)
         .catch(emeError);
     };
 
     // Support Safari EME with FairPlay
     // (also used in early Chrome or Chrome with EME disabled flag)
     player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-      const options = getOptions(player);
-      const firstWebkitneedkeyTimeout = options.firstWebkitneedkeyTimeout || 1000;
+      const firstWebkitneedkeyTimeout = playerOptions.firstWebkitneedkeyTimeout || 1000;
       const src = player.src();
       // on source change or first startup reset webkitneedkey options.
 
@@ -304,7 +306,7 @@ const onPlayerReady = (player, emeError) => {
       // videojs.log('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
-        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+        handleMsNeedKeyEvent(event, playerOptions, player.eme.sessions, player.tech_);
       } catch (error) {
         emeError(error);
       }
