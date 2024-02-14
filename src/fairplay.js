@@ -11,7 +11,6 @@ import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRe
 import {httpResponseHandler} from './http-handler.js';
 
 export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps';
-
 export const LEGACY_FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
