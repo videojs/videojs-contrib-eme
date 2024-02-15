@@ -229,7 +229,7 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   const playerOptions = getOptions(player);
-  const isLegacyFairplay = playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
+  const isLegacyFairplay = playerOptions.keySystem && playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
 
   if (window.MediaKeys && !isLegacyFairplay) {
     // Support EME 05 July 2016

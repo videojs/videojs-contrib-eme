@@ -1,9 +1,9 @@
 import QUnit from 'qunit';
 import {
   default as fairplay,
-  FAIRPLAY_KEY_SYSTEM,
   defaultGetLicense,
-  defaultGetCertificate
+  defaultGetCertificate,
+  LEGACY_FAIRPLAY_KEY_SYSTEM
 } from '../src/fairplay';
 import videojs from 'video.js';
 import window from 'global/window';
@@ -170,7 +170,7 @@ QUnit.test('error in getCertificate rejects promise', function(assert) {
   const keySystems = {};
   const done = assert.async(1);
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {
     getCertificate: (options, callback) => {
       callback('error in getCertificate');
     }
@@ -195,7 +195,7 @@ QUnit.test('error in WebKitMediaKeys rejects promise', function(assert) {
     throw new Error('unsupported keySystem');
   };
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {};
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {};
 
   fairplay({
     video,
@@ -221,7 +221,7 @@ QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
 
   window.WebKitMediaKeys = function() {};
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {};
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {};
 
   fairplay({
     video,
@@ -251,7 +251,7 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
 
   window.WebKitMediaKeys = function() {};
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {};
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {};
 
   fairplay({
     video,
@@ -290,7 +290,7 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
 
   window.WebKitMediaKeys = function() {};
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
       callback('error in getLicense');
     }
@@ -336,7 +336,7 @@ QUnit.test('keysessioncreated fired on key session created', function(assert) {
 
   window.WebKitMediaKeys = function() {};
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {
     licenseUri: 'some-url',
     certificateUri: 'some-other-url'
   };
@@ -376,7 +376,7 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
 
   window.WebKitMediaKeys = function() {};
 
-  keySystems[FAIRPLAY_KEY_SYSTEM] = {
+  keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {
     getLicense: (options, contentId, message, callback) => {
       callback(null);
       keySession.trigger('webkitkeyerror');
