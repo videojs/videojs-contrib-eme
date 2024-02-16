@@ -229,15 +229,15 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   const playerOptions = getOptions(player);
+  // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
+  // If we are using this keysystem we want to use WebkitMediaKeys.
   const isLegacyFairplay = playerOptions.keySystem && playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
 
   if (window.MediaKeys && !isLegacyFairplay) {
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'encrypted\' event');
+      videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
       handleEncryptedEvent(player, event, playerOptions, player.eme.sessions, player.tech_)
         .catch(emeError);
@@ -251,9 +251,7 @@ const onPlayerReady = (player, emeError) => {
     // Functionally speaking, there should be no discernible difference between
     // the behavior of IE11 and those of other browsers.
     player.tech_.el_.addEventListener('msneedkey', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'msneedkey\' event');
+      videojs.log.debug('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
         handleMsNeedKeyEvent(event, playerOptions, player.eme.sessions, player.tech_);
@@ -358,10 +356,7 @@ const eme = function(options = {}) {
     initLegacyFairplay() {
       const playerOptions = getOptions(player);
       const handleFn = (event) => {
-        // TODO convert to videojs.log.debug and add back in
-        // https://github.com/videojs/video.js/pull/4780
-        // videojs.log('eme', 'Received a \'webkitneedkey\' event');
-
+        videojs.log.debug('eme', 'Received a \'webkitneedkey\' event');
         // TODO it's possible that the video state must be cleared if reusing the same video
         // element between sources
         setupSessions(player);

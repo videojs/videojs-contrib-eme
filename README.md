@@ -14,7 +14,6 @@ Maintenance Status: Stable
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Using](#using)
   - [Initialization](#initialization)
   - [FairPlay](#fairplay)
@@ -43,6 +42,7 @@ Maintenance Status: Stable
   - [`emeOptions`](#emeoptions)
   - [`initializeMediaKeys()`](#initializemediakeys)
   - [`detectSupportedCDMs()`](#detectsupportedcdms)
+  - [`initLegacyFairplay()`](#initlegacyfairplay)
   - [Events](#events)
     - [`licenserequestattempted`](#licenserequestattempted)
     - [`keystatuschange`](#keystatuschange)
@@ -573,6 +573,13 @@ player.eme.detectSupportedCDMs()
   });
 ```
 
+### `initLegacyFairplay()`
+
+`player.eme.initLegacyFairplay()` is used to init the `'webkitneedskey'` listener when using `WebKitMediaKeys` in Safari. This is useful because Safari currently supports both the modern `com.apple.fps` keysystem through `MediaKeys` and the legacy `com.apple.fps.1_0` keysystem through `WebKitMediaKeys`. Since this plugin will prefer using modern `MediaKeys` over `WebkitMediaKeys` initializing legacy fairplay can be necessary for media using the legacy `1_0` keysystem.
+
+```js
+player.eme.initLegacyFairplay();
+```
 _________________________________________________________
 
 ### Events
