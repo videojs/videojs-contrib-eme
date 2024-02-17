@@ -10,7 +10,7 @@ import window from 'global/window';
 import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 
-export const FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
+export const LEGACY_FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
 const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   if (typeof id === 'string') {
@@ -53,7 +53,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
       try {
-        video.webkitSetMediaKeys(new window.WebKitMediaKeys(FAIRPLAY_KEY_SYSTEM));
+        video.webkitSetMediaKeys(new window.WebKitMediaKeys(LEGACY_FAIRPLAY_KEY_SYSTEM));
       } catch (error) {
         reject('Could not create MediaKeys');
         return;
@@ -153,7 +153,7 @@ export const defaultGetLicense = (fairplayOptions) => {
 };
 
 const fairplay = ({video, initData, options, eventBus}) => {
-  const fairplayOptions = options.keySystems[FAIRPLAY_KEY_SYSTEM];
+  const fairplayOptions = options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM];
   const getCertificate = fairplayOptions.getCertificate ||
     defaultGetCertificate(fairplayOptions);
   const getContentId = fairplayOptions.getContentId || defaultGetContentId;

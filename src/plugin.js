@@ -3,7 +3,7 @@ import window from 'global/window';
 import { standard5July2016, getSupportedKeySystem } from './eme';
 import {
   default as fairplay,
-  FAIRPLAY_KEY_SYSTEM
+  LEGACY_FAIRPLAY_KEY_SYSTEM
 } from './fairplay';
 import {
   default as msPrefixed,
@@ -96,7 +96,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
 };
 
 export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
-  if (!options.keySystems || !options.keySystems[FAIRPLAY_KEY_SYSTEM] || !event.initData) {
+  if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
   }
@@ -228,70 +228,22 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  if (window.MediaKeys) {
+  const playerOptions = getOptions(player);
+  // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
+  // If we are using this keysystem we want to use WebkitMediaKeys.
+  const isLegacyFairplay = playerOptions.keySystem && playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
+
+  if (window.MediaKeys && !isLegacyFairplay) {
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'encrypted\' event');
+      videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, playerOptions, player.eme.sessions, player.tech_)
         .catch(emeError);
     });
   } else if (window.WebKitMediaKeys) {
-    const handleFn = (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received a \'webkitneedkey\' event');
-
-      // TODO it's possible that the video state must be cleared if reusing the same video
-      // element between sources
-      setupSessions(player);
-      handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
-        .catch(emeError);
-    };
-
-    // Support Safari EME with FairPlay
-    // (also used in early Chrome or Chrome with EME disabled flag)
-    player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-      const options = getOptions(player);
-      const firstWebkitneedkeyTimeout = options.firstWebkitneedkeyTimeout || 1000;
-      const src = player.src();
-      // on source change or first startup reset webkitneedkey options.
-
-      player.eme.webkitneedkey_ = player.eme.webkitneedkey_ || {};
-
-      // if the source changed we need to handle the first event again.
-      // track source changes internally.
-      if (player.eme.webkitneedkey_.src !== src) {
-        player.eme.webkitneedkey_ = {
-          handledFirstEvent: false,
-          src
-        };
-      }
-      // It's possible that at the start of playback a rendition switch
-      // on a small player in safari's HLS implementation will cause
-      // two webkitneedkey events to occur. We want to make sure to cancel
-      // our first existing request if we get another within 1 second. This
-      // prevents a non-fatal player error from showing up due to a
-      // request failure.
-      if (!player.eme.webkitneedkey_.handledFirstEvent) {
-        // clear the old timeout so that a new one can be created
-        // with the new rendition's event data
-        player.clearTimeout(player.eme.webkitneedkey_.timeout);
-        player.eme.webkitneedkey_.timeout = player.setTimeout(() => {
-          player.eme.webkitneedkey_.handledFirstEvent = true;
-          player.eme.webkitneedkey_.timeout = null;
-          handleFn(event);
-        }, firstWebkitneedkeyTimeout);
-      // after we have a verified first request, we will request on
-      // every other event like normal.
-      } else {
-        handleFn(event);
-      }
-    });
-
+    player.eme.initLegacyFairplay();
   } else if (window.MSMediaKeys) {
     // IE11 Windows 8.1+
     // Since IE11 doesn't support promises, we have to use a combination of
@@ -299,12 +251,10 @@ const onPlayerReady = (player, emeError) => {
     // Functionally speaking, there should be no discernible difference between
     // the behavior of IE11 and those of other browsers.
     player.tech_.el_.addEventListener('msneedkey', (event) => {
-      // TODO convert to videojs.log.debug and add back in
-      // https://github.com/videojs/video.js/pull/4780
-      // videojs.log('eme', 'Received an \'msneedkey\' event');
+      videojs.log.debug('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
-        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+        handleMsNeedKeyEvent(event, playerOptions, player.eme.sessions, player.tech_);
       } catch (error) {
         emeError(error);
       }
@@ -402,6 +352,56 @@ const eme = function(options = {}) {
           }
         }
       }
+    },
+    initLegacyFairplay() {
+      const playerOptions = getOptions(player);
+      const handleFn = (event) => {
+        videojs.log.debug('eme', 'Received a \'webkitneedkey\' event');
+        // TODO it's possible that the video state must be cleared if reusing the same video
+        // element between sources
+        setupSessions(player);
+        handleWebKitNeedKeyEvent(event, playerOptions, player.tech_)
+          .catch(emeError);
+      };
+
+      // Support Safari EME with FairPlay
+      // (also used in early Chrome or Chrome with EME disabled flag)
+      player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+        const firstWebkitneedkeyTimeout = playerOptions.firstWebkitneedkeyTimeout || 1000;
+        const src = player.src();
+        // on source change or first startup reset webkitneedkey options.
+
+        player.eme.webkitneedkey_ = player.eme.webkitneedkey_ || {};
+
+        // if the source changed we need to handle the first event again.
+        // track source changes internally.
+        if (player.eme.webkitneedkey_.src !== src) {
+          player.eme.webkitneedkey_ = {
+            handledFirstEvent: false,
+            src
+          };
+        }
+        // It's possible that at the start of playback a rendition switch
+        // on a small player in safari's HLS implementation will cause
+        // two webkitneedkey events to occur. We want to make sure to cancel
+        // our first existing request if we get another within 1 second. This
+        // prevents a non-fatal player error from showing up due to a
+        // request failure.
+        if (!player.eme.webkitneedkey_.handledFirstEvent) {
+          // clear the old timeout so that a new one can be created
+          // with the new rendition's event data
+          player.clearTimeout(player.eme.webkitneedkey_.timeout);
+          player.eme.webkitneedkey_.timeout = player.setTimeout(() => {
+            player.eme.webkitneedkey_.handledFirstEvent = true;
+            player.eme.webkitneedkey_.timeout = null;
+            handleFn(event);
+          }, firstWebkitneedkeyTimeout);
+        // after we have a verified first request, we will request on
+        // every other event like normal.
+        } else {
+          handleFn(event);
+        }
+      });
     },
     detectSupportedCDMs,
     options
