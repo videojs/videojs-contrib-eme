@@ -1,3 +1,26 @@
+<a name="5.1.0"></a>
+# [5.1.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.0.0...v5.1.0) (2024-02-17)
+
+### Features
+
+* Add CDM detection module (#98) ([33dfe13](https://github.com/videojs/videojs-contrib-eme/commit/33dfe13)), closes [#98](https://github.com/videojs/videojs-contrib-eme/issues/98)
+* add request types (#200) ([58109ca](https://github.com/videojs/videojs-contrib-eme/commit/58109ca)), closes [#200](https://github.com/videojs/videojs-contrib-eme/issues/200)
+
+### Bug Fixes
+
+* Close keySession when player is disposed (#176) ([c8ca31a](https://github.com/videojs/videojs-contrib-eme/commit/c8ca31a)), closes [#176](https://github.com/videojs/videojs-contrib-eme/issues/176)
+* disable firefox headless in karma (#205) ([a90edcb](https://github.com/videojs/videojs-contrib-eme/commit/a90edcb)), closes [#205](https://github.com/videojs/videojs-contrib-eme/issues/205)
+* legacy fairplay (#204) ([ee6e512](https://github.com/videojs/videojs-contrib-eme/commit/ee6e512)), closes [#204](https://github.com/videojs/videojs-contrib-eme/issues/204)
+* playready message passthrough (#201) ([78bc2d7](https://github.com/videojs/videojs-contrib-eme/commit/78bc2d7)), closes [#201](https://github.com/videojs/videojs-contrib-eme/issues/201)
+
+### Chores
+
+* Update CI workflow (#188) ([579df4c](https://github.com/videojs/videojs-contrib-eme/commit/579df4c)), closes [#188](https://github.com/videojs/videojs-contrib-eme/issues/188)
+
+### Code Refactoring
+
+* add support for future Video.js 8.x (#172) ([6a19aba](https://github.com/videojs/videojs-contrib-eme/commit/6a19aba)), closes [#172](https://github.com/videojs/videojs-contrib-eme/issues/172)
+
 <a name="5.0.0"></a>
 # [5.0.0](https://github.com/videojs/videojs-contrib-eme/compare/v4.0.0...v5.0.0) (2022-08-19)
 
