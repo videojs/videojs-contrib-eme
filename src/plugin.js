@@ -192,6 +192,8 @@ export const emeErrorHandler = (player) => {
       // MEDIA_ERR_ENCRYPTED is code 5
       code: 5
     };
+    const vjsErrorType = videojs.Error && videojs.Error.EMEKeySessionCreationError;
+    const errorType = vjsErrorType || 'eme-key-session-creation-error';
 
     if (typeof objOrErr === 'string') {
       error.message = objOrErr;
@@ -208,7 +210,7 @@ export const emeErrorHandler = (player) => {
 
     player.error(error);
     player.eme.error({
-      errorType: videojs.Error.EMEKeySessionCreationError,
+      errorType,
       error
     });
   };
