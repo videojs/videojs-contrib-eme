@@ -207,6 +207,10 @@ export const emeErrorHandler = (player) => {
     }
 
     player.error(error);
+    player.eme.error({
+      errorType: videojs.Error.EMEKeySessionCreationError,
+      error
+    });
   };
 };
 
@@ -404,7 +408,27 @@ const eme = function(options = {}) {
       });
     },
     detectSupportedCDMs,
-    options
+    options,
+    _error: null,
+    error(err) {
+
+      // If `err` doesn't exist, return the current error.
+      if (err === undefined) {
+        return this._error || null;
+      }
+
+      // If `err` is null, reset the ads error.
+      if (err === null) {
+        this._error = null;
+
+        return;
+      }
+
+      this._error = err;
+
+      videojs.log.error(`EME error occured of type: ${err.errorType}.`);
+      player.trigger('vjsemeerror');
+    }
   };
 };
 

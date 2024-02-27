@@ -832,6 +832,12 @@ QUnit.test('emeError properly handles various parameter types', function(assert)
     },
     error: (obj) => {
       errorObj = obj;
+    },
+    eme: {
+      _error: null,
+      error: (err) => {
+        this._error = err;
+      }
     }
   };
   const emeError = emeErrorHandler(player);
