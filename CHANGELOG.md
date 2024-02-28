@@ -1,3 +1,6 @@
+<a name="5.1.1"></a>
+## [5.1.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.0...v5.1.1) (2024-02-28)
+
 <a name="5.1.0"></a>
 # [5.1.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.0.0...v5.1.0) (2024-02-17)
 
