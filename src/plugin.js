@@ -210,7 +210,6 @@ export const emeErrorHandler = (player) => {
     }
 
     player.error(error);
-    player.trigger('vjsemeerror');
   };
 };
 
