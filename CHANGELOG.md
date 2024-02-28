@@ -1,6 +1,10 @@
 <a name="5.1.1"></a>
 ## [5.1.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.0...v5.1.1) (2024-02-28)
 
+### Bug Fixes
+
+* fixes an issue where events were using stale player options (#207) ([92aae13](https://github.com/videojs/videojs-contrib-eme/commit/92aae13)), closes [#207](https://github.com/videojs/videojs-contrib-eme/issues/207)
+
 <a name="5.1.0"></a>
 # [5.1.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.0.0...v5.1.0) (2024-02-17)
 
