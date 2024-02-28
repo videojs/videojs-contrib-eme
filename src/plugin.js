@@ -188,12 +188,13 @@ export const setupSessions = (player) => {
  */
 export const emeErrorHandler = (player) => {
   return (objOrErr) => {
-    const error = {
-      // MEDIA_ERR_ENCRYPTED is code 5
-      code: 5
-    };
     const vjsErrorType = videojs.Error && videojs.Error.EMEKeySessionCreationError;
     const errorType = vjsErrorType || 'eme-key-session-creation-error';
+    const error = {
+      // MEDIA_ERR_ENCRYPTED is code 5
+      code: 5,
+      errorType
+    };
 
     if (typeof objOrErr === 'string') {
       error.message = objOrErr;
@@ -209,10 +210,7 @@ export const emeErrorHandler = (player) => {
     }
 
     player.error(error);
-    player.eme.error({
-      errorType,
-      error
-    });
+    player.trigger('vjsemeerror');
   };
 };
 
@@ -410,27 +408,7 @@ const eme = function(options = {}) {
       });
     },
     detectSupportedCDMs,
-    options,
-    _error: null,
-    error(err) {
-
-      // If `err` doesn't exist, return the current error.
-      if (err === undefined) {
-        return this._error || null;
-      }
-
-      // If `err` is null, reset the ads error.
-      if (err === null) {
-        this._error = null;
-
-        return;
-      }
-
-      this._error = err;
-
-      videojs.log.error(`EME error occured of type: ${err.errorType}.`);
-      player.trigger('vjsemeerror');
-    }
+    options
   };
 };
 
