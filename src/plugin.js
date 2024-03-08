@@ -245,7 +245,7 @@ const onPlayerReady = (player, emeError) => {
     player.tech_.el_.addEventListener('encrypted', (event) => {
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, playerOptions, player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
         .catch((error) => {
           emeError(error, videojs.Error.EMEEncryptedError);
         });
@@ -262,7 +262,7 @@ const onPlayerReady = (player, emeError) => {
       videojs.log.debug('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
-        handleMsNeedKeyEvent(event, playerOptions, player.eme.sessions, player.tech_);
+        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
       } catch (error) {
         emeError(error, videojs.Error.MSKeyError);
       }
