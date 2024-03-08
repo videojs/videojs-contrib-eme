@@ -187,13 +187,10 @@ export const setupSessions = (player) => {
  * @return   {Function}
  */
 export const emeErrorHandler = (player) => {
-  return (objOrErr) => {
-    const vjsErrorType = videojs.Error && videojs.Error.EMEKeySessionCreationError;
-    const errorType = vjsErrorType || 'eme-key-session-creation-error';
+  return (objOrErr, errorType) => {
     const error = {
       // MEDIA_ERR_ENCRYPTED is code 5
-      code: 5,
-      errorType
+      code: 5
     };
 
     if (typeof objOrErr === 'string') {
@@ -206,6 +203,12 @@ export const emeErrorHandler = (player) => {
           (objOrErr.cause.length ||
            objOrErr.cause.byteLength)) {
         error.cause = objOrErr.cause;
+      }
+      if (errorType) {
+        error.errorType = errorType;
+      }
+      if (objOrErr.keySystem) {
+        error.keySystem = objOrErr.keySystem;
       }
     }
 
@@ -243,7 +246,9 @@ const onPlayerReady = (player, emeError) => {
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
       handleEncryptedEvent(player, event, playerOptions, player.eme.sessions, player.tech_)
-        .catch(emeError);
+        .catch((error) => {
+          emeError(error, videojs.Error.EMEEncryptedError);
+        });
     });
   } else if (window.WebKitMediaKeys) {
     player.eme.initLegacyFairplay();
@@ -259,13 +264,17 @@ const onPlayerReady = (player, emeError) => {
       try {
         handleMsNeedKeyEvent(event, playerOptions, player.eme.sessions, player.tech_);
       } catch (error) {
-        emeError(error);
+        emeError(error, videojs.Error.MSKeyError);
       }
     });
-    player.tech_.on('mskeyerror', emeError);
+    const msKeyErrorCallback = (error) => {
+      emeError(error, videojs.Error.MSKeyError);
+    };
+
+    player.tech_.on('mskeyerror', msKeyErrorCallback);
     // TODO: refactor this plugin so it can use a plugin dispose
     player.on('dispose', () => {
-      player.tech_.off('mskeyerror', emeError);
+      player.tech_.off('mskeyerror', msKeyErrorCallback);
     });
   }
 };
@@ -325,7 +334,7 @@ const eme = function(options = {}) {
           .catch((error) => {
             callback(error);
             if (!suppressErrorIfPossible) {
-              emeError(error);
+              emeError(error, videojs.Error.EMEEncryptedError);
             }
           });
       } else if (window.MSMediaKeys) {
@@ -335,7 +344,7 @@ const eme = function(options = {}) {
           if (event.type === 'mskeyerror') {
             callback(event.target.error);
             if (!suppressErrorIfPossible) {
-              emeError(event.message);
+              emeError(event.message, videojs.Error.MSKeyError);
             }
           } else {
             callback();
@@ -351,7 +360,7 @@ const eme = function(options = {}) {
           player.tech_.off('mskeyerror', msKeyHandler);
           callback(error);
           if (!suppressErrorIfPossible) {
-            emeError(error);
+            emeError(error, videojs.Error.MSKeyError);
           }
         }
       }
@@ -364,7 +373,9 @@ const eme = function(options = {}) {
         // element between sources
         setupSessions(player);
         handleWebKitNeedKeyEvent(event, playerOptions, player.tech_)
-          .catch(emeError);
+          .catch((error) => {
+            emeError(error, videojs.Error.WebkitKeyError);
+          });
       };
 
       // Support Safari EME with FairPlay

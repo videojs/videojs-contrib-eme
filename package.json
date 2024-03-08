@@ -52,6 +52,9 @@
     "global": "^4.3.2",
     "video.js": "^6 || ^7 || ^8"
   },
+  "peerDependencies": {
+    "video.js": "^8.11.8"
+  },
   "devDependencies": {
     "conventional-changelog-cli": "^2.0.12",
     "conventional-changelog-videojs": "^3.0.0",
