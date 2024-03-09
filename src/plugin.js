@@ -239,6 +239,7 @@ const onPlayerReady = (player, emeError) => {
       const isLegacyFairplay = playerOptions.keySystems && playerOptions.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM];
 
       if (isLegacyFairplay) {
+        videojs.log.debug('eme', `Ignoring \'encrypted\' event, using legacy fairplay keySystem ${LEGACY_FAIRPLAY_KEY_SYSTEM}`);
         return;
       }
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
