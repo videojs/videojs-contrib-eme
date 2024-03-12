@@ -55,6 +55,13 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
     // return silently since it may be handled by a different system
     return Promise.resolve();
   }
+  // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
+  // If we are using this keysystem we want to use WebkitMediaKeys.
+  // This can be initialized manually with initLegacyFairplay().
+  if (options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM]) {
+    videojs.log.debug('eme', `Ignoring \'encrypted\' event, using legacy fairplay keySystem ${LEGACY_FAIRPLAY_KEY_SYSTEM}`);
+    return Promise.resolve();
+  }
 
   let initData = event.initData;
 
@@ -228,12 +235,7 @@ const onPlayerReady = (player, emeError) => {
 
   setupSessions(player);
 
-  const playerOptions = getOptions(player);
-  // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
-  // If we are using this keysystem we want to use WebkitMediaKeys.
-  const isLegacyFairplay = playerOptions.keySystem && playerOptions.keySystem[LEGACY_FAIRPLAY_KEY_SYSTEM];
-
-  if (window.MediaKeys && !isLegacyFairplay) {
+  if (window.MediaKeys) {
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
@@ -354,20 +356,19 @@ const eme = function(options = {}) {
       }
     },
     initLegacyFairplay() {
-      const playerOptions = getOptions(player);
       const handleFn = (event) => {
         videojs.log.debug('eme', 'Received a \'webkitneedkey\' event');
         // TODO it's possible that the video state must be cleared if reusing the same video
         // element between sources
         setupSessions(player);
-        handleWebKitNeedKeyEvent(event, playerOptions, player.tech_)
+        handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
           .catch(emeError);
       };
 
       // Support Safari EME with FairPlay
       // (also used in early Chrome or Chrome with EME disabled flag)
       player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-        const firstWebkitneedkeyTimeout = playerOptions.firstWebkitneedkeyTimeout || 1000;
+        const firstWebkitneedkeyTimeout = getOptions(player).firstWebkitneedkeyTimeout || 1000;
         const src = player.src();
         // on source change or first startup reset webkitneedkey options.
 
