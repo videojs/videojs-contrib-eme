@@ -115,13 +115,19 @@ export const makeNewRequest = (player, requestOptions) => {
     eventBus.trigger('keysessioncreated');
 
     player.on('dispose', () => {
-      keySession.close().catch((error) => {
+      keySession.close().then(() => {
+        eventBus.trigger('keysessionclosed');
+      }).catch((error) => {
         emeError(error, videojs.Error.EMEFailedToCloseSession);
       });
     });
 
     return new Promise((resolve, reject) => {
       keySession.addEventListener('message', (event) => {
+        eventBus.trigger({
+          type: 'keymessage',
+          event
+        });
         // all other types will be handled by keystatuseschange
         if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
           return;
@@ -129,7 +135,9 @@ export const makeNewRequest = (player, requestOptions) => {
 
         getLicense(options, event.message, contentId)
           .then((license) => {
-            resolve(keySession.update(license).catch((error) => {
+            resolve(keySession.update(license).then(() => {
+              eventBus.trigger('keysessionupdated');
+            }).catch((error) => {
               emeError(error, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys);
             }));
           })
@@ -179,6 +187,7 @@ export const makeNewRequest = (player, requestOptions) => {
           // https://github.com/videojs/video.js/pull/4780
           // videojs.log.debug('Session expired, closing the session.');
           keySession.close().then(() => {
+            eventBus.trigger('keysessionclosed');
             removeSession(initData);
             makeNewRequest(player, requestOptions);
           }).catch((error) => {
@@ -314,7 +323,6 @@ export const addPendingSessions = ({
   video.pendingSessionData = [];
 
   promises.push(video.setMediaKeys(createdMediaKeys).catch((error) => {
-    // EMEFailedToAttachMediaKeysToVideoElement
     emeError(error, videojs.Error.EMEFailedToAttachMediaKeysToVideoElement);
   }));
 
@@ -465,6 +473,7 @@ export const standard5July2016 = ({
     }).then(() => {
       return keySystemAccess.createMediaKeys();
     }).then((createdMediaKeys) => {
+      eventBus.trigger('keysystemaccesscomplete');
       return addPendingSessions({
         player,
         video,
@@ -473,7 +482,6 @@ export const standard5July2016 = ({
       });
     }).catch((err) => {
       emeError(err, videojs.Error.EMEFailedToCreateMediaKeys);
-      // EMEFailedToCreateMediaKeys
       // if we have a specific error message, use it, otherwise show a more
       // generic one
       if (err) {
