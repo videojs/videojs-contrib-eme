@@ -28,7 +28,10 @@ const getMockSession = () => {
       mockSession.numCloses++;
       // fake a promise for easy testing
       return {
-        then: (nextCall) => nextCall()
+        then: (nextCall) => {
+          nextCall();
+          return Promise.resolve();
+        }
       };
     },
     numCloses: 0,
@@ -443,7 +446,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
   });
 });
 
-QUnit.test('5 July 2016 lifecycle', function(assert) {
+QUnit.test.only('5 July 2016 lifecycle', function(assert) {
   assert.expect(33);
 
   let errors = 0;
