@@ -356,20 +356,19 @@ const eme = function(options = {}) {
       }
     },
     initLegacyFairplay() {
-      const playerOptions = getOptions(player);
       const handleFn = (event) => {
         videojs.log.debug('eme', 'Received a \'webkitneedkey\' event');
         // TODO it's possible that the video state must be cleared if reusing the same video
         // element between sources
         setupSessions(player);
-        handleWebKitNeedKeyEvent(event, playerOptions, player.tech_)
+        handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
           .catch(emeError);
       };
 
       // Support Safari EME with FairPlay
       // (also used in early Chrome or Chrome with EME disabled flag)
       player.tech_.el_.addEventListener('webkitneedkey', (event) => {
-        const firstWebkitneedkeyTimeout = playerOptions.firstWebkitneedkeyTimeout || 1000;
+        const firstWebkitneedkeyTimeout = getOptions(player).firstWebkitneedkeyTimeout || 1000;
         const src = player.src();
         // on source change or first startup reset webkitneedkey options.
 
