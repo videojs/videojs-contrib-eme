@@ -71,7 +71,7 @@ export const getSupportedConfigurations = (keySystem, keySystemOptions) => {
   return [supportedConfiguration];
 };
 
-export const getSupportedKeySystem = (keySystems) => {
+export const getSupportedKeySystem = (keySystems, emeError) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
 
@@ -82,10 +82,14 @@ export const getSupportedKeySystem = (keySystems) => {
 
     if (!promise) {
       promise =
-        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations).catch((error) => {
+          emeError(error, videojs.Error.EMEFailedToRequestMediaKeySystemAccess);
+        });
     } else {
-      promise = promise.catch((e) =>
-        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations));
+      promise = promise.catch(() => {
+        // TODO: Not sure if we want to call emeError here or not.
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
+      });
     }
   });
 
@@ -101,84 +105,97 @@ export const makeNewRequest = (player, requestOptions) => {
     getLicense,
     removeSession,
     eventBus,
-    contentId
+    contentId,
+    emeError
   } = requestOptions;
 
-  const keySession = mediaKeys.createSession();
+  try {
+    const keySession = mediaKeys.createSession();
 
-  eventBus.trigger('keysessioncreated');
+    eventBus.trigger('keysessioncreated');
 
-  player.on('dispose', () => {
-    keySession.close();
-  });
-
-  return new Promise((resolve, reject) => {
-    keySession.addEventListener('message', (event) => {
-      // all other types will be handled by keystatuseschange
-      if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
-        return;
-      }
-
-      getLicense(options, event.message, contentId)
-        .then((license) => {
-          resolve(keySession.update(license));
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    }, false);
-
-    keySession.addEventListener('keystatuseschange', (event) => {
-      let expired = false;
-
-      // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
-      keySession.keyStatuses.forEach((status, keyId) => {
-        // Trigger an event so that outside listeners can take action if appropriate.
-        // For instance, the `output-restricted` status should result in an
-        // error being thrown.
-        eventBus.trigger({
-          keyId,
-          status,
-          target: keySession,
-          type: 'keystatuschange'
-        });
-        switch (status) {
-        case 'expired':
-          // If one key is expired in a session, all keys are expired. From
-          // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-expired, "All other
-          // keys in the session must have this status."
-          expired = true;
-          break;
-        case 'internal-error':
-          const message =
-            'Key status reported as "internal-error." Leaving the session open since we ' +
-            'don\'t have enough details to know if this error is fatal.';
-
-          // "This value is not actionable by the application."
-          // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-internal-error
-          videojs.log.warn(message, event);
-          break;
-        }
+    player.on('dispose', () => {
+      keySession.close().catch((error) => {
+        emeError(error, videojs.Error.EMEFailedToCloseSession);
       });
-
-      if (expired) {
-        // Close session and remove it from the session list to ensure that a new
-        // session can be created.
-        //
-        // TODO convert to videojs.log.debug and add back in
-        // https://github.com/videojs/video.js/pull/4780
-        // videojs.log.debug('Session expired, closing the session.');
-        keySession.close().then(() => {
-          removeSession(initData);
-          makeNewRequest(player, requestOptions);
-        });
-      }
-    }, false);
-
-    keySession.generateRequest(initDataType, initData).catch(() => {
-      reject('Unable to create or initialize key session');
     });
-  });
+
+    return new Promise((resolve, reject) => {
+      keySession.addEventListener('message', (event) => {
+        // all other types will be handled by keystatuseschange
+        if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
+          return;
+        }
+
+        getLicense(options, event.message, contentId)
+          .then((license) => {
+            resolve(keySession.update(license).catch((error) => {
+              emeError(error, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys);
+            }));
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      }, false);
+
+      keySession.addEventListener('keystatuseschange', (event) => {
+        let expired = false;
+
+        // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
+        keySession.keyStatuses.forEach((status, keyId) => {
+          // Trigger an event so that outside listeners can take action if appropriate.
+          // For instance, the `output-restricted` status should result in an
+          // error being thrown.
+          eventBus.trigger({
+            keyId,
+            status,
+            target: keySession,
+            type: 'keystatuschange'
+          });
+          switch (status) {
+          case 'expired':
+            // If one key is expired in a session, all keys are expired. From
+            // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-expired, "All other
+            // keys in the session must have this status."
+            expired = true;
+            break;
+          case 'internal-error':
+            const message =
+              'Key status reported as "internal-error." Leaving the session open since we ' +
+              'don\'t have enough details to know if this error is fatal.';
+
+            // "This value is not actionable by the application."
+            // https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus-internal-error
+            videojs.log.warn(message, event);
+            break;
+          }
+        });
+
+        if (expired) {
+          // Close session and remove it from the session list to ensure that a new
+          // session can be created.
+          //
+          // TODO convert to videojs.log.debug and add back in
+          // https://github.com/videojs/video.js/pull/4780
+          // videojs.log.debug('Session expired, closing the session.');
+          keySession.close().then(() => {
+            removeSession(initData);
+            makeNewRequest(player, requestOptions);
+          }).catch((error) => {
+            emeError(error, videojs.Error.EMEFailedToCloseSession);
+          });
+        }
+      }, false);
+
+      keySession.generateRequest(initDataType, initData).catch((error) => {
+        emeError(error, videojs.Error.EMEFailedToGenerateLicenseRequest);
+        reject('Unable to create or initialize key session');
+      });
+    });
+
+  } catch (error) {
+    emeError(error, videojs.Error.EMEFailedToCreateMediaKeySession);
+  }
 };
 
 /*
@@ -217,7 +234,8 @@ export const addSession = ({
   getLicense,
   contentId,
   removeSession,
-  eventBus
+  eventBus,
+  emeError
 }) => {
   const sessionData = {
     initDataType,
@@ -226,7 +244,8 @@ export const addSession = ({
     getLicense,
     removeSession,
     eventBus,
-    contentId
+    contentId,
+    emeError
   };
 
   if (video.mediaKeysObject) {
@@ -262,7 +281,8 @@ export const addPendingSessions = ({
   player,
   video,
   certificate,
-  createdMediaKeys
+  createdMediaKeys,
+  emeError
 }) => {
   // save media keys on the video element to act as a reference for other functions so
   // that they don't recreate the keys
@@ -270,7 +290,9 @@ export const addPendingSessions = ({
   const promises = [];
 
   if (certificate) {
-    promises.push(createdMediaKeys.setServerCertificate(certificate));
+    promises.push(createdMediaKeys.setServerCertificate(certificate).catch((error) => {
+      emeError(error, videojs.Error.EMEFailedToSetServerCertificate);
+    }));
   }
 
   for (let i = 0; i < video.pendingSessionData.length; i++) {
@@ -284,13 +306,17 @@ export const addPendingSessions = ({
       getLicense: data.getLicense,
       removeSession: data.removeSession,
       eventBus: data.eventBus,
-      contentId: data.contentId
+      contentId: data.contentId,
+      emeError: data.emeError
     }));
   }
 
   video.pendingSessionData = [];
 
-  promises.push(video.setMediaKeys(createdMediaKeys));
+  promises.push(video.setMediaKeys(createdMediaKeys).catch((error) => {
+    // EMEFailedToAttachMediaKeysToVideoElement
+    emeError(error, videojs.Error.EMEFailedToAttachMediaKeysToVideoElement);
+  }));
 
   return Promise.all(promises);
 };
@@ -388,7 +414,8 @@ export const standard5July2016 = ({
   keySystemAccess,
   options,
   removeSession,
-  eventBus
+  eventBus,
+  emeError
 }) => {
   let keySystemPromise = Promise.resolve();
   const keySystem = keySystemAccess.keySystem;
@@ -445,6 +472,8 @@ export const standard5July2016 = ({
         createdMediaKeys
       });
     }).catch((err) => {
+      emeError(err, videojs.Error.EMEFailedToCreateMediaKeys);
+      // EMEFailedToCreateMediaKeys
       // if we have a specific error message, use it, otherwise show a more
       // generic one
       if (err) {
@@ -468,7 +497,8 @@ export const standard5July2016 = ({
       getLicense,
       contentId,
       removeSession,
-      eventBus
+      eventBus,
+      emeError
     });
   });
 };

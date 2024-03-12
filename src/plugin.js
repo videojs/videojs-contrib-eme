@@ -50,7 +50,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (player, event, options, sessions, eventBus) => {
+export const handleEncryptedEvent = (player, event, options, sessions, eventBus, emeError) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -58,7 +58,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
 
   let initData = event.initData;
 
-  return getSupportedKeySystem(options.keySystems).then((keySystemAccess) => {
+  return getSupportedKeySystem(options.keySystems, emeError).then((keySystemAccess) => {
     const keySystem = keySystemAccess.keySystem;
 
     // Use existing init data from options if provided
@@ -90,7 +90,8 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
       keySystemAccess,
       options,
       removeSession: removeSession.bind(null, sessions),
-      eventBus
+      eventBus,
+      emeError
     });
   });
 };
@@ -245,7 +246,7 @@ const onPlayerReady = (player, emeError) => {
     player.tech_.el_.addEventListener('encrypted', (event) => {
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_, emeError)
         .catch((error) => {
           emeError(error, videojs.Error.EMEEncryptedError);
         });
@@ -329,7 +330,7 @@ const eme = function(options = {}) {
       setupSessions(player);
 
       if (window.MediaKeys) {
-        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_, emeError)
           .then(() => callback())
           .catch((error) => {
             callback(error);
