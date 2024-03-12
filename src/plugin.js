@@ -93,6 +93,8 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
       eventBus,
       emeError
     });
+  }).catch((error) => {
+    emeError(error, videojs.Error.EMEFailedToRequestMediaKeySystemAccess);
   });
 };
 

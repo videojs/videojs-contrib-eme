@@ -71,7 +71,7 @@ export const getSupportedConfigurations = (keySystem, keySystemOptions) => {
   return [supportedConfiguration];
 };
 
-export const getSupportedKeySystem = (keySystems, emeError) => {
+export const getSupportedKeySystem = (keySystems) => {
   // As this happens after the src is set on the video, we rely only on the set src (we
   // do not change src based on capabilities of the browser in this plugin).
 
@@ -82,12 +82,9 @@ export const getSupportedKeySystem = (keySystems, emeError) => {
 
     if (!promise) {
       promise =
-        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations).catch((error) => {
-          emeError(error, videojs.Error.EMEFailedToRequestMediaKeySystemAccess);
-        });
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
     } else {
       promise = promise.catch(() => {
-        // TODO: Not sure if we want to call emeError here or not.
         window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
       });
     }
