@@ -84,9 +84,8 @@ export const getSupportedKeySystem = (keySystems) => {
       promise =
         window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
     } else {
-      promise = promise.catch((e) => {
-        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
-      });
+      promise = promise.catch((e) =>
+        window.navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations));
     }
   });
 
