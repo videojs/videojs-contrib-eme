@@ -1,3 +1,10 @@
+<a name="5.1.2"></a>
+## [5.1.2](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.1...v5.1.2) (2024-03-12)
+
+### Bug Fixes
+
+* getOptions after encrypted event (#209) ([6b0b6dd](https://github.com/videojs/videojs-contrib-eme/commit/6b0b6dd)), closes [#209](https://github.com/videojs/videojs-contrib-eme/issues/209)
+
 <a name="5.1.1"></a>
 ## [5.1.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.0...v5.1.1) (2024-02-28)
 
