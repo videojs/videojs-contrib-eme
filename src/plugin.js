@@ -55,6 +55,13 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
     // return silently since it may be handled by a different system
     return Promise.resolve();
   }
+  // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
+  // If we are using this keysystem we want to use WebkitMediaKeys.
+  // This can be initialized manually with initLegacyFairplay().
+  if (options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM]) {
+    videojs.log.debug('eme', `Ignoring \'encrypted\' event, using legacy fairplay keySystem ${LEGACY_FAIRPLAY_KEY_SYSTEM}`);
+    return Promise.resolve();
+  }
 
   let initData = event.initData;
 
@@ -232,16 +239,6 @@ const onPlayerReady = (player, emeError) => {
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
-      const playerOptions = getOptions(player);
-      // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
-      // If we are using this keysystem we want to use WebkitMediaKeys.
-      // This can be initialized manually with initLegacyFairplay().
-      const isLegacyFairplay = playerOptions.keySystems && playerOptions.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM];
-
-      if (isLegacyFairplay) {
-        videojs.log.debug('eme', `Ignoring \'encrypted\' event, using legacy fairplay keySystem ${LEGACY_FAIRPLAY_KEY_SYSTEM}`);
-        return;
-      }
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
       handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
