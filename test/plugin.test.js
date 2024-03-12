@@ -430,6 +430,21 @@ QUnit.test('handleEncryptedEvent checks for required options', function(assert) 
   });
 });
 
+QUnit.test('handleEncryptedEvent checks for legacy fairplay', function(assert) {
+  const done = assert.async();
+  const sessions = [];
+  const options = {
+    keySystems: {
+      'com.apple.fps.1_0': {url: 'some-url'}
+    }
+  };
+
+  handleEncryptedEvent(this.player, this.event1, options, sessions).then(() => {
+    assert.equal(sessions.length, 0, 'did not create a session when no options');
+    done();
+  });
+});
+
 QUnit.test('handleEncryptedEvent checks for required init data', function(assert) {
   const done = assert.async();
   const sessions = [];
