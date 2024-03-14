@@ -50,6 +50,9 @@
   ],
   "dependencies": {
     "global": "^4.3.2",
+    "video.js": "^6 || ^7 || ^8"
+  },
+  "peerDependencies": {
     "video.js": "^8.11.8"
   },
   "devDependencies": {
