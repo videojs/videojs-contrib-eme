@@ -828,7 +828,7 @@ QUnit.test('emeError properly handles various parameter types', function(assert)
   let errorObj;
   const player = {
     tech_: {
-      el_: videojs.EventTarget()
+      el_: new videojs.EventTarget()
     },
     error: (obj) => {
       errorObj = obj;

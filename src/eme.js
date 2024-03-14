@@ -474,7 +474,8 @@ export const standard5July2016 = ({
         player,
         video,
         certificate,
-        createdMediaKeys
+        createdMediaKeys,
+        emeError
       });
     }).catch((err) => {
       emeError(err, videojs.Error.EMEFailedToCreateMediaKeys);
