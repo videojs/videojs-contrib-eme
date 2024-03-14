@@ -314,6 +314,12 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -341,7 +347,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
         'com.widevine.alpha': 'some-url'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
@@ -353,12 +359,11 @@ QUnit.test('accepts a license URL as an option', function(assert) {
     );
 
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -382,6 +387,12 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
   const keySystemAccess = {
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
@@ -410,7 +421,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
         }
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
@@ -422,12 +433,11 @@ QUnit.test('accepts a license URL as property', function(assert) {
     );
 
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -447,7 +457,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
-  assert.expect(33);
+  assert.expect(34);
 
   let errors = 0;
   const done = assert.async();
@@ -459,7 +469,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     keySessionGenerateRequest: 0,
     keySessionUpdate: 0,
     createMediaKeys: 0,
-    licenseRequestAttempts: 0
+    licenseRequestAttempts: 0,
+    keysessionUpdatedEvent: 0
   };
 
   const getCertificate = (emeOptions, callback) => {
@@ -492,6 +503,9 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     trigger: (name) => {
       if (name === 'licenserequestattempted') {
         callCounts.licenseRequestAttempts++;
+      }
+      if (name === 'keysessionupdated') {
+        callCounts.keysessionUpdatedEvent++;
       }
     }
   };
@@ -596,6 +610,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         callCounts.licenseRequestAttempts, 1,
         'license request event triggered'
       );
+      assert.equal(callCounts.keysessionUpdatedEvent, 1, 'keysessionupdated event fired once');
       assert.equal(errors, 0, 'no errors occurred');
     });
   });
@@ -1061,6 +1076,12 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1091,17 +1112,16 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
         'Some-Header': 'some-header-value'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1126,6 +1146,12 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1161,17 +1187,16 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
         'Some-Header': 'lower-priority-header-value'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1231,13 +1256,19 @@ QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
 
 QUnit.test('keySession is closed when player is disposed', function(assert) {
   const mockSession = getMockSession();
+  const done = assert.async();
 
   makeNewRequest(this.player, {
     mediaKeys: {
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: (eventName) => {}
+      trigger: (eventName) => {
+        if (eventName === 'keysessionclosed') {
+          assert.ok(true, 'got a keysessionclosed event');
+          done();
+        }
+      }
     }
   });
 

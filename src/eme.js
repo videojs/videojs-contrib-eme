@@ -178,10 +178,7 @@ export const makeNewRequest = (player, requestOptions) => {
         if (expired) {
           // Close session and remove it from the session list to ensure that a new
           // session can be created.
-          //
-          // TODO convert to videojs.log.debug and add back in
-          // https://github.com/videojs/video.js/pull/4780
-          // videojs.log.debug('Session expired, closing the session.');
+          videojs.log.debug('Session expired, closing the session.');
           keySession.close().then(() => {
             eventBus.trigger('keysessionclosed');
             removeSession(initData);
