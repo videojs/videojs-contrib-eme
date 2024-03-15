@@ -468,57 +468,6 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
   });
 });
 
-QUnit.test.skip('handleEncryptedEvent calls emeError when getSupportedKeySystem fails', function(assert) {
-  const eventBus = getMockEventBus();
-  const sessions = [];
-  const emeErrors = [];
-  const expectedMessage = 'video.setMediaKeys is not a function';
-  const expectedErrors = [
-    {
-      error: expectedMessage,
-      errorType: videojs.Error.EMEFailedToCreateMediaKeys
-    },
-    {
-      error: expectedMessage,
-      errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess
-    }
-  ];
-  let index = 0;
-  const emeError = (error, errorType) => {
-    const promise = new Promise((_, resolve) => {
-      assert.equal(error.message, expectedErrors[index].error, 'expected error');
-      assert.equal(errorType, expectedErrors[index].errorType, 'expected errorType');
-      resolve();
-    });
-
-    emeErrors.push(promise);
-    index++;
-  };
-
-  handleEncryptedEvent(this.player, this.event1, this.options, sessions, eventBus, emeError);
-  return Promise.all(emeErrors);
-});
-
-// QUnit.test('handleEncryptedEvent', function(assert) {
-//   const mockEventBus = getMockEventBus();
-//   const done = assert.async();
-//   const sessions = [];
-//   const emeError = (error, errorType) => {
-//     console.log(error, errorType);
-//   };
-
-//   // testing the rejection path because this isn't a real session
-//   handleEncryptedEvent(this.player, this.event1, this.options, sessions, mockEventBus, emeError).then((_, reject) => {
-//     reject('foo');
-//   }).catch((error) => {
-//     console.log(error);
-//     assert.equal(sessions.length, 2, 'created a new session when new init data');
-//     assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
-//     assert.equal(sessions[1].initData, this.initData2, 'added new session init data');
-//     done();
-//   });
-// });
-
 QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(assert) {
   const done = assert.async();
   const sessions = [];
