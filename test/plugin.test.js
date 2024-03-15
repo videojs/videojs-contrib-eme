@@ -468,6 +468,21 @@ QUnit.test('handleEncryptedEvent creates session', function(assert) {
   });
 });
 
+QUnit.test('handleEncryptedEvent creates new session for new init data', function(assert) {
+  const done = assert.async();
+  const sessions = [];
+
+  // testing the rejection path because this isn't a real session
+  handleEncryptedEvent(this.player, this.event1, this.options, sessions).catch(() => {
+    return handleEncryptedEvent(this.player, this.event2, this.options, sessions).catch(() => {
+      assert.equal(sessions.length, 2, 'created a new session when new init data');
+      assert.equal(sessions[0].initData, this.initData1, 'retained session init data');
+      assert.equal(sessions[1].initData, this.initData2, 'added new session init data');
+      done();
+    });
+  });
+});
+
 QUnit.test('handleEncryptedEvent doesn\'t create duplicate sessions', function(assert) {
   const done = assert.async();
   const sessions = [];
