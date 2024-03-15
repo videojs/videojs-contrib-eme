@@ -823,7 +823,24 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
   };
   const done = assert.async(3);
   const callbacks = [];
+  const expectedErrors = [
+    {
+      error: 'setServerCertificate failed',
+      errorType: videojs.Error.EMEFailedToSetServerCertificate
+    },
+    {
+      error: 'setMediaKeys failed',
+      errorType: videojs.Error.EMEFailedToAttachMediaKeysToVideoElement
+    },
+    {
+      error: 'generateRequest failed',
+      errorType: videojs.Error.EMEFailedToGenerateLicenseRequest
+    }
+  ];
   const test = (errMessage, testDescription) => {
+    let expectedErrorsLength = 0;
+    const emeErrors = [];
+
     video.mediaKeysObject = undefined;
     standard5July2016({
       player: this.player,
@@ -831,9 +848,18 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
       keySystemAccess,
       options,
       eventBus: getMockEventBus(),
-      emeError: () => {}
+      emeError: (error, errorType) => {
+        expectedErrorsLength++;
+        emeErrors.push({error, errorType });
+      }
     }).catch((err) => {
       assert.equal(err, errMessage, testDescription);
+      assert.equal(emeErrors.length, expectedErrorsLength, 'emeError called expected number of times');
+      for (let i = 0; i < expectedErrors.length; i++) {
+        assert.equal(emeErrors[i].error, expectedErrors[i].error, 'expected eme error');
+        assert.equal(emeErrors[i].errorType, expectedErrors[i].errorType, 'expected eme errorType');
+      }
+      expectedErrors.shift();
       done();
       if (callbacks[0]) {
         callbacks.shift()();
@@ -851,7 +877,6 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
   });
 
   test('Unable to create or initialize key session', 'first promise fails');
-
 });
 
 QUnit.test('getLicense not called for messageType that isnt license-request or license-renewal', function(assert) {
@@ -1277,6 +1302,76 @@ QUnit.test('keySession is closed when player is disposed', function(assert) {
   this.player.dispose();
 
   assert.equal(mockSession.numCloses, 1, 'close() called once after dipose');
+});
+
+QUnit.test('emeError is called when keySession.close fails', function(assert) {
+  const mockSession = getMockSession();
+  const done = assert.async();
+  const expectedErrorMessage = 'Failed to close session';
+
+  mockSession.close = () => {
+    return Promise.reject(expectedErrorMessage);
+  };
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, errorType) => {
+      assert.equal(error, expectedErrorMessage, 'expected eme error message');
+      assert.equal(errorType, videojs.Error.EMEFailedToCloseSession, 'expected eme error type');
+      done();
+    }
+  });
+  this.player.dispose();
+});
+
+QUnit.test('emeError called when session.generateRequest fails', function(assert) {
+  const mockSession = getMockSession();
+  const done = assert.async();
+  const expectedErrorMessage = 'generate request failed';
+
+  mockSession.generateRequest = () => {
+    return Promise.reject(expectedErrorMessage);
+  };
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, errorType) => {
+      assert.equal(error, expectedErrorMessage, 'expected eme error message');
+      assert.equal(errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'expected eme error type');
+    }
+  }).catch((error) => {
+    assert.equal(error, 'Unable to create or initialize key session', 'expected message');
+    done();
+  });
+});
+
+QUnit.test('emeError called when mediaKeys.createSession fails', function(assert) {
+  const done = assert.async();
+  const expectedError = new Error('session could not be created');
+
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => {
+        throw expectedError;
+      }
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, errorType) => {
+      assert.equal(error, expectedError, 'expected eme error message');
+      assert.equal(errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'expected eme error type');
+      done();
+    }
+  });
 });
 
 QUnit.module('session management', {

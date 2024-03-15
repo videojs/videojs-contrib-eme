@@ -65,7 +65,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
 
   let initData = event.initData;
 
-  return getSupportedKeySystem(options.keySystems, emeError).then((keySystemAccess) => {
+  return getSupportedKeySystem(options.keySystems).then((keySystemAccess) => {
     const keySystem = keySystemAccess.keySystem;
 
     // Use existing init data from options if provided
