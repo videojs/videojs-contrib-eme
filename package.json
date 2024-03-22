@@ -49,8 +49,10 @@
     "test/"
   ],
   "dependencies": {
-    "global": "^4.3.2",
-    "video.js": "^6 || ^7 || ^8"
+    "global": "^4.3.2"
+  },
+  "peerDependencies": {
+    "video.js": "^8.11.8"
   },
   "devDependencies": {
     "conventional-changelog-cli": "^2.0.12",

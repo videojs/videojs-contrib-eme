@@ -50,7 +50,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (player, event, options, sessions, eventBus) => {
+export const handleEncryptedEvent = (player, event, options, sessions, eventBus, emeError) => {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -97,12 +97,20 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus)
       keySystemAccess,
       options,
       removeSession: removeSession.bind(null, sessions),
-      eventBus
+      eventBus,
+      emeError
     });
+  }).catch((error) => {
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
+      config: options.keySystems
+    };
+
+    emeError(error, metadata);
   });
 };
 
-export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
+export const handleWebKitNeedKeyEvent = (event, options, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -116,11 +124,12 @@ export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
     video: event.target,
     initData: event.initData,
     options,
-    eventBus
+    eventBus,
+    emeError
   });
 };
 
-export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
+export const handleMsNeedKeyEvent = (event, options, sessions, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[PLAYREADY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
@@ -160,7 +169,8 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
     video: event.target,
     initData,
     options,
-    eventBus
+    eventBus,
+    emeError
   });
 };
 
@@ -194,7 +204,7 @@ export const setupSessions = (player) => {
  * @return   {Function}
  */
 export const emeErrorHandler = (player) => {
-  return (objOrErr) => {
+  return (objOrErr, metadata) => {
     const error = {
       // MEDIA_ERR_ENCRYPTED is code 5
       code: 5
@@ -211,6 +221,15 @@ export const emeErrorHandler = (player) => {
            objOrErr.cause.byteLength)) {
         error.cause = objOrErr.cause;
       }
+      if (objOrErr.keySystem) {
+        error.keySystem = objOrErr.keySystem;
+      }
+      // pass along original error object.
+      error.originalError = objOrErr;
+    }
+
+    if (metadata) {
+      error.metadata = metadata;
     }
 
     player.error(error);
@@ -241,8 +260,7 @@ const onPlayerReady = (player, emeError) => {
     player.tech_.el_.addEventListener('encrypted', (event) => {
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_)
-        .catch(emeError);
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_, emeError);
     });
   } else if (window.WebKitMediaKeys) {
     player.eme.initLegacyFairplay();
@@ -256,15 +274,19 @@ const onPlayerReady = (player, emeError) => {
       videojs.log.debug('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
-        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_, emeError);
       } catch (error) {
         emeError(error);
       }
     });
-    player.tech_.on('mskeyerror', emeError);
+    const msKeyErrorCallback = (error) => {
+      emeError(error);
+    };
+
+    player.tech_.on('mskeyerror', msKeyErrorCallback);
     // TODO: refactor this plugin so it can use a plugin dispose
     player.on('dispose', () => {
-      player.tech_.off('mskeyerror', emeError);
+      player.tech_.off('mskeyerror', msKeyErrorCallback);
     });
   }
 };
@@ -319,7 +341,7 @@ const eme = function(options = {}) {
       setupSessions(player);
 
       if (window.MediaKeys) {
-        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_)
+        handleEncryptedEvent(player, mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_, emeError)
           .then(() => callback())
           .catch((error) => {
             callback(error);
@@ -344,7 +366,7 @@ const eme = function(options = {}) {
         player.tech_.one('mskeyadded', msKeyHandler);
         player.tech_.one('mskeyerror', msKeyHandler);
         try {
-          handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
+          handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_, emeError);
         } catch (error) {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
@@ -362,7 +384,9 @@ const eme = function(options = {}) {
         // element between sources
         setupSessions(player);
         handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
-          .catch(emeError);
+          .catch((error) => {
+            emeError(error);
+          });
       };
 
       // Support Safari EME with FairPlay

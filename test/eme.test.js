@@ -28,7 +28,10 @@ const getMockSession = () => {
       mockSession.numCloses++;
       // fake a promise for easy testing
       return {
-        then: (nextCall) => nextCall()
+        then: (nextCall) => {
+          nextCall();
+          return Promise.resolve();
+        }
       };
     },
     numCloses: 0,
@@ -311,6 +314,12 @@ QUnit.test('accepts a license URL as an option', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -338,7 +347,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
         'com.widevine.alpha': 'some-url'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
@@ -350,12 +359,11 @@ QUnit.test('accepts a license URL as an option', function(assert) {
     );
 
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -379,6 +387,12 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
   const keySystemAccess = {
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
@@ -407,7 +421,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
         }
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
@@ -419,12 +433,11 @@ QUnit.test('accepts a license URL as property', function(assert) {
     );
 
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -444,7 +457,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
 });
 
 QUnit.test('5 July 2016 lifecycle', function(assert) {
-  assert.expect(33);
+  assert.expect(34);
 
   let errors = 0;
   const done = assert.async();
@@ -456,7 +469,8 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     keySessionGenerateRequest: 0,
     keySessionUpdate: 0,
     createMediaKeys: 0,
-    licenseRequestAttempts: 0
+    licenseRequestAttempts: 0,
+    keysessionUpdatedEvent: 0
   };
 
   const getCertificate = (emeOptions, callback) => {
@@ -472,6 +486,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   const video = {
     setMediaKeys: (mediaKeys) => {
       setMediaKeys = mediaKeys;
+      return Promise.resolve(mediaKeys);
     }
   };
 
@@ -488,6 +503,9 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
     trigger: (name) => {
       if (name === 'licenserequestattempted') {
         callCounts.licenseRequestAttempts++;
+      }
+      if (name === 'keysessionupdated') {
+        callCounts.keysessionUpdatedEvent++;
       }
     }
   };
@@ -592,6 +610,7 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
         callCounts.licenseRequestAttempts, 1,
         'license request event triggered'
       );
+      assert.equal(callCounts.keysessionUpdatedEvent, 1, 'keysessionupdated event fired once');
       assert.equal(errors, 0, 'no errors occurred');
     });
   });
@@ -678,15 +697,22 @@ QUnit.test('rejects promise when getCertificate throws error', function(assert) 
     keySystem: 'com.widevine.alpha'
   };
   const done = assert.async(1);
+  const expectedError = 'error fetching certificate';
+  const emeError = (error, metadata) => {
+    assert.equal(error, expectedError, 'emeError called with expected message');
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected type');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected type');
+  };
 
   standard5July2016({
     player: this.player,
     video: {},
     keySystemAccess,
     options,
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch((err) => {
-    assert.equal(err, 'error fetching certificate', 'correct error message');
+    assert.equal(err, expectedError, 'correct error message');
     done();
   });
 });
@@ -704,13 +730,18 @@ QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
     }
   };
   const done = assert.async(1);
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected errorType');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected keySystem');
+  };
 
   standard5July2016({
     player: this.player,
     video: {},
     keySystemAccess,
     options,
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch((err) => {
     assert.equal(
       err, 'Failed to create and initialize a MediaKeys object',
@@ -734,15 +765,22 @@ QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
     }
   };
   const done = assert.async(1);
+  const expectedError = 'failed creating mediaKeys';
+  const emeError = (error, metadata) => {
+    assert.equal(error, expectedError, 'emeError called with expected error');
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected errorType');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected keySystem');
+  };
 
   standard5July2016({
     player: this.player,
     video: {},
     keySystemAccess,
     options,
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch((err) => {
-    assert.equal(err, 'failed creating mediaKeys', 'uses specific error when given');
+    assert.equal(err, expectedError, 'uses specific error when given');
     done();
   });
 
@@ -788,16 +826,43 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
   };
   const done = assert.async(3);
   const callbacks = [];
+  const expectedErrors = [
+    {
+      error: 'setServerCertificate failed',
+      errorType: videojs.Error.EMEFailedToSetServerCertificate
+    },
+    {
+      error: 'setMediaKeys failed',
+      errorType: videojs.Error.EMEFailedToAttachMediaKeysToVideoElement
+    },
+    {
+      error: 'generateRequest failed',
+      errorType: videojs.Error.EMEFailedToGenerateLicenseRequest
+    }
+  ];
   const test = (errMessage, testDescription) => {
+    let expectedErrorsLength = 0;
+    const emeErrors = [];
+
     video.mediaKeysObject = undefined;
     standard5July2016({
       player: this.player,
       video,
       keySystemAccess,
       options,
-      eventBus: getMockEventBus()
+      eventBus: getMockEventBus(),
+      emeError: (error, metadata) => {
+        expectedErrorsLength++;
+        emeErrors.push({error, errorType: metadata.errorType });
+      }
     }).catch((err) => {
       assert.equal(err, errMessage, testDescription);
+      assert.equal(emeErrors.length, expectedErrorsLength, 'emeError called expected number of times');
+      for (let i = 0; i < expectedErrors.length; i++) {
+        assert.equal(emeErrors[i].error, expectedErrors[i].error, 'expected eme error');
+        assert.equal(emeErrors[i].errorType, expectedErrors[i].errorType, 'expected eme errorType');
+      }
+      expectedErrors.shift();
       done();
       if (callbacks[0]) {
         callbacks.shift()();
@@ -807,15 +872,14 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
 
   callbacks.push(() => {
     rejectSetServerCertificate = false;
-    test('setMediaKeys failed', 'second promise fails');
+    test('Unable to create or initialize key session', 'second promise fails');
   });
   callbacks.push(() => {
     rejectSetMediaKeys = false;
     test('Unable to create or initialize key session', 'third promise fails');
   });
 
-  test('setServerCertificate failed', 'first promise fails');
-
+  test('Unable to create or initialize key session', 'first promise fails');
 });
 
 QUnit.test('getLicense not called for messageType that isnt license-request or license-renewal', function(assert) {
@@ -1018,16 +1082,20 @@ QUnit.test('keySession.update promise rejection', function(assert) {
     setMediaKeys: () => Promise.resolve()
   };
   const done = assert.async(1);
+  const emeError = (error, metadata) => {
+    assert.equal(error, 'keySession update failed', 'correct error message');
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys, 'errorType is correct');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'keySystem is correct');
+    done();
+  };
 
   standard5July2016({
     player: this.player,
     video,
     keySystemAccess,
     options,
-    eventBus: getMockEventBus()
-  }).catch((err) => {
-    assert.equal(err, 'keySession update failed', 'correct error message');
-    done();
+    eventBus: getMockEventBus(),
+    emeError
   });
 
 });
@@ -1037,6 +1105,12 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1067,17 +1141,16 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
         'Some-Header': 'some-header-value'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1102,6 +1175,12 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   const mockSession = getMockSession();
+  const mockEventBus = getMockEventBus();
+  const mockMessageEvent = {
+    type: 'message',
+    message: 'the-message',
+    messageType: 'license-request'
+  };
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1137,17 +1216,16 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
         'Some-Header': 'lower-priority-header-value'
       }
     },
-    eventBus: getMockEventBus()
+    eventBus: mockEventBus
   }).catch((e) => {});
 
   setTimeout(() => {
     // Simulate 'message' event
-    mockSession.listeners[0].listener({
-      type: 'message',
-      message: 'the-message',
-      messageType: 'license-request'
-    });
+    mockSession.listeners[0].listener(mockMessageEvent);
 
+    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1207,13 +1285,19 @@ QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
 
 QUnit.test('keySession is closed when player is disposed', function(assert) {
   const mockSession = getMockSession();
+  const done = assert.async();
 
   makeNewRequest(this.player, {
     mediaKeys: {
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: (eventName) => {}
+      trigger: (eventName) => {
+        if (eventName === 'keysessionclosed') {
+          assert.ok(true, 'got a keysessionclosed event');
+          done();
+        }
+      }
     }
   });
 
@@ -1222,6 +1306,76 @@ QUnit.test('keySession is closed when player is disposed', function(assert) {
   this.player.dispose();
 
   assert.equal(mockSession.numCloses, 1, 'close() called once after dipose');
+});
+
+QUnit.test('emeError is called when keySession.close fails', function(assert) {
+  const mockSession = getMockSession();
+  const done = assert.async();
+  const expectedErrorMessage = 'Failed to close session';
+
+  mockSession.close = () => {
+    return Promise.reject(expectedErrorMessage);
+  };
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, metadata) => {
+      assert.equal(error, expectedErrorMessage, 'expected eme error message');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToCloseSession, 'expected eme error type');
+      done();
+    }
+  });
+  this.player.dispose();
+});
+
+QUnit.test('emeError called when session.generateRequest fails', function(assert) {
+  const mockSession = getMockSession();
+  const done = assert.async();
+  const expectedErrorMessage = 'generate request failed';
+
+  mockSession.generateRequest = () => {
+    return Promise.reject(expectedErrorMessage);
+  };
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => mockSession
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, metadata) => {
+      assert.equal(error, expectedErrorMessage, 'expected eme error message');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'expected eme error type');
+    }
+  }).catch((error) => {
+    assert.equal(error, 'Unable to create or initialize key session', 'expected message');
+    done();
+  });
+});
+
+QUnit.test('emeError called when mediaKeys.createSession fails', function(assert) {
+  const done = assert.async();
+  const expectedError = new Error('session could not be created');
+
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => {
+        throw expectedError;
+      }
+    },
+    eventBus: {
+      trigger: () => {}
+    },
+    emeError: (error, metadata) => {
+      assert.equal(error, expectedError, 'expected eme error message');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'expected eme error type');
+      done();
+    }
+  });
 });
 
 QUnit.module('session management', {
@@ -1244,6 +1398,7 @@ QUnit.test('addSession saves options', function(assert) {
   const removeSession = () => '';
   const eventBus = { trigger: () => {} };
   const contentId = null;
+  const emeError = () => {};
 
   addSession({
     video,
@@ -1253,7 +1408,8 @@ QUnit.test('addSession saves options', function(assert) {
     options,
     getLicense,
     removeSession,
-    eventBus
+    eventBus,
+    emeError
   });
 
   assert.deepEqual(
@@ -1265,7 +1421,9 @@ QUnit.test('addSession saves options', function(assert) {
       getLicense,
       removeSession,
       eventBus,
-      contentId
+      contentId,
+      emeError,
+      keySystem: undefined
     }],
     'saved options into pendingSessionData array'
   );

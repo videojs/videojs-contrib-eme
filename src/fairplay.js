@@ -49,12 +49,18 @@ const concatInitDataIdAndCertificate = ({initData, id, cert}) => {
   return new Uint8Array(buffer, 0, buffer.byteLength);
 };
 
-const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus}) => {
+const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus, emeError}) => {
   return new Promise((resolve, reject) => {
     if (!video.webkitKeys) {
       try {
         video.webkitSetMediaKeys(new window.WebKitMediaKeys(LEGACY_FAIRPLAY_KEY_SYSTEM));
       } catch (error) {
+        const metadata = {
+          errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+          keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
+        };
+
+        emeError(error, metadata);
         reject('Could not create MediaKeys');
         return;
       }
@@ -68,6 +74,12 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         concatInitDataIdAndCertificate({id: contentId, initData, cert})
       );
     } catch (error) {
+      const metadata = {
+        errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+        keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
+      };
+
+      emeError(error, metadata);
       reject('Could not create key session');
       return;
     }
@@ -82,6 +94,12 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
           eventBus.trigger('licenserequestattempted');
         }
         if (err) {
+          const metadata = {
+            errortype: videojs.Error.EMEFailedToGenerateLicenseRequest,
+            keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
+          };
+
+          emeError(err, metadata);
           reject(err);
           return;
         }
@@ -97,7 +115,12 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
     // for testing purposes, adding webkitkeyerror must be the last item in this method
     keySession.addEventListener('webkitkeyerror', () => {
       const error = keySession.error;
+      const metadata = {
+        errorType: videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
+        keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
+      };
 
+      emeError(error, metadata);
       reject(`KeySession error: code ${error.code}, systemCode ${error.systemCode}`);
     });
   });
@@ -152,7 +175,7 @@ export const defaultGetLicense = (fairplayOptions) => {
   };
 };
 
-const fairplay = ({video, initData, options, eventBus}) => {
+const fairplay = ({video, initData, options, eventBus, emeError}) => {
   const fairplayOptions = options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM];
   const getCertificate = fairplayOptions.getCertificate ||
     defaultGetCertificate(fairplayOptions);
@@ -163,6 +186,12 @@ const fairplay = ({video, initData, options, eventBus}) => {
   return new Promise((resolve, reject) => {
     getCertificate(options, (err, cert) => {
       if (err) {
+        const metadata = {
+          errorType: videojs.Error.EMEFailedToSetServerCertificate,
+          keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
+        };
+
+        emeError(err, metadata);
         reject(err);
         return;
       }
@@ -177,7 +206,8 @@ const fairplay = ({video, initData, options, eventBus}) => {
       getLicense,
       options,
       contentId: getContentId(options, uint16ArrayToString(initData)),
-      eventBus
+      eventBus,
+      emeError
     });
   });
 };

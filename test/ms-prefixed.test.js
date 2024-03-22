@@ -6,6 +6,7 @@ import {
   challengeElement
 } from './playready-message';
 import {
+  PLAYREADY_KEY_SYSTEM,
   createSession,
   default as msPrefixed
 } from '../src/ms-prefixed';
@@ -61,12 +62,17 @@ QUnit.test('overwrites msKeys', function(assert) {
 });
 
 QUnit.test('error thrown when creating keys bubbles up', function(assert) {
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'errorType is expected value');
+  };
+
   window.MSMediaKeys = function() {
     throw new Error('error');
   };
 
   assert.throws(
-    () => msPrefixed({video: this.video}),
+    () => msPrefixed({video: this.video, emeError}),
     new Error('Unable to create media keys for PlayReady key system. Error: error'),
     'error is thrown with proper message'
   );
@@ -98,9 +104,13 @@ QUnit.test('throws error if session was not created', function(assert) {
       };
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'errorType is expected value');
+  };
 
   assert.throws(
-    () => msPrefixed({video}),
+    () => msPrefixed({video, emeError}),
     new Error('Could not create key session.'),
     'error is thrown with proper message'
   );
@@ -108,6 +118,10 @@ QUnit.test('throws error if session was not created', function(assert) {
 
 QUnit.test('throws error on keysession mskeyerror event', function(assert) {
   let errorMessage;
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   msPrefixed({
     video: this.video,
@@ -121,7 +135,8 @@ QUnit.test('throws error on keysession mskeyerror event', function(assert) {
       trigger: (event) => {
         errorMessage = typeof event === 'string' ? event : event.message;
       }
-    }
+    },
+    emeError
   });
 
   this.session.error = {
@@ -161,6 +176,10 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
       }
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToRequestMediaKeySystemAccess, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   msPrefixed({
     video: this.video,
@@ -170,7 +189,8 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
       trigger: (event) => {
         errorMessage = typeof event === 'string' ? event : event.message;
       }
-    }
+    },
+    emeError
   });
 
   assert.notOk(passedOptions, 'getKey not called');
@@ -214,6 +234,10 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   let errorMessage;
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -231,7 +255,8 @@ QUnit.test('makes request when nothing provided on key message', function(assert
           errorMessage = event.message;
         }
       }
-    }
+    },
+    emeError
   });
   this.session.trigger({
     type: 'mskeymessage',
@@ -344,6 +369,10 @@ QUnit.test('makes request with provided url string on key message', function(ass
   const origXhr = videojs.xhr;
   const xhrCalls = [];
   let errorMessage;
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -361,7 +390,8 @@ QUnit.test('makes request with provided url string on key message', function(ass
           errorMessage = event.message;
         }
       }
-    }
+    },
+    emeError
   });
   this.session.trigger({
     type: 'mskeymessage',
@@ -431,6 +461,10 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     licenseRequestAttempts: 0
   };
   let errorMessage;
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'errorType is expected value');
+    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   videojs.xhr = (config, callback) => xhrCalls.push({config, callback});
 
@@ -452,7 +486,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
           errorMessage = event.message;
         }
       }
-    }
+    },
+    emeError
   });
   this.session.trigger({
     type: 'mskeymessage',
