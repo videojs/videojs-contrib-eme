@@ -221,14 +221,15 @@ export const emeErrorHandler = (player) => {
            objOrErr.cause.byteLength)) {
         error.cause = objOrErr.cause;
       }
-      if (metadata) {
-        error.metadata = metadata;
-      }
       if (objOrErr.keySystem) {
         error.keySystem = objOrErr.keySystem;
       }
       // pass along original error object.
       error.originalError = objOrErr;
+    }
+
+    if (metadata) {
+      error.metadata = metadata;
     }
 
     player.error(error);
