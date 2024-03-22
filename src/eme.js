@@ -102,7 +102,8 @@ export const makeNewRequest = (player, requestOptions) => {
     removeSession,
     eventBus,
     contentId,
-    emeError
+    emeError,
+    keySystem
   } = requestOptions;
 
   try {
@@ -114,7 +115,12 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession.close().then(() => {
         eventBus.trigger('keysessionclosed');
       }).catch((error) => {
-        emeError(error, videojs.Error.EMEFailedToCloseSession);
+        const metadata = {
+          errorType: videojs.Error.EMEFailedToCloseSession,
+          keySystem
+        };
+
+        emeError(error, metadata);
       });
     });
 
@@ -134,7 +140,12 @@ export const makeNewRequest = (player, requestOptions) => {
             resolve(keySession.update(license).then(() => {
               eventBus.trigger('keysessionupdated');
             }).catch((error) => {
-              emeError(error, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys);
+              const metadata = {
+                errorType: videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
+                keySystem
+              };
+
+              emeError(error, metadata);
             }));
           })
           .catch((err) => {
@@ -184,19 +195,34 @@ export const makeNewRequest = (player, requestOptions) => {
             removeSession(initData);
             makeNewRequest(player, requestOptions);
           }).catch((error) => {
-            emeError(error, videojs.Error.EMEFailedToCloseSession);
+            const metadata = {
+              errorType: videojs.Error.EMEFailedToCloseSession,
+              keySystem
+            };
+
+            emeError(error, metadata);
           });
         }
       }, false);
 
       keySession.generateRequest(initDataType, initData).catch((error) => {
-        emeError(error, videojs.Error.EMEFailedToGenerateLicenseRequest);
+        const metadata = {
+          errorType: videojs.Error.EMEFailedToGenerateLicenseRequest,
+          keySystem
+        };
+
+        emeError(error, metadata);
         reject('Unable to create or initialize key session');
       });
     });
 
   } catch (error) {
-    emeError(error, videojs.Error.EMEFailedToCreateMediaKeySession);
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      keySystem
+    };
+
+    emeError(error, metadata);
   }
 };
 
@@ -247,7 +273,8 @@ export const addSession = ({
     removeSession,
     eventBus,
     contentId,
-    emeError
+    emeError,
+    keySystem: video.keySystem
   };
 
   if (video.mediaKeysObject) {
@@ -293,7 +320,12 @@ export const addPendingSessions = ({
 
   if (certificate) {
     promises.push(createdMediaKeys.setServerCertificate(certificate).catch((error) => {
-      emeError(error, videojs.Error.EMEFailedToSetServerCertificate);
+      const metadata = {
+        errorType: videojs.Error.EMEFailedToSetServerCertificate,
+        keySystem: video.keySystem
+      };
+
+      emeError(error, metadata);
     }));
   }
 
@@ -309,14 +341,20 @@ export const addPendingSessions = ({
       removeSession: data.removeSession,
       eventBus: data.eventBus,
       contentId: data.contentId,
-      emeError: data.emeError
+      emeError: data.emeError,
+      keySystem: video.keySystem
     }));
   }
 
   video.pendingSessionData = [];
 
   promises.push(video.setMediaKeys(createdMediaKeys).catch((error) => {
-    emeError(error, videojs.Error.EMEFailedToAttachMediaKeysToVideoElement);
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToAttachMediaKeysToVideoElement,
+      keySystem: video.keySystem
+    };
+
+    emeError(error, metadata);
   }));
 
   return Promise.all(promises);
@@ -475,7 +513,12 @@ export const standard5July2016 = ({
         emeError
       });
     }).catch((err) => {
-      emeError(err, videojs.Error.EMEFailedToCreateMediaKeys);
+      const metadata = {
+        errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+        keySystem
+      };
+
+      emeError(err, metadata);
       // if we have a specific error message, use it, otherwise show a more
       // generic one
       if (err) {

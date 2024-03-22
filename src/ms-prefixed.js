@@ -8,15 +8,22 @@
  */
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
+import videojs from 'video.js';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
-export const addKeyToSession = (options, session, event, eventBus) => {
+export const addKeyToSession = (options, session, event, eventBus, emeError) => {
   let playreadyOptions = options.keySystems[PLAYREADY_KEY_SYSTEM];
 
   if (typeof playreadyOptions.getKey === 'function') {
     playreadyOptions.getKey(options, event.destinationURL, event.message.buffer, (err, key) => {
       if (err) {
+        const metadata = {
+          errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
+          keySystem: PLAYREADY_KEY_SYSTEM
+        };
+
+        emeError(err, metadata);
         eventBus.trigger({
           message: 'Unable to get key: ' + err,
           target: session,
@@ -46,6 +53,12 @@ export const addKeyToSession = (options, session, event, eventBus) => {
     }
 
     if (err) {
+      const metadata = {
+        errorType: videojs.Error.EMEFailedToGenerateLicenseRequest,
+        keySystem: PLAYREADY_KEY_SYSTEM
+      };
+
+      emeError(err, metadata);
       eventBus.trigger({
         message: 'Unable to request key from url: ' + playreadyOptions.url,
         target: session,
@@ -64,12 +77,19 @@ export const addKeyToSession = (options, session, event, eventBus) => {
   }
 };
 
-export const createSession = (video, initData, options, eventBus) => {
+export const createSession = (video, initData, options, eventBus, emeError) => {
   // Note: invalid mime type passed here throws a NotSupportedError
   const session = video.msKeys.createSession('video/mp4', initData);
 
   if (!session) {
-    throw new Error('Could not create key session.');
+    const error = new Error('Could not create key session.');
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      keySystem: PLAYREADY_KEY_SYSTEM
+    };
+
+    emeError(error, metadata);
+    throw error;
   }
 
   eventBus.trigger('keysessioncreated');
@@ -84,10 +104,16 @@ export const createSession = (video, initData, options, eventBus) => {
   // eslint-disable-next-line max-len
   // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
   session.addEventListener('mskeymessage', (event) => {
-    addKeyToSession(options, session, event, eventBus);
+    addKeyToSession(options, session, event, eventBus, emeError);
   });
 
   session.addEventListener('mskeyerror', (event) => {
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      keySystem: PLAYREADY_KEY_SYSTEM
+    };
+
+    emeError(session.error, metadata);
     eventBus.trigger({
       message: 'Unexpected key error from key session with ' +
       `code: ${session.error.code} and systemCode: ${session.error.systemCode}`,
@@ -104,7 +130,7 @@ export const createSession = (video, initData, options, eventBus) => {
   });
 };
 
-export default ({video, initData, options, eventBus}) => {
+export default ({video, initData, options, eventBus, emeError}) => {
   // Although by the standard examples the presence of video.msKeys is checked first to
   // verify that we aren't trying to create a new session when one already exists, here
   // sessions are managed earlier (on the player.eme object), meaning that at this point
@@ -117,9 +143,15 @@ export default ({video, initData, options, eventBus}) => {
   try {
     video.msSetMediaKeys(new window.MSMediaKeys(PLAYREADY_KEY_SYSTEM));
   } catch (e) {
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+      keySystem: PLAYREADY_KEY_SYSTEM
+    };
+
+    emeError(e, metadata);
     throw new Error('Unable to create media keys for PlayReady key system. ' +
       'Error: ' + e.message);
   }
 
-  createSession(video, initData, options, eventBus);
+  createSession(video, initData, options, eventBus, emeError);
 };

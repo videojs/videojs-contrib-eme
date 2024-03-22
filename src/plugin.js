@@ -64,9 +64,10 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
   }
 
   let initData = event.initData;
+  let keySystem;
 
   return getSupportedKeySystem(options.keySystems).then((keySystemAccess) => {
-    const keySystem = keySystemAccess.keySystem;
+    keySystem = keySystemAccess.keySystem;
 
     // Use existing init data from options if provided
     if (options.keySystems[keySystem] &&
@@ -101,11 +102,16 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
       emeError
     });
   }).catch((error) => {
-    emeError(error, videojs.Error.EMEFailedToRequestMediaKeySystemAccess);
+    const metadata = {
+      errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
+      keySystem
+    };
+
+    emeError(error, metadata);
   });
 };
 
-export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
+export const handleWebKitNeedKeyEvent = (event, options, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -119,11 +125,12 @@ export const handleWebKitNeedKeyEvent = (event, options, eventBus) => {
     video: event.target,
     initData: event.initData,
     options,
-    eventBus
+    eventBus,
+    emeError
   });
 };
 
-export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
+export const handleMsNeedKeyEvent = (event, options, sessions, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[PLAYREADY_KEY_SYSTEM]) {
     // return silently since it may be handled by a different system
     return;
@@ -163,7 +170,8 @@ export const handleMsNeedKeyEvent = (event, options, sessions, eventBus) => {
     video: event.target,
     initData,
     options,
-    eventBus
+    eventBus,
+    emeError
   });
 };
 
@@ -197,7 +205,7 @@ export const setupSessions = (player) => {
  * @return   {Function}
  */
 export const emeErrorHandler = (player) => {
-  return (objOrErr, errorType) => {
+  return (objOrErr, metadata) => {
     const error = {
       // MEDIA_ERR_ENCRYPTED is code 5
       code: 5
@@ -214,12 +222,14 @@ export const emeErrorHandler = (player) => {
            objOrErr.cause.byteLength)) {
         error.cause = objOrErr.cause;
       }
-      if (errorType) {
-        error.errorType = errorType;
+      if (metadata) {
+        error.metadata = metadata;
       }
       if (objOrErr.keySystem) {
         error.keySystem = objOrErr.keySystem;
       }
+      // pass along original error object.
+      error.originalError = objOrErr;
     }
 
     player.error(error);
@@ -250,10 +260,7 @@ const onPlayerReady = (player, emeError) => {
     player.tech_.el_.addEventListener('encrypted', (event) => {
       videojs.log.debug('eme', 'Received an \'encrypted\' event');
       setupSessions(player);
-      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_, emeError)
-        .catch((error) => {
-          emeError(error, videojs.Error.EMEEncryptedError);
-        });
+      handleEncryptedEvent(player, event, getOptions(player), player.eme.sessions, player.tech_, emeError);
     });
   } else if (window.WebKitMediaKeys) {
     player.eme.initLegacyFairplay();
@@ -269,11 +276,11 @@ const onPlayerReady = (player, emeError) => {
       try {
         handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
       } catch (error) {
-        emeError(error, videojs.Error.MSKeyError);
+        emeError(error);
       }
     });
     const msKeyErrorCallback = (error) => {
-      emeError(error, videojs.Error.MSKeyError);
+      emeError(error);
     };
 
     player.tech_.on('mskeyerror', msKeyErrorCallback);
@@ -339,7 +346,7 @@ const eme = function(options = {}) {
           .catch((error) => {
             callback(error);
             if (!suppressErrorIfPossible) {
-              emeError(error, videojs.Error.EMEEncryptedError);
+              emeError(error);
             }
           });
       } else if (window.MSMediaKeys) {
@@ -349,7 +356,7 @@ const eme = function(options = {}) {
           if (event.type === 'mskeyerror') {
             callback(event.target.error);
             if (!suppressErrorIfPossible) {
-              emeError(event.message, videojs.Error.MSKeyError);
+              emeError(event.message);
             }
           } else {
             callback();
@@ -365,7 +372,7 @@ const eme = function(options = {}) {
           player.tech_.off('mskeyerror', msKeyHandler);
           callback(error);
           if (!suppressErrorIfPossible) {
-            emeError(error, videojs.Error.MSKeyError);
+            emeError(error);
           }
         }
       }
@@ -378,7 +385,7 @@ const eme = function(options = {}) {
         setupSessions(player);
         handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
           .catch((error) => {
-            emeError(error, videojs.Error.WebkitKeyError);
+            emeError(error);
           });
       };
 
