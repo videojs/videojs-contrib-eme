@@ -64,10 +64,9 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
   }
 
   let initData = event.initData;
-  let keySystem;
 
   return getSupportedKeySystem(options.keySystems).then((keySystemAccess) => {
-    keySystem = keySystemAccess.keySystem;
+    const keySystem = keySystemAccess.keySystem;
 
     // Use existing init data from options if provided
     if (options.keySystems[keySystem] &&
@@ -104,7 +103,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
   }).catch((error) => {
     const metadata = {
       errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
-      keySystem
+      config: options.keySystems
     };
 
     emeError(error, metadata);
