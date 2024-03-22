@@ -169,6 +169,10 @@ QUnit.test('lifecycle', function(assert) {
 QUnit.test('error in getCertificate rejects promise', function(assert) {
   const keySystems = {};
   const done = assert.async(1);
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToSetServerCertificate, 'errorType is expected value');
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] = {
     getCertificate: (options, callback) => {
@@ -176,7 +180,7 @@ QUnit.test('error in getCertificate rejects promise', function(assert) {
     }
   };
 
-  fairplay({options: {keySystems}, eventBus: getMockEventBus() }).catch((err) => {
+  fairplay({options: {keySystems}, eventBus: getMockEventBus(), emeError}).catch((err) => {
     assert.equal(err, 'error in getCertificate', 'message is good');
     done();
   });
@@ -190,6 +194,10 @@ QUnit.test('error in WebKitMediaKeys rejects promise', function(assert) {
   const video = {
     webkitSetMediaKeys: () => {}
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'errorType is expected value');
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   window.WebKitMediaKeys = () => {
     throw new Error('unsupported keySystem');
@@ -201,7 +209,8 @@ QUnit.test('error in WebKitMediaKeys rejects promise', function(assert) {
     video,
     initData,
     options: {keySystems},
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch(err => {
     assert.equal(err, 'Could not create MediaKeys', 'message is good');
     done();
@@ -218,6 +227,10 @@ QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
       throw new Error('MediaKeys unusable');
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'errorType is expected value');
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   window.WebKitMediaKeys = function() {};
 
@@ -227,7 +240,8 @@ QUnit.test('error in webkitSetMediaKeys rejects promise', function(assert) {
     video,
     initData,
     options: {keySystems},
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch(err => {
     assert.equal(err, 'Could not create MediaKeys', 'message is good');
     done();
@@ -248,6 +262,10 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
       };
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'errorType is expected value');
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   window.WebKitMediaKeys = function() {};
 
@@ -257,7 +275,8 @@ QUnit.test('error in webkitKeys.createSession rejects promise', function(assert)
     video,
     initData,
     options: {keySystems},
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch(err => {
     assert.equal(
       err, 'Could not create key session',
@@ -287,6 +306,9 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
       };
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   window.WebKitMediaKeys = function() {};
 
@@ -300,7 +322,8 @@ QUnit.test('error in getLicense rejects promise', function(assert) {
     video,
     initData,
     options: {keySystems},
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch(err => {
     assert.equal(err, 'error in getLicense', 'message is good');
     done();
@@ -373,6 +396,10 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
       };
     }
   };
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys, 'errorType is expected value');
+    assert.equal(metadata.keySystem, LEGACY_FAIRPLAY_KEY_SYSTEM, 'keySystem is expected value');
+  };
 
   window.WebKitMediaKeys = function() {};
 
@@ -387,7 +414,8 @@ QUnit.test('a webkitkeyerror rejects promise', function(assert) {
     video,
     initData,
     options: {keySystems},
-    eventBus: getMockEventBus()
+    eventBus: getMockEventBus(),
+    emeError
   }).catch(err => {
     assert.equal(err, 'KeySession error: code 0, systemCode 1', 'message is good');
     done();

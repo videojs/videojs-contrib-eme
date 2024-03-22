@@ -698,9 +698,10 @@ QUnit.test('rejects promise when getCertificate throws error', function(assert) 
   };
   const done = assert.async(1);
   const expectedError = 'error fetching certificate';
-  const emeError = (error, errorType) => {
+  const emeError = (error, metadata) => {
     assert.equal(error, expectedError, 'emeError called with expected message');
-    assert.equal(errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected type');
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected type');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected type');
   };
 
   standard5July2016({
@@ -729,8 +730,9 @@ QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
     }
   };
   const done = assert.async(1);
-  const emeError = (_, errorType) => {
-    assert.equal(errorType, videojs.Error.EMEFailedToCreateMediaKeys);
+  const emeError = (_, metadata) => {
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected errorType');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected keySystem');
   };
 
   standard5July2016({
@@ -764,9 +766,10 @@ QUnit.test('rejects promise when createMediaKeys rejects', function(assert) {
   };
   const done = assert.async(1);
   const expectedError = 'failed creating mediaKeys';
-  const emeError = (error, errorType) => {
+  const emeError = (error, metadata) => {
     assert.equal(error, expectedError, 'emeError called with expected error');
-    assert.equal(errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected errorType');
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeys, 'emeError called with expected errorType');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'emeError called with expected keySystem');
   };
 
   standard5July2016({
@@ -848,9 +851,9 @@ QUnit.test('rejects promise when addPendingSessions rejects', function(assert) {
       keySystemAccess,
       options,
       eventBus: getMockEventBus(),
-      emeError: (error, errorType) => {
+      emeError: (error, metadata) => {
         expectedErrorsLength++;
-        emeErrors.push({error, errorType });
+        emeErrors.push({error, errorType: metadata.errorType });
       }
     }).catch((err) => {
       assert.equal(err, errMessage, testDescription);
@@ -1079,9 +1082,10 @@ QUnit.test('keySession.update promise rejection', function(assert) {
     setMediaKeys: () => Promise.resolve()
   };
   const done = assert.async(1);
-  const emeError = (error, errorType) => {
+  const emeError = (error, metadata) => {
     assert.equal(error, 'keySession update failed', 'correct error message');
-    assert.equal(errorType, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys);
+    assert.equal(metadata.errorType, videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys, 'errorType is correct');
+    assert.equal(metadata.keySystem, 'com.widevine.alpha', 'keySystem is correct');
     done();
   };
 
@@ -1319,9 +1323,9 @@ QUnit.test('emeError is called when keySession.close fails', function(assert) {
     eventBus: {
       trigger: () => {}
     },
-    emeError: (error, errorType) => {
+    emeError: (error, metadata) => {
       assert.equal(error, expectedErrorMessage, 'expected eme error message');
-      assert.equal(errorType, videojs.Error.EMEFailedToCloseSession, 'expected eme error type');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToCloseSession, 'expected eme error type');
       done();
     }
   });
@@ -1343,9 +1347,9 @@ QUnit.test('emeError called when session.generateRequest fails', function(assert
     eventBus: {
       trigger: () => {}
     },
-    emeError: (error, errorType) => {
+    emeError: (error, metadata) => {
       assert.equal(error, expectedErrorMessage, 'expected eme error message');
-      assert.equal(errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'expected eme error type');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToGenerateLicenseRequest, 'expected eme error type');
     }
   }).catch((error) => {
     assert.equal(error, 'Unable to create or initialize key session', 'expected message');
@@ -1366,9 +1370,9 @@ QUnit.test('emeError called when mediaKeys.createSession fails', function(assert
     eventBus: {
       trigger: () => {}
     },
-    emeError: (error, errorType) => {
+    emeError: (error, metadata) => {
       assert.equal(error, expectedError, 'expected eme error message');
-      assert.equal(errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'expected eme error type');
+      assert.equal(metadata.errorType, videojs.Error.EMEFailedToCreateMediaKeySession, 'expected eme error type');
       done();
     }
   });
@@ -1418,7 +1422,8 @@ QUnit.test('addSession saves options', function(assert) {
       removeSession,
       eventBus,
       contentId,
-      emeError
+      emeError,
+      keySystem: undefined
     }],
     'saved options into pendingSessionData array'
   );

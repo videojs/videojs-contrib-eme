@@ -274,7 +274,7 @@ const onPlayerReady = (player, emeError) => {
       videojs.log.debug('eme', 'Received an \'msneedkey\' event');
       setupSessions(player);
       try {
-        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_);
+        handleMsNeedKeyEvent(event, getOptions(player), player.eme.sessions, player.tech_, emeError);
       } catch (error) {
         emeError(error);
       }
@@ -366,7 +366,7 @@ const eme = function(options = {}) {
         player.tech_.one('mskeyadded', msKeyHandler);
         player.tech_.one('mskeyerror', msKeyHandler);
         try {
-          handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_);
+          handleMsNeedKeyEvent(mockEncryptedEvent, mergedEmeOptions, player.eme.sessions, player.tech_, emeError);
         } catch (error) {
           player.tech_.off('mskeyadded', msKeyHandler);
           player.tech_.off('mskeyerror', msKeyHandler);
