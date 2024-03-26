@@ -617,8 +617,10 @@ This event is triggered directly from the underlying `keystatuseschange` event, 
 When the key session is created, an event of type `keysessioncreated` will be triggered on the Video.js playback tech.
 
 ```
-player.tech().on('keysessioncreated', function(event) {
-  // note that there is no event data for keysessioncreated
+player.tech().on('keysessioncreated', function(keySession) {
+  // Event data:
+  // keySession: the mediaKeySession object 
+  // https://www.w3.org/TR/encrypted-media/#mediakeysession-interface
 });
 ```
 

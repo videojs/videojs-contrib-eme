@@ -91,7 +91,8 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
     options: {},
     getLicense() {},
     removeSession() {},
-    eventBus
+    eventBus,
+    emeError() {}
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');

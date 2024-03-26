@@ -33,6 +33,11 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
       }
 
       session.update(key);
+
+      eventBus.trigger({
+        type: 'keysessionupdated',
+        keySession: session
+      });
     });
     return;
   }
@@ -92,7 +97,10 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
     throw error;
   }
 
-  eventBus.trigger('keysessioncreated');
+  eventBus.trigger({
+    type: 'keysessioncreated',
+    keySession: session
+  });
 
   // Note that mskeymessage may not always be called for PlayReady:
   //
@@ -104,6 +112,10 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
   // eslint-disable-next-line max-len
   // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
   session.addEventListener('mskeymessage', (event) => {
+    eventBus.trigger({
+      type: 'keymessage',
+      messageEvent: event
+    });
     addKeyToSession(options, session, event, eventBus, emeError);
   });
 

@@ -109,11 +109,17 @@ export const makeNewRequest = (player, requestOptions) => {
   try {
     const keySession = mediaKeys.createSession();
 
-    eventBus.trigger('keysessioncreated');
+    eventBus.trigger({
+      type: 'keysessioncreated',
+      keySession
+    });
 
     player.on('dispose', () => {
       keySession.close().then(() => {
-        eventBus.trigger('keysessionclosed');
+        eventBus.trigger({
+          type: 'keysessionclosed',
+          keySession
+        });
       }).catch((error) => {
         const metadata = {
           errorType: videojs.Error.EMEFailedToCloseSession,
@@ -128,7 +134,7 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession.addEventListener('message', (event) => {
         eventBus.trigger({
           type: 'keymessage',
-          event
+          messageEvent: event
         });
         // all other types will be handled by keystatuseschange
         if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
@@ -138,7 +144,10 @@ export const makeNewRequest = (player, requestOptions) => {
         getLicense(options, event.message, contentId)
           .then((license) => {
             resolve(keySession.update(license).then(() => {
-              eventBus.trigger('keysessionupdated');
+              eventBus.trigger({
+                type: 'keysessionupdated',
+                keySession
+              });
             }).catch((error) => {
               const metadata = {
                 errorType: videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
@@ -153,9 +162,18 @@ export const makeNewRequest = (player, requestOptions) => {
           });
       }, false);
 
-      keySession.addEventListener('keystatuseschange', (event) => {
+      const KEY_STATUSES_CHANGE = 'keystatuseschange';
+
+      keySession.addEventListener(KEY_STATUSES_CHANGE, (event) => {
         let expired = false;
 
+        // Re-emit the keystatuseschange event with the entire keyStatusesMap
+        eventBus.trigger({
+          type: KEY_STATUSES_CHANGE,
+          keyStatuses: keySession.keyStatuses
+        });
+
+        // Keep 'keystatuschange' for backward compatibility.
         // based on https://www.w3.org/TR/encrypted-media/#example-using-all-events
         keySession.keyStatuses.forEach((status, keyId) => {
           // Trigger an event so that outside listeners can take action if appropriate.
@@ -191,7 +209,10 @@ export const makeNewRequest = (player, requestOptions) => {
           // session can be created.
           videojs.log.debug('Session expired, closing the session.');
           keySession.close().then(() => {
-            eventBus.trigger('keysessionclosed');
+            eventBus.trigger({
+              type: 'keysessionclosed',
+              keySession
+            });
             removeSession(initData);
             makeNewRequest(player, requestOptions);
           }).catch((error) => {
@@ -504,7 +525,10 @@ export const standard5July2016 = ({
     }).then(() => {
       return keySystemAccess.createMediaKeys();
     }).then((createdMediaKeys) => {
-      eventBus.trigger('keysystemaccesscomplete');
+      eventBus.trigger({
+        type: 'keysystemaccesscomplete',
+        mediaKeys: createdMediaKeys
+      });
       return addPendingSessions({
         player,
         video,
