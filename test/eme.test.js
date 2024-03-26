@@ -70,7 +70,7 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
   const mockSession = getMockSession();
   const eventBus = {
     trigger: (event) => {
-      if (typeof event === 'string') {
+      if (typeof event === 'string' || event.type !== 'keystatuschange') {
         return;
       }
 
@@ -91,7 +91,8 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
     options: {},
     getLicense() {},
     removeSession() {},
-    eventBus
+    eventBus,
+    emeError() {}
   });
 
   assert.equal(mockSession.listeners.length, 2, 'added listeners');
@@ -325,11 +326,12 @@ QUnit.test('accepts a license URL as an option', function(assert) {
     xhrCalls.push(options);
   };
 
+  const createSession = () => mockSession;
   const keySystemAccess = {
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
       return {
-        createSession: () => mockSession
+        createSession
       };
     }
   };
@@ -361,9 +363,12 @@ QUnit.test('accepts a license URL as an option', function(assert) {
     // Simulate 'message' event
     mockSession.listeners[0].listener(mockMessageEvent);
 
-    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
-    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
-    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
+    assert.equal(mockEventBus.calls[0].type, 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.deepEqual(mockEventBus.calls[0].mediaKeys, { createSession }, 'keysystemaccesscomplete payload fired');
+    assert.equal(mockEventBus.calls[1].type, 'keysessioncreated', 'keysessioncreated fired');
+    assert.equal(mockEventBus.calls[1].keySession, mockSession, 'keysessioncreated payload fired');
+    assert.equal(mockEventBus.calls[2].type, 'keymessage', 'keymessage event type is expected type');
+    assert.equal(mockEventBus.calls[2].messageEvent, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -388,6 +393,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
   const xhrCalls = [];
   const mockSession = getMockSession();
   const mockEventBus = getMockEventBus();
+  const createSession = () => mockSession;
   const mockMessageEvent = {
     type: 'message',
     message: 'the-message',
@@ -397,7 +403,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
       return {
-        createSession: () => mockSession
+        createSession
       };
     }
   };
@@ -435,9 +441,10 @@ QUnit.test('accepts a license URL as property', function(assert) {
     // Simulate 'message' event
     mockSession.listeners[0].listener(mockMessageEvent);
 
-    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
-    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
-    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
+    assert.equal(mockEventBus.calls[0].type, 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.deepEqual(mockEventBus.calls[0].mediaKeys, { createSession }, 'keysystemaccesscomplete payload');
+    assert.equal(mockEventBus.calls[1].type, 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].messageEvent, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -500,7 +507,9 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
   };
 
   const eventBus = {
-    trigger: (name) => {
+    trigger: (event) => {
+      const name = typeof event === 'string' ? event : event.type;
+
       if (name === 'licenserequestattempted') {
         callCounts.licenseRequestAttempts++;
       }
@@ -1111,6 +1120,7 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
     message: 'the-message',
     messageType: 'license-request'
   };
+  const createSession = () => mockSession;
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1120,7 +1130,7 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
       return {
-        createSession: () => mockSession
+        createSession
       };
     }
   };
@@ -1148,9 +1158,10 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
     // Simulate 'message' event
     mockSession.listeners[0].listener(mockMessageEvent);
 
-    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
-    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
-    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
+    assert.equal(mockEventBus.calls[0].type, 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.deepEqual(mockEventBus.calls[0].mediaKeys, { createSession }, 'keysystemaccesscomplete payload');
+    assert.equal(mockEventBus.calls[1].type, 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[2].messageEvent, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1181,6 +1192,7 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
     message: 'the-message',
     messageType: 'license-request'
   };
+  const createSession = () => mockSession;
 
   videojs.xhr = (options) => {
     xhrCalls.push(options);
@@ -1190,7 +1202,7 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
     keySystem: 'com.widevine.alpha',
     createMediaKeys: () => {
       return {
-        createSession: () => mockSession
+        createSession
       };
     }
   };
@@ -1223,9 +1235,12 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
     // Simulate 'message' event
     mockSession.listeners[0].listener(mockMessageEvent);
 
-    assert.equal(mockEventBus.calls[0], 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
-    assert.equal(mockEventBus.calls[1], 'keysessioncreated', 'keymessage fired');
-    assert.equal(mockEventBus.calls[2].event, mockMessageEvent, 'keymessage event is expected message event');
+    assert.equal(mockEventBus.calls[0].type, 'keysystemaccesscomplete', 'keysystemaccesscomplete fired');
+    assert.deepEqual(mockEventBus.calls[0].mediaKeys, { createSession }, 'keysystemaccesscomplete payload');
+    assert.equal(mockEventBus.calls[1].type, 'keysessioncreated', 'keymessage fired');
+    assert.equal(mockEventBus.calls[1].keySession, mockSession, 'keymessage payload');
+    assert.equal(mockEventBus.calls[2].type, 'keymessage', 'keymessage event is expected message event');
+    assert.equal(mockEventBus.calls[2].messageEvent, mockMessageEvent, 'keymessage event is expected message event');
     assert.equal(xhrCalls.length, 1, 'made one XHR');
     assert.deepEqual(xhrCalls[0], {
       uri: 'some-url',
@@ -1273,8 +1288,8 @@ QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: (eventName) => {
-        if (eventName === 'keysessioncreated') {
+      trigger: (event) => {
+        if (event.type === 'keysessioncreated') {
           assert.ok(true, 'got a keysessioncreated event');
           done();
         }
@@ -1292,8 +1307,8 @@ QUnit.test('keySession is closed when player is disposed', function(assert) {
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: (eventName) => {
-        if (eventName === 'keysessionclosed') {
+      trigger: (event) => {
+        if (event.type === 'keysessionclosed') {
           assert.ok(true, 'got a keysessionclosed event');
           done();
         }

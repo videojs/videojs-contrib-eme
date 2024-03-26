@@ -84,11 +84,18 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       return;
     }
 
-    eventBus.trigger('keysessioncreated');
+    eventBus.trigger({
+      type: 'keysessioncreated',
+      keySession
+    });
 
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
+      eventBus.trigger({
+        type: 'keymessage',
+        messageEvent: event
+      });
       getLicense(options, contentId, event.message, (err, license) => {
         if (eventBus) {
           eventBus.trigger('licenserequestattempted');
@@ -105,6 +112,11 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         }
 
         keySession.update(new Uint8Array(license));
+
+        eventBus.trigger({
+          type: 'keysessionupdated',
+          keySession
+        });
       });
     });
 

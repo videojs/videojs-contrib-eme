@@ -10,7 +10,7 @@ import {
   PLAYREADY_KEY_SYSTEM
 } from './ms-prefixed';
 import {detectSupportedCDMs } from './cdm.js';
-import { arrayBuffersEqual, arrayBufferFrom, merge } from './utils';
+import { arrayBuffersEqual, arrayBufferFrom, merge, getMediaKeySystemConfigurations } from './utils';
 import {version as VERSION} from '../package.json';
 
 export const hasSession = (sessions, initData) => {
@@ -103,7 +103,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
   }).catch((error) => {
     const metadata = {
       errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
-      config: options.keySystems
+      config: getMediaKeySystemConfigurations(options.keySystems)
     };
 
     emeError(error, metadata);

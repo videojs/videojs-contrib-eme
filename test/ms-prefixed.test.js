@@ -178,7 +178,7 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   };
   const emeError = (_, metadata) => {
     assert.equal(metadata.errorType, videojs.Error.EMEFailedToRequestMediaKeySystemAccess, 'errorType is expected value');
-    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+    assert.deepEqual(metadata.config, [{}], 'keySystem is expected value');
   };
 
   msPrefixed({
@@ -595,11 +595,12 @@ QUnit.test('will use a custom getLicense method if one is provided', function(as
 });
 
 QUnit.test('createSession triggers keysessioncreated', function(assert) {
+  const addEventListener = () => {};
   const video = {
     msKeys: {
       createSession: () => {
         return {
-          addEventListener: () => {}
+          addEventListener
         };
       }
     }
@@ -610,8 +611,9 @@ QUnit.test('createSession triggers keysessioncreated', function(assert) {
 
   assert.equal(eventBus.calls.length, 1, 'one event triggered');
   assert.equal(
-    eventBus.calls[0],
+    eventBus.calls[0].type,
     'keysessioncreated',
     'triggered keysessioncreated event'
   );
+  assert.deepEqual(eventBus.calls[0].keySession, { addEventListener }, 'keysessioncreated payload');
 });

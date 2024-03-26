@@ -1,5 +1,6 @@
 import document from 'global/document';
 import videojs from 'video.js';
+import { getSupportedConfigurations } from './eme';
 
 export const stringToUint16Array = (string) => {
   // 2 bytes for each char
@@ -77,4 +78,21 @@ export const mergeAndRemoveNull = (...args) => {
   });
 
   return result;
+};
+
+/**
+ * Transforms the keySystems object into a MediaKeySystemConfiguration Object array.
+ *
+ * @param {Object} keySystems object from the options.
+ * @return {Array} of MediaKeySystemConfiguration objects.
+ */
+export const getMediaKeySystemConfigurations = (keySystems) => {
+  const config = [];
+
+  Object.keys(keySystems).forEach((keySystem) => {
+    const mediaKeySystemConfig = getSupportedConfigurations(keySystem, keySystems[keySystem])[0];
+
+    config.push(mediaKeySystemConfig);
+  });
+  return config;
 };
