@@ -336,13 +336,14 @@ QUnit.test('keysessioncreated fired on key session created', function(assert) {
   const done = assert.async();
   const initData = new Uint8Array([1, 2, 3, 4]).buffer;
   let sessionCreated = false;
+  const addEventListener = () => {};
   const video = {
     webkitSetMediaKeys: () => {
       video.webkitKeys = {
         createSession: () => {
           sessionCreated = true;
           return {
-            addEventListener: () => {}
+            addEventListener
           };
         }
       };
@@ -350,8 +351,9 @@ QUnit.test('keysessioncreated fired on key session created', function(assert) {
   };
   const eventBus = {
     trigger: (event) => {
-      if (event === 'keysessioncreated') {
+      if (event.type === 'keysessioncreated') {
         assert.ok(sessionCreated, 'keysessioncreated fired after session created');
+        assert.deepEqual(event.keySession, { addEventListener }, 'keySession payload passed with event');
         done();
       }
     }

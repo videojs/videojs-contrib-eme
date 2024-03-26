@@ -595,11 +595,12 @@ QUnit.test('will use a custom getLicense method if one is provided', function(as
 });
 
 QUnit.test('createSession triggers keysessioncreated', function(assert) {
+  const addEventListener = () => {};
   const video = {
     msKeys: {
       createSession: () => {
         return {
-          addEventListener: () => {}
+          addEventListener
         };
       }
     }
@@ -610,8 +611,9 @@ QUnit.test('createSession triggers keysessioncreated', function(assert) {
 
   assert.equal(eventBus.calls.length, 1, 'one event triggered');
   assert.equal(
-    eventBus.calls[0],
+    eventBus.calls[0].type,
     'keysessioncreated',
     'triggered keysessioncreated event'
   );
+  assert.deepEqual(eventBus.calls[0].keySession, { addEventListener }, 'keysessioncreated payload');
 });
