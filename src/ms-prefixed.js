@@ -9,6 +9,7 @@
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
 import videojs from 'video.js';
+import { getMediaKeySystemConfigurations } from './utils';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
@@ -20,7 +21,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
       if (err) {
         const metadata = {
           errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
-          keySystem: PLAYREADY_KEY_SYSTEM
+          config: getMediaKeySystemConfigurations(options.keySystems)
         };
 
         emeError(err, metadata);

@@ -3,7 +3,8 @@ import QUnit from 'qunit';
 import {
   arrayBuffersEqual,
   arrayBufferFrom,
-  mergeAndRemoveNull
+  mergeAndRemoveNull,
+  getMediaKeySystemConfigurations
 } from '../src/utils';
 
 QUnit.module('utils');
@@ -71,4 +72,32 @@ QUnit.test('mergeAndRemoveNull removes property if value is null', function(asse
     a: 'A',
     c: 'c'
   }, 'successfully merged and removed null property');
+});
+
+QUnit.test('getMediaKeySystemConfigurations returns MediaKeySystemConfiguration array', function(assert) {
+  const config = getMediaKeySystemConfigurations({
+    'com.widevine.alpha': {
+      audioContentType: 'audio/mp4; codecs="mp4a.40.2"',
+      audioRobustness: 'SW_SECURE_CRYPTO',
+      videoContentType: 'video/mp4; codecs="avc1.42E01E"',
+      videoRobustness: 'SW_SECURE_CRYPTO'
+    }
+  });
+
+  const expectedConfig = [{
+    audioCapabilities: [
+      {
+        contentType: 'audio/mp4; codecs=\"mp4a.40.2\"',
+        robustness: 'SW_SECURE_CRYPTO'
+      }
+    ],
+    videoCapabilities: [
+      {
+        contentType: 'video/mp4; codecs=\"avc1.42E01E\"',
+        robustness: 'SW_SECURE_CRYPTO'
+      }
+    ]
+  }];
+
+  assert.deepEqual(config, expectedConfig, 'getMediaKeysystemConfigurations returns expected values');
 });

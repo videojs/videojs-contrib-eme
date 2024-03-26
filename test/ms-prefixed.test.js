@@ -178,7 +178,7 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
   };
   const emeError = (_, metadata) => {
     assert.equal(metadata.errorType, videojs.Error.EMEFailedToRequestMediaKeySystemAccess, 'errorType is expected value');
-    assert.equal(metadata.keySystem, PLAYREADY_KEY_SYSTEM, 'keySystem is expected value');
+    assert.deepEqual(metadata.config, [{}], 'keySystem is expected value');
   };
 
   msPrefixed({
