@@ -1,3 +1,11 @@
+<a name="5.2.0"></a>
+# [5.2.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.2...v5.2.0) (2024-03-28)
+
+### Features
+
+* eme error interface (#208) ([5820da7](https://github.com/videojs/videojs-contrib-eme/commit/5820da7)), closes [#208](https://github.com/videojs/videojs-contrib-eme/issues/208)
+* event payloads (#210) ([8bc0cff](https://github.com/videojs/videojs-contrib-eme/commit/8bc0cff)), closes [#210](https://github.com/videojs/videojs-contrib-eme/issues/210)
+
 <a name="5.1.2"></a>
 ## [5.1.2](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.1...v5.1.2) (2024-03-12)
 
