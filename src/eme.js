@@ -440,6 +440,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   }
 
   const isFairplay = isFairplayKeySystem(keySystem);
+  const isPlayready = keySystem === 'com.microsoft.playready' || keySystem === 'com.microsoft.playready.recommendation';
 
   if (isFairplay && keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
     keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
@@ -454,7 +455,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   }
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
-    if (keySystem === 'com.microsoft.playready') {
+    if (isPlayready) {
       keySystemOptions.getLicense = defaultPlayreadyGetLicense(keySystemOptions);
     } else if (isFairplay) {
       keySystemOptions.getLicense = defaultFairplayGetLicense(keySystemOptions);
