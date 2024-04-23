@@ -8,6 +8,7 @@ import {
   defaultGetLicense as defaultFairplayGetLicense,
   defaultGetContentId as defaultFairplayGetContentId
 } from './fairplay';
+import EmeError from './consts/errors';
 
 const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
 
@@ -122,7 +123,7 @@ export const makeNewRequest = (player, requestOptions) => {
         });
       }).catch((error) => {
         const metadata = {
-          errorType: videojs.Error.EMEFailedToCloseSession,
+          errorType: EmeError.EMEFailedToCloseSession,
           keySystem
         };
 
@@ -150,7 +151,7 @@ export const makeNewRequest = (player, requestOptions) => {
               });
             }).catch((error) => {
               const metadata = {
-                errorType: videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
+                errorType: EmeError.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
                 keySystem
               };
 
@@ -217,7 +218,7 @@ export const makeNewRequest = (player, requestOptions) => {
             makeNewRequest(player, requestOptions);
           }).catch((error) => {
             const metadata = {
-              errorType: videojs.Error.EMEFailedToCloseSession,
+              errorType: EmeError.EMEFailedToCloseSession,
               keySystem
             };
 
@@ -228,7 +229,7 @@ export const makeNewRequest = (player, requestOptions) => {
 
       keySession.generateRequest(initDataType, initData).catch((error) => {
         const metadata = {
-          errorType: videojs.Error.EMEFailedToGenerateLicenseRequest,
+          errorType: EmeError.EMEFailedToGenerateLicenseRequest,
           keySystem
         };
 
@@ -239,7 +240,7 @@ export const makeNewRequest = (player, requestOptions) => {
 
   } catch (error) {
     const metadata = {
-      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      errorType: EmeError.EMEFailedToCreateMediaKeySession,
       keySystem
     };
 
@@ -342,7 +343,7 @@ export const addPendingSessions = ({
   if (certificate) {
     promises.push(createdMediaKeys.setServerCertificate(certificate).catch((error) => {
       const metadata = {
-        errorType: videojs.Error.EMEFailedToSetServerCertificate,
+        errorType: EmeError.EMEFailedToSetServerCertificate,
         keySystem: video.keySystem
       };
 
@@ -371,7 +372,7 @@ export const addPendingSessions = ({
 
   promises.push(video.setMediaKeys(createdMediaKeys).catch((error) => {
     const metadata = {
-      errorType: videojs.Error.EMEFailedToAttachMediaKeysToVideoElement,
+      errorType: EmeError.EMEFailedToAttachMediaKeysToVideoElement,
       keySystem: video.keySystem
     };
 
@@ -538,7 +539,7 @@ export const standard5July2016 = ({
       });
     }).catch((err) => {
       const metadata = {
-        errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+        errorType: EmeError.EMEFailedToCreateMediaKeys,
         keySystem
       };
 

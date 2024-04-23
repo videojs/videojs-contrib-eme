@@ -12,6 +12,7 @@ import {
 import {detectSupportedCDMs } from './cdm.js';
 import { arrayBuffersEqual, arrayBufferFrom, merge, getMediaKeySystemConfigurations } from './utils';
 import {version as VERSION} from '../package.json';
+import EmeError from './consts/errors';
 
 export const hasSession = (sessions, initData) => {
   for (let i = 0; i < sessions.length; i++) {
@@ -102,7 +103,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
     });
   }).catch((error) => {
     const metadata = {
-      errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
+      errorType: EmeError.EMEFailedToRequestMediaKeySystemAccess,
       config: getMediaKeySystemConfigurations(options.keySystems)
     };
 
