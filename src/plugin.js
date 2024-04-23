@@ -437,6 +437,9 @@ const eme = function(options = {}) {
 // Register the plugin with video.js.
 videojs.registerPlugin('eme', eme);
 
+// contrib-eme specific error const
+eme.Error = EmeError;
+
 // Include the version number.
 eme.VERSION = VERSION;
 
