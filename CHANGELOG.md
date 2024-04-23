@@ -1,3 +1,10 @@
+<a name="5.2.1"></a>
+## [5.2.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.2.0...v5.2.1) (2024-04-23)
+
+### Chores
+
+* move eme errors (#215) ([1a000bc](https://github.com/videojs/videojs-contrib-eme/commit/1a000bc)), closes [#215](https://github.com/videojs/videojs-contrib-eme/issues/215)
+
 <a name="5.2.0"></a>
 # [5.2.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.1.2...v5.2.0) (2024-03-28)
 
