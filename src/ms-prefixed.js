@@ -8,8 +8,8 @@
  */
 import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
-import videojs from 'video.js';
 import { getMediaKeySystemConfigurations } from './utils';
+import EmeError from './consts/errors';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
@@ -20,7 +20,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
     playreadyOptions.getKey(options, event.destinationURL, event.message.buffer, (err, key) => {
       if (err) {
         const metadata = {
-          errorType: videojs.Error.EMEFailedToRequestMediaKeySystemAccess,
+          errorType: EmeError.EMEFailedToRequestMediaKeySystemAccess,
           config: getMediaKeySystemConfigurations(options.keySystems)
         };
 
@@ -60,7 +60,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
 
     if (err) {
       const metadata = {
-        errorType: videojs.Error.EMEFailedToGenerateLicenseRequest,
+        errorType: EmeError.EMEFailedToGenerateLicenseRequest,
         keySystem: PLAYREADY_KEY_SYSTEM
       };
 
@@ -90,7 +90,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
   if (!session) {
     const error = new Error('Could not create key session.');
     const metadata = {
-      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      errorType: EmeError.EMEFailedToCreateMediaKeySession,
       keySystem: PLAYREADY_KEY_SYSTEM
     };
 
@@ -122,7 +122,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
 
   session.addEventListener('mskeyerror', (event) => {
     const metadata = {
-      errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+      errorType: EmeError.EMEFailedToCreateMediaKeySession,
       keySystem: PLAYREADY_KEY_SYSTEM
     };
 
@@ -157,7 +157,7 @@ export default ({video, initData, options, eventBus, emeError}) => {
     video.msSetMediaKeys(new window.MSMediaKeys(PLAYREADY_KEY_SYSTEM));
   } catch (e) {
     const metadata = {
-      errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+      errorType: EmeError.EMEFailedToCreateMediaKeys,
       keySystem: PLAYREADY_KEY_SYSTEM
     };
 

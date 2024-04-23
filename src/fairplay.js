@@ -9,6 +9,7 @@ import videojs from 'video.js';
 import window from 'global/window';
 import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
+import EmeError from './consts/errors';
 
 export const LEGACY_FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -56,7 +57,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         video.webkitSetMediaKeys(new window.WebKitMediaKeys(LEGACY_FAIRPLAY_KEY_SYSTEM));
       } catch (error) {
         const metadata = {
-          errorType: videojs.Error.EMEFailedToCreateMediaKeys,
+          errorType: EmeError.EMEFailedToCreateMediaKeys,
           keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
         };
 
@@ -75,7 +76,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       );
     } catch (error) {
       const metadata = {
-        errorType: videojs.Error.EMEFailedToCreateMediaKeySession,
+        errorType: EmeError.EMEFailedToCreateMediaKeySession,
         keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
       };
 
@@ -102,7 +103,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
         }
         if (err) {
           const metadata = {
-            errortype: videojs.Error.EMEFailedToGenerateLicenseRequest,
+            errortype: EmeError.EMEFailedToGenerateLicenseRequest,
             keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
           };
 
@@ -128,7 +129,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
     keySession.addEventListener('webkitkeyerror', () => {
       const error = keySession.error;
       const metadata = {
-        errorType: videojs.Error.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
+        errorType: EmeError.EMEFailedToUpdateSessionWithReceivedLicenseKeys,
         keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
       };
 
@@ -199,7 +200,7 @@ const fairplay = ({video, initData, options, eventBus, emeError}) => {
     getCertificate(options, (err, cert) => {
       if (err) {
         const metadata = {
-          errorType: videojs.Error.EMEFailedToSetServerCertificate,
+          errorType: EmeError.EMEFailedToSetServerCertificate,
           keySystem: LEGACY_FAIRPLAY_KEY_SYSTEM
         };
 
