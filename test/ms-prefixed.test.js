@@ -275,8 +275,8 @@ QUnit.test('makes request when nothing provided on key message', function(assert
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
-      'Content-Type': 'text/xml; charset=utf-8',
-      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+      'content-type': 'text/xml; charset=utf-8',
+      'soapaction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
     'uses headers from message'
   );
@@ -348,8 +348,8 @@ QUnit.test(
     assert.deepEqual(
       xhrCalls[0].config.headers,
       {
-        'Content-Type': 'text/xml; charset=utf-8',
-        'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+        'content-type': 'text/xml; charset=utf-8',
+        'soapaction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
       },
       'uses headers from message'
     );
@@ -416,8 +416,8 @@ QUnit.test('makes request with provided url string on key message', function(ass
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
-      'Content-Type': 'text/xml; charset=utf-8',
-      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+      'content-type': 'text/xml; charset=utf-8',
+      'soapaction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
     'uses headers from message'
   );
@@ -512,8 +512,8 @@ QUnit.test('makes request with provided url on key message', function(assert) {
   assert.deepEqual(
     xhrCalls[0].config.headers,
     {
-      'Content-Type': 'text/xml; charset=utf-8',
-      'SOAPAction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
+      'content-type': 'text/xml; charset=utf-8',
+      'soapaction': '"http://schemas.microsoft.com/DRM/2007/03/protocols/AcquireLicense"'
     },
     'uses headers from message'
   );

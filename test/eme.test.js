@@ -377,7 +377,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
       requestType: 'license',
       body: 'the-message',
       headers: {
-        'Content-type': 'application/octet-stream'
+        'content-type': 'application/octet-stream'
       }
     }, 'made request with proper options');
 
@@ -453,7 +453,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
       requestType: 'license',
       body: 'the-message',
       headers: {
-        'Content-type': 'application/octet-stream'
+        'content-type': 'application/octet-stream'
       }
     }, 'made request with proper options');
 
@@ -1148,7 +1148,7 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
         'com.widevine.alpha': 'some-url'
       },
       emeHeaders: {
-        'Some-Header': 'some-header-value'
+        'some-header': 'some-header-value'
       }
     },
     eventBus: mockEventBus
@@ -1170,8 +1170,8 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
       requestType: 'license',
       body: 'the-message',
       headers: {
-        'Content-type': 'application/octet-stream',
-        'Some-Header': 'some-header-value'
+        'content-type': 'application/octet-stream',
+        'some-header': 'some-header-value'
       }
     }, 'made request with proper emeHeaders option value');
 
@@ -1249,8 +1249,8 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
       requestType: 'license',
       body: 'the-message',
       headers: {
-        'Content-type': 'application/octet-stream',
-        'Some-Header': 'priority-header-value'
+        'content-type': 'application/octet-stream',
+        'some-header': 'priority-header-value'
       }
     }, 'made request with proper licenseHeaders value');
 

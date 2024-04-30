@@ -457,8 +457,8 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     requestType: 'license',
     body: undefined,
     headers: {
-      'Content-type': 'application/octet-stream',
-      'Some-Header': 'some-header-value'
+      'content-type': 'application/octet-stream',
+      'some-header': 'some-header-value'
     }
   }, 'made license request with proper emeHeaders value');
 
@@ -467,7 +467,7 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     responseType: 'arraybuffer',
     requestType: 'license',
     headers: {
-      'Some-Header': 'some-header-value'
+      'some-header': 'some-header-value'
     }
   }, 'made certificate request with proper emeHeaders value');
 
@@ -512,8 +512,8 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     requestType: 'license',
     body: undefined,
     headers: {
-      'Content-type': 'application/octet-stream',
-      'Some-Header': 'higher-priority-license-header'
+      'content-type': 'application/octet-stream',
+      'some-header': 'higher-priority-license-header'
     }
   }, 'made license request with proper licenseHeaders value');
 
@@ -522,7 +522,7 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     responseType: 'arraybuffer',
     requestType: 'license',
     headers: {
-      'Some-Header': 'higher-priority-cert-header'
+      'some-header': 'higher-priority-cert-header'
     }
   }, 'made certificate request with proper certificateHeaders value');
 
