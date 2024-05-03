@@ -164,7 +164,7 @@ export const makeNewRequest = (player, requestOptions) => {
         let expired = false;
 
         // Protect from race conditions causing the player to be disposed.
-        if (player.isDisposed()) {
+        if (eventBus.isDisposed()) {
           return;
         }
 
@@ -213,7 +213,7 @@ export const makeNewRequest = (player, requestOptions) => {
 
             // Because close() is async, this promise could resolve after the
             // player has been disposed.
-            if (player.isDisposed()) {
+            if (eventBus.isDisposed()) {
               return;
             }
 
