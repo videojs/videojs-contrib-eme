@@ -13,6 +13,24 @@ import EmeError from './consts/errors';
 const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
 
 /**
+ * Trigger an event on the event bus component safely.
+ *
+ * This is used because there are cases where we can see race conditions
+ * between asynchronous operations (like closing a key session) and the
+ * availability of the event bus's DOM element.
+ *
+ * @param  {Component} eventBus
+ * @param  {...} args
+ */
+const safeTriggerOnEventBus = (eventBus, ...args) => {
+  if (eventBus.isDisposed()) {
+    return;
+  }
+
+  eventBus.trigger(...args);
+};
+
+/**
  * Returns an array of MediaKeySystemConfigurationObjects provided in the keySystem
  * options.
  *
@@ -110,7 +128,7 @@ export const makeNewRequest = (player, requestOptions) => {
   try {
     const keySession = mediaKeys.createSession();
 
-    eventBus.trigger({
+    safeTriggerOnEventBus(eventBus, {
       type: 'keysessioncreated',
       keySession
     });
@@ -128,7 +146,7 @@ export const makeNewRequest = (player, requestOptions) => {
 
     return new Promise((resolve, reject) => {
       keySession.addEventListener('message', (event) => {
-        eventBus.trigger({
+        safeTriggerOnEventBus(eventBus, {
           type: 'keymessage',
           messageEvent: event
         });
@@ -140,7 +158,7 @@ export const makeNewRequest = (player, requestOptions) => {
         getLicense(options, event.message, contentId)
           .then((license) => {
             resolve(keySession.update(license).then(() => {
-              eventBus.trigger({
+              safeTriggerOnEventBus(eventBus, {
                 type: 'keysessionupdated',
                 keySession
               });
@@ -169,7 +187,7 @@ export const makeNewRequest = (player, requestOptions) => {
         }
 
         // Re-emit the keystatuseschange event with the entire keyStatusesMap
-        eventBus.trigger({
+        safeTriggerOnEventBus(eventBus, {
           type: KEY_STATUSES_CHANGE,
           keyStatuses: keySession.keyStatuses
         });
@@ -180,7 +198,7 @@ export const makeNewRequest = (player, requestOptions) => {
           // Trigger an event so that outside listeners can take action if appropriate.
           // For instance, the `output-restricted` status should result in an
           // error being thrown.
-          eventBus.trigger({
+          safeTriggerOnEventBus(eventBus, {
             keyId,
             status,
             target: keySession,
@@ -217,7 +235,7 @@ export const makeNewRequest = (player, requestOptions) => {
               return;
             }
 
-            eventBus.trigger({
+            safeTriggerOnEventBus(eventBus, {
               type: 'keysessionclosed',
               keySession
             });
@@ -415,7 +433,7 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
     return new Promise((resolve, reject) => {
       const callback = function(err, license) {
         if (eventBus) {
-          eventBus.trigger('licenserequestattempted');
+          safeTriggerOnEventBus(eventBus, 'licenserequestattempted');
         }
         if (err) {
           reject(err);
@@ -533,7 +551,7 @@ export const standard5July2016 = ({
     }).then(() => {
       return keySystemAccess.createMediaKeys();
     }).then((createdMediaKeys) => {
-      eventBus.trigger({
+      safeTriggerOnEventBus(eventBus, {
         type: 'keysystemaccesscomplete',
         mediaKeys: createdMediaKeys
       });
