@@ -79,6 +79,9 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
       }
       callCount[event.keyId][event.status]++;
       callCount.total++;
+    },
+    isDisposed: () => {
+      return false;
     }
   };
 
@@ -203,7 +206,10 @@ QUnit.test('keystatuseschange with expired key closes and recreates session', fu
   const initData = new Uint8Array([1, 2, 3]);
   const mockSession = getMockSession();
   const eventBus = {
-    trigger: (name) => {}
+    trigger: (name) => {},
+    isDisposed: () => {
+      return false;
+    }
   };
   let creates = 0;
 
@@ -263,7 +269,10 @@ QUnit.test('keystatuseschange with internal-error logs a warning', function(asse
   const mockSession = getMockSession();
   const warnCalls = [];
   const eventBus = {
-    trigger: (name) => {}
+    trigger: (name) => {},
+    isDisposed: () => {
+      return false;
+    }
   };
 
   videojs.log.warn = (...args) => warnCalls.push(args);
