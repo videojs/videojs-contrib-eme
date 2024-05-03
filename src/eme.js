@@ -116,12 +116,7 @@ export const makeNewRequest = (player, requestOptions) => {
     });
 
     player.on('dispose', () => {
-      keySession.close().then(() => {
-        eventBus.trigger({
-          type: 'keysessionclosed',
-          keySession
-        });
-      }).catch((error) => {
+      keySession.close().catch((error) => {
         const metadata = {
           errorType: EmeError.EMEFailedToCloseSession,
           keySystem
@@ -168,9 +163,11 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession.addEventListener(KEY_STATUSES_CHANGE, (event) => {
         let expired = false;
 
-        if (!eventBus) {
+        // Protect from race conditions causing the player to be disposed.
+        if (player.isDisposed()) {
           return;
         }
+
         // Re-emit the keystatuseschange event with the entire keyStatusesMap
         eventBus.trigger({
           type: KEY_STATUSES_CHANGE,
@@ -213,6 +210,13 @@ export const makeNewRequest = (player, requestOptions) => {
           // session can be created.
           videojs.log.debug('Session expired, closing the session.');
           keySession.close().then(() => {
+
+            // Because close() is async, this promise could resolve after the
+            // player has been disposed.
+            if (player.isDisposed()) {
+              return;
+            }
+
             eventBus.trigger({
               type: 'keysessionclosed',
               keySession
