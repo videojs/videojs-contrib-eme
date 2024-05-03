@@ -134,7 +134,12 @@ export const makeNewRequest = (player, requestOptions) => {
     });
 
     player.on('dispose', () => {
-      keySession.close().catch((error) => {
+      keySession.close().then(() => {
+        safeTriggerOnEventBus(eventBus, {
+          type: 'keysessionclosed',
+          keySession
+        });
+      }).catch((error) => {
         const metadata = {
           errorType: EmeError.EMEFailedToCloseSession,
           keySystem
