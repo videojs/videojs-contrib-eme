@@ -168,6 +168,9 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession.addEventListener(KEY_STATUSES_CHANGE, (event) => {
         let expired = false;
 
+        if (!eventBus) {
+          return;
+        }
         // Re-emit the keystatuseschange event with the entire keyStatusesMap
         eventBus.trigger({
           type: KEY_STATUSES_CHANGE,
