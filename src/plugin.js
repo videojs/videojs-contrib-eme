@@ -390,9 +390,7 @@ const eme = function(options = {}) {
           });
       };
 
-      // Support Safari EME with FairPlay
-      // (also used in early Chrome or Chrome with EME disabled flag)
-      player.tech_.el_.addEventListener('webkitneedkey', (event) => {
+      const webkitNeedKeyEventHandler = (event) => {
         const firstWebkitneedkeyTimeout = getOptions(player).firstWebkitneedkeyTimeout || 1000;
         const src = player.src();
         // on source change or first startup reset webkitneedkey options.
@@ -422,12 +420,31 @@ const eme = function(options = {}) {
             player.eme.webkitneedkey_.timeout = null;
             handleFn(event);
           }, firstWebkitneedkeyTimeout);
-        // after we have a verified first request, we will request on
-        // every other event like normal.
+          // after we have a verified first request, we will request on
+          // every other event like normal.
         } else {
           handleFn(event);
         }
+      };
+
+      let videoElement = player.tech_.el_;
+
+      // Support Safari EME with FairPlay
+      // (also used in early Chrome or Chrome with EME disabled flag)
+      videoElement.addEventListener('webkitneedkey', webkitNeedKeyEventHandler);
+
+      const cleanup = () => {
+        videoElement.removeEventListener('webkitneedkey', webkitNeedKeyEventHandler);
+        videoElement = null;
+      };
+
+      // auto-cleanup:
+      player.on('dispose', () => {
+        cleanup();
       });
+
+      // returning for manual cleanup
+      return cleanup;
     },
     detectSupportedCDMs,
     options
