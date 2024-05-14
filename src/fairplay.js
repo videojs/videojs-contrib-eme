@@ -10,6 +10,7 @@ import window from 'global/window';
 import {stringToUint16Array, uint16ArrayToString, getHostnameFromUri, mergeAndRemoveNull} from './utils';
 import {httpResponseHandler} from './http-handler.js';
 import EmeError from './consts/errors';
+import { safeTriggerOnEventBus } from './eme.js';
 
 export const LEGACY_FAIRPLAY_KEY_SYSTEM = 'com.apple.fps.1_0';
 
@@ -85,7 +86,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
       return;
     }
 
-    eventBus.trigger({
+    safeTriggerOnEventBus(eventBus, {
       type: 'keysessioncreated',
       keySession
     });
@@ -93,13 +94,14 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
     keySession.contentId = contentId;
 
     keySession.addEventListener('webkitkeymessage', (event) => {
-      eventBus.trigger({
+      safeTriggerOnEventBus(eventBus, {
         type: 'keymessage',
         messageEvent: event
       });
       getLicense(options, contentId, event.message, (err, license) => {
         if (eventBus) {
-          eventBus.trigger('licenserequestattempted');
+
+          safeTriggerOnEventBus(eventBus, { type: 'licenserequestattempted' });
         }
         if (err) {
           const metadata = {
@@ -114,7 +116,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
 
         keySession.update(new Uint8Array(license));
 
-        eventBus.trigger({
+        safeTriggerOnEventBus(eventBus, {
           type: 'keysessionupdated',
           keySession
         });

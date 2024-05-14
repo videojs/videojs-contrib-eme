@@ -525,6 +525,9 @@ QUnit.test('5 July 2016 lifecycle', function(assert) {
       if (name === 'keysessionupdated') {
         callCounts.keysessionUpdatedEvent++;
       }
+    },
+    isDisposed: () => {
+      return false;
     }
   };
 
@@ -1302,6 +1305,9 @@ QUnit.test('makeNewRequest triggers keysessioncreated', function(assert) {
           assert.ok(true, 'got a keysessioncreated event');
           done();
         }
+      },
+      isDisposed: () => {
+        return false;
       }
     }
   });
@@ -1348,7 +1354,10 @@ QUnit.test('emeError is called when keySession.close fails', function(assert) {
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: () => {}
+      trigger: () => {},
+      isDisposed: () => {
+        return false;
+      }
     },
     emeError: (error, metadata) => {
       assert.equal(error, expectedErrorMessage, 'expected eme error message');
@@ -1372,7 +1381,10 @@ QUnit.test('emeError called when session.generateRequest fails', function(assert
       createSession: () => mockSession
     },
     eventBus: {
-      trigger: () => {}
+      trigger: () => {},
+      isDisposed: () => {
+        return false;
+      }
     },
     emeError: (error, metadata) => {
       assert.equal(error, expectedErrorMessage, 'expected eme error message');
@@ -1472,7 +1484,12 @@ QUnit.test('addPendingSessions reuses saved options', function(assert) {
     options,
     getLicense,
     removeSession: () => '',
-    eventBus: { trigger: () => {} }
+    eventBus: {
+      trigger: () => {},
+      isDisposed: () => {
+        return false;
+      }
+    }
   }];
   const video = {
     pendingSessionData,

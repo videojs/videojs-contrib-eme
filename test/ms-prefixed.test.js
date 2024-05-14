@@ -134,6 +134,9 @@ QUnit.test('throws error on keysession mskeyerror event', function(assert) {
     eventBus: {
       trigger: (event) => {
         errorMessage = typeof event === 'string' ? event : event.message;
+      },
+      isDisposed: () => {
+        return false;
       }
     },
     emeError
@@ -188,6 +191,9 @@ QUnit.test('calls getKey when provided on key message', function(assert) {
     eventBus: {
       trigger: (event) => {
         errorMessage = typeof event === 'string' ? event : event.message;
+      },
+      isDisposed: () => {
+        return false;
       }
     },
     emeError
@@ -254,6 +260,9 @@ QUnit.test('makes request when nothing provided on key message', function(assert
         if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
+      },
+      isDisposed: () => {
+        return false;
       }
     },
     emeError
@@ -389,6 +398,9 @@ QUnit.test('makes request with provided url string on key message', function(ass
         if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
+      },
+      isDisposed: () => {
+        return false;
       }
     },
     emeError
@@ -480,11 +492,14 @@ QUnit.test('makes request with provided url on key message', function(assert) {
     },
     eventBus: {
       trigger: (event) => {
-        if (event === 'licenserequestattempted') {
+        if (event.type === 'licenserequestattempted') {
           callCounts.licenseRequestAttempts++;
         } else if (typeof event === 'object' && event.type === 'mskeyerror') {
           errorMessage = event.message;
         }
+      },
+      isDisposed: () => {
+        return false;
       }
     },
     emeError

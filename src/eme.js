@@ -22,12 +22,12 @@ const isFairplayKeySystem = (str) => str.startsWith('com.apple.fps');
  * @param  {Component} eventBus
  * @param  {...} args
  */
-const safeTriggerOnEventBus = (eventBus, ...args) => {
+export const safeTriggerOnEventBus = (eventBus, args) => {
   if (eventBus.isDisposed()) {
     return;
   }
 
-  eventBus.trigger(...args);
+  eventBus.trigger({...args});
 };
 
 /**
@@ -438,7 +438,7 @@ const promisifyGetLicense = (keySystem, getLicenseFn, eventBus) => {
     return new Promise((resolve, reject) => {
       const callback = function(err, license) {
         if (eventBus) {
-          safeTriggerOnEventBus(eventBus, 'licenserequestattempted');
+          safeTriggerOnEventBus(eventBus, { type: 'licenserequestattempted' });
         }
         if (err) {
           reject(err);
