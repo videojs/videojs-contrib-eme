@@ -1,3 +1,10 @@
+<a name="5.3.1"></a>
+## [5.3.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.0...v5.3.1) (2024-05-16)
+
+### Bug Fixes
+
+* eventBus error after dispose (#218) ([730bdd9](https://github.com/videojs/videojs-contrib-eme/commit/730bdd9)), closes [#218](https://github.com/videojs/videojs-contrib-eme/issues/218)
+
 <a name="5.3.0"></a>
 # [5.3.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.2.1...v5.3.0) (2024-05-09)
 
