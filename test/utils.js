@@ -15,6 +15,9 @@ export const getMockEventBus = () => {
     calls,
     trigger: (event) => {
       calls.push(event);
+    },
+    isDisposed: () => {
+      return false;
     }
   };
 

@@ -57,10 +57,13 @@ QUnit.test('lifecycle', function(assert) {
   };
 
   const eventBus = {
-    trigger: (name) => {
-      if (name === 'licenserequestattempted') {
+    trigger: (event) => {
+      if (event.type === 'licenserequestattempted') {
         callCounts.licenseRequestAttempts++;
       }
+    },
+    isDisposed: () => {
+      return false;
     }
   };
 
@@ -356,6 +359,9 @@ QUnit.test('keysessioncreated fired on key session created', function(assert) {
         assert.deepEqual(event.keySession, { addEventListener }, 'keySession payload passed with event');
         done();
       }
+    },
+    isDisposed: () => {
+      return false;
     }
   };
 

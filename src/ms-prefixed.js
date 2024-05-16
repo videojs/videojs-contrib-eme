@@ -10,6 +10,7 @@ import window from 'global/window';
 import { requestPlayreadyLicense } from './playready';
 import { getMediaKeySystemConfigurations } from './utils';
 import EmeError from './consts/errors';
+import { safeTriggerOnEventBus } from './eme';
 
 export const PLAYREADY_KEY_SYSTEM = 'com.microsoft.playready';
 
@@ -25,7 +26,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
         };
 
         emeError(err, metadata);
-        eventBus.trigger({
+        safeTriggerOnEventBus(eventBus, {
           message: 'Unable to get key: ' + err,
           target: session,
           type: 'mskeyerror'
@@ -35,7 +36,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
 
       session.update(key);
 
-      eventBus.trigger({
+      safeTriggerOnEventBus(eventBus, {
         type: 'keysessionupdated',
         keySession: session
       });
@@ -55,7 +56,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
 
   const callback = (err, responseBody) => {
     if (eventBus) {
-      eventBus.trigger('licenserequestattempted');
+      safeTriggerOnEventBus(eventBus, { type: 'licenserequestattempted' });
     }
 
     if (err) {
@@ -65,7 +66,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
       };
 
       emeError(err, metadata);
-      eventBus.trigger({
+      safeTriggerOnEventBus(eventBus, {
         message: 'Unable to request key from url: ' + playreadyOptions.url,
         target: session,
         type: 'mskeyerror'
@@ -98,7 +99,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
     throw error;
   }
 
-  eventBus.trigger({
+  safeTriggerOnEventBus(eventBus, {
     type: 'keysessioncreated',
     keySession: session
   });
@@ -113,7 +114,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
   // eslint-disable-next-line max-len
   // @see [PlayReady License Acquisition]{@link https://msdn.microsoft.com/en-us/library/dn468979.aspx}
   session.addEventListener('mskeymessage', (event) => {
-    eventBus.trigger({
+    safeTriggerOnEventBus(eventBus, {
       type: 'keymessage',
       messageEvent: event
     });
@@ -127,7 +128,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
     };
 
     emeError(session.error, metadata);
-    eventBus.trigger({
+    safeTriggerOnEventBus(eventBus, {
       message: 'Unexpected key error from key session with ' +
       `code: ${session.error.code} and systemCode: ${session.error.systemCode}`,
       target: session,
@@ -136,7 +137,7 @@ export const createSession = (video, initData, options, eventBus, emeError) => {
   });
 
   session.addEventListener('mskeyadded', () => {
-    eventBus.trigger({
+    safeTriggerOnEventBus(eventBus, {
       target: session,
       type: 'mskeyadded'
     });
