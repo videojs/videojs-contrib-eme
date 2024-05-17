@@ -433,18 +433,22 @@ const eme = function(options = {}) {
       // (also used in early Chrome or Chrome with EME disabled flag)
       videoElement.addEventListener('webkitneedkey', webkitNeedKeyEventHandler);
 
-      const cleanup = () => {
-        videoElement.removeEventListener('webkitneedkey', webkitNeedKeyEventHandler);
+      const cleanupWebkitNeedKeyHandler = () => {
+        // no need in auto-cleanup if manual clean is called
+        player.off('dispose', cleanupWebkitNeedKeyHandler);
+        // check for null, if manual cleanup is called multiple times for any reason
+        if (videoElement !== null) {
+          videoElement.removeEventListener('webkitneedkey', webkitNeedKeyEventHandler);
+        }
+
         videoElement = null;
       };
 
       // auto-cleanup:
-      player.on('dispose', () => {
-        cleanup();
-      });
+      player.on('dispose', cleanupWebkitNeedKeyHandler);
 
       // returning for manual cleanup
-      return cleanup;
+      return cleanupWebkitNeedKeyHandler;
     },
     detectSupportedCDMs,
     options
