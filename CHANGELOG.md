@@ -1,3 +1,10 @@
+<a name="5.3.2"></a>
+## [5.3.2](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.1...v5.3.2) (2024-05-17)
+
+### Bug Fixes
+
+* fix cleanup issues (#220) ([6b82ffa](https://github.com/videojs/videojs-contrib-eme/commit/6b82ffa)), closes [#220](https://github.com/videojs/videojs-contrib-eme/issues/220)
+
 <a name="5.3.1"></a>
 ## [5.3.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.0...v5.3.1) (2024-05-16)
 
