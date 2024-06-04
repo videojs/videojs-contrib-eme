@@ -1,3 +1,10 @@
+<a name="5.4.0"></a>
+# [5.4.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.2...v5.4.0) (2024-06-04)
+
+### Features
+
+* add metadata to the license requests (#221) ([7621c86](https://github.com/videojs/videojs-contrib-eme/commit/7621c86)), closes [#221](https://github.com/videojs/videojs-contrib-eme/issues/221)
+
 <a name="5.3.2"></a>
 ## [5.3.2](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.1...v5.3.2) (2024-05-17)
 
