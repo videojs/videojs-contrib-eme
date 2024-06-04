@@ -80,7 +80,7 @@ export const addKeyToSession = (options, session, event, eventBus, emeError) => 
   if (playreadyOptions.getLicense) {
     playreadyOptions.getLicense(options, event.message.buffer, callback);
   } else {
-    requestPlayreadyLicense(playreadyOptions, event.message.buffer, options, callback);
+    requestPlayreadyLicense(PLAYREADY_KEY_SYSTEM, playreadyOptions, event.message.buffer, options, callback);
   }
 };
 

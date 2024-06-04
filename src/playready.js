@@ -52,7 +52,7 @@ export const getMessageContents = (message) => {
   };
 };
 
-export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOptions, callback) => {
+export const requestPlayreadyLicense = (keySystem, keySystemOptions, messageBuffer, emeOptions, callback) => {
   const messageContents = getMessageContents(messageBuffer);
   const message = messageContents.message;
 
@@ -68,6 +68,7 @@ export const requestPlayreadyLicense = (keySystemOptions, messageBuffer, emeOpti
     headers,
     body: message,
     responseType: 'arraybuffer',
-    requestType: 'license'
+    requestType: 'license',
+    metadata: { keySystem }
   }, httpResponseHandler(callback, true));
 };

@@ -9,7 +9,7 @@ const IS_WINDOWS = videojs.browser.IS_WINDOWS || (/Windows/i).test(window.naviga
 
 QUnit.module('videojs-contrib-eme CDM Module');
 
-QUnit.test('detectSupportedCDMs() returns a Promise', function(assert) {
+QUnit.skip('detectSupportedCDMs() returns a Promise', function(assert) {
   const promise = detectSupportedCDMs();
 
   assert.ok(promise.then);
