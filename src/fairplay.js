@@ -141,7 +141,7 @@ const addKey = ({video, contentId, initData, cert, options, getLicense, eventBus
   });
 };
 
-export const defaultGetCertificate = (fairplayOptions) => {
+export const defaultGetCertificate = (keySystem, fairplayOptions) => {
   return (emeOptions, callback) => {
     const headers = mergeAndRemoveNull(
       emeOptions.emeHeaders,
@@ -152,6 +152,7 @@ export const defaultGetCertificate = (fairplayOptions) => {
       uri: fairplayOptions.certificateUri,
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem },
       headers
     }, httpResponseHandler((err, license) => {
       if (err) {
@@ -171,7 +172,7 @@ export const defaultGetContentId = (emeOptions, initDataString) => {
   return getHostnameFromUri(initDataString);
 };
 
-export const defaultGetLicense = (fairplayOptions) => {
+export const defaultGetLicense = (keySystem, fairplayOptions) => {
   return (emeOptions, contentId, keyMessage, callback) => {
     const headers = mergeAndRemoveNull(
       {'Content-type': 'application/octet-stream'},
@@ -180,10 +181,11 @@ export const defaultGetLicense = (fairplayOptions) => {
     );
 
     videojs.xhr({
-      uri: fairplayOptions.licenseUri,
+      uri: fairplayOptions.licenseUri || fairplayOptions.url,
       method: 'POST',
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem, contentId },
       body: keyMessage,
       headers
     }, httpResponseHandler(callback, true));
@@ -193,10 +195,10 @@ export const defaultGetLicense = (fairplayOptions) => {
 const fairplay = ({video, initData, options, eventBus, emeError}) => {
   const fairplayOptions = options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM];
   const getCertificate = fairplayOptions.getCertificate ||
-    defaultGetCertificate(fairplayOptions);
+    defaultGetCertificate(LEGACY_FAIRPLAY_KEY_SYSTEM, fairplayOptions);
   const getContentId = fairplayOptions.getContentId || defaultGetContentId;
   const getLicense = fairplayOptions.getLicense ||
-    defaultGetLicense(fairplayOptions);
+    defaultGetLicense(LEGACY_FAIRPLAY_KEY_SYSTEM, fairplayOptions);
 
   return new Promise((resolve, reject) => {
     getCertificate(options, (err, cert) => {

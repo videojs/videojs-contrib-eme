@@ -448,10 +448,10 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     xhrCalls.push(xhrOptions);
   };
 
-  const getLicense = defaultGetLicense(fairplayOptions);
-  const getCertificate = defaultGetCertificate(fairplayOptions);
+  const getLicense = defaultGetLicense('', fairplayOptions);
+  const getCertificate = defaultGetCertificate('', fairplayOptions);
 
-  getLicense(emeOptions);
+  getLicense(emeOptions, 'contentId');
   getCertificate(emeOptions);
 
   assert.equal(xhrCalls.length, 2, 'made two XHR requests');
@@ -461,6 +461,7 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     method: 'POST',
     responseType: 'arraybuffer',
     requestType: 'license',
+    metadata: { keySystem: '', contentId: 'contentId' },
     body: undefined,
     headers: {
       'Content-type': 'application/octet-stream',
@@ -472,6 +473,7 @@ QUnit.test('emeHeaders sent with license and certificate requests', function(ass
     uri: 'some-other-url',
     responseType: 'arraybuffer',
     requestType: 'license',
+    metadata: { keySystem: '' },
     headers: {
       'Some-Header': 'some-header-value'
     }
@@ -503,10 +505,10 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     xhrCalls.push(xhrOptions);
   };
 
-  const getLicense = defaultGetLicense(fairplayOptions);
-  const getCertificate = defaultGetCertificate(fairplayOptions);
+  const getLicense = defaultGetLicense('', fairplayOptions);
+  const getCertificate = defaultGetCertificate('', fairplayOptions);
 
-  getLicense(emeOptions);
+  getLicense(emeOptions, 'contentId');
   getCertificate(emeOptions);
 
   assert.equal(xhrCalls.length, 2, 'made two XHR requests');
@@ -516,6 +518,7 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     method: 'POST',
     responseType: 'arraybuffer',
     requestType: 'license',
+    metadata: { keySystem: '', contentId: 'contentId' },
     body: undefined,
     headers: {
       'Content-type': 'application/octet-stream',
@@ -527,6 +530,7 @@ QUnit.test('licenseHeaders and certificateHeaders properties override emeHeaders
     uri: 'some-other-url',
     responseType: 'arraybuffer',
     requestType: 'license',
+    metadata: { keySystem: '' },
     headers: {
       'Some-Header': 'higher-priority-cert-header'
     }

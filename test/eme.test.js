@@ -384,6 +384,7 @@ QUnit.test('accepts a license URL as an option', function(assert) {
       method: 'POST',
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem: 'com.widevine.alpha' },
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream'
@@ -460,6 +461,7 @@ QUnit.test('accepts a license URL as property', function(assert) {
       method: 'POST',
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem: 'com.widevine.alpha' },
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream'
@@ -1004,7 +1006,7 @@ QUnit.test('getLicense promise rejection', function(assert) {
 
 QUnit.test('getLicense calls back with error for 400 and 500 status codes', function(assert) {
   const getLicenseCallback = sinon.spy();
-  const getLicense = defaultGetLicense({});
+  const getLicense = defaultGetLicense('', {});
 
   function toArrayBuffer(obj) {
     const json = JSON.stringify(obj);
@@ -1043,7 +1045,7 @@ QUnit.test('getLicense calls back with error for 400 and 500 status codes', func
 
 QUnit.test('getLicense calls back with response body for non-400/500 status codes', function(assert) {
   const getLicenseCallback = sinon.spy();
-  const getLicense = defaultGetLicense({});
+  const getLicense = defaultGetLicense('', {});
 
   videojs.xhr = (params, callback) => {
     return callback(null, {statusCode: 200}, {body: 'some-body'});
@@ -1180,6 +1182,7 @@ QUnit.test('emeHeaders option sets headers on default license xhr request', func
       method: 'POST',
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem: 'com.widevine.alpha' },
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream',
@@ -1259,6 +1262,7 @@ QUnit.test('licenseHeaders keySystems property overrides emeHeaders value', func
       method: 'POST',
       responseType: 'arraybuffer',
       requestType: 'license',
+      metadata: { keySystem: 'com.widevine.alpha' },
       body: 'the-message',
       headers: {
         'Content-type': 'application/octet-stream',

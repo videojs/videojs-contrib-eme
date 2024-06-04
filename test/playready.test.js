@@ -59,7 +59,7 @@ QUnit.test('emeHeaders sent with license requests', function(assert) {
     xhrCalls.push(xhrOptions);
   };
 
-  requestPlayreadyLicense(keySystemOptions, createMessageBuffer(), emeOptions);
+  requestPlayreadyLicense('com.microsoft.playready', keySystemOptions, createMessageBuffer(), emeOptions);
 
   assert.equal(xhrCalls.length, 1, 'made one XHR');
   assert.deepEqual(xhrCalls[0], {
@@ -72,7 +72,8 @@ QUnit.test('emeHeaders sent with license requests', function(assert) {
     },
     body: challengeElement,
     responseType: 'arraybuffer',
-    requestType: 'license'
+    requestType: 'license',
+    metadata: { keySystem: 'com.microsoft.playready' }
   }, 'license request sent with correct headers');
 
   videojs.xhr = origXhr;
@@ -97,7 +98,7 @@ QUnit.test('licenseHeaders property overrides emeHeaders', function(assert) {
     xhrCalls.push(xhrOptions);
   };
 
-  requestPlayreadyLicense(keySystemOptions, createMessageBuffer(), emeOptions);
+  requestPlayreadyLicense('com.microsoft.playready', keySystemOptions, createMessageBuffer(), emeOptions);
 
   assert.equal(xhrCalls.length, 1, 'made one XHR');
   assert.deepEqual(xhrCalls[0], {
@@ -110,7 +111,8 @@ QUnit.test('licenseHeaders property overrides emeHeaders', function(assert) {
     },
     body: challengeElement,
     responseType: 'arraybuffer',
-    requestType: 'license'
+    requestType: 'license',
+    metadata: { keySystem: 'com.microsoft.playready' }
   }, 'license request sent with correct headers');
 
   videojs.xhr = origXhr;

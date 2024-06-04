@@ -412,11 +412,11 @@ export const addPendingSessions = ({
   return Promise.all(promises);
 };
 
-const defaultPlayreadyGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
-  requestPlayreadyLicense(keySystemOptions, keyMessage, emeOptions, callback);
+const defaultPlayreadyGetLicense = (keySystem, keySystemOptions) => (emeOptions, keyMessage, callback) => {
+  requestPlayreadyLicense(keySystem, keySystemOptions, keyMessage, emeOptions, callback);
 };
 
-export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, callback) => {
+export const defaultGetLicense = (keySystem, keySystemOptions) => (emeOptions, keyMessage, callback) => {
   const headers = mergeAndRemoveNull(
     {'Content-type': 'application/octet-stream'},
     emeOptions.emeHeaders,
@@ -428,6 +428,7 @@ export const defaultGetLicense = (keySystemOptions) => (emeOptions, keyMessage, 
     method: 'POST',
     responseType: 'arraybuffer',
     requestType: 'license',
+    metadata: { keySystem },
     body: keyMessage,
     headers
   }, httpResponseHandler(callback, true));
@@ -473,7 +474,7 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
   const isFairplay = isFairplayKeySystem(keySystem);
 
   if (isFairplay && keySystemOptions.certificateUri && !keySystemOptions.getCertificate) {
-    keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystemOptions);
+    keySystemOptions.getCertificate = defaultFairplayGetCertificate(keySystem, keySystemOptions);
   }
 
   if (isFairplay && !keySystemOptions.getCertificate) {
@@ -486,11 +487,11 @@ const standardizeKeySystemOptions = (keySystem, keySystemOptions) => {
 
   if (keySystemOptions.url && !keySystemOptions.getLicense) {
     if (keySystem === 'com.microsoft.playready') {
-      keySystemOptions.getLicense = defaultPlayreadyGetLicense(keySystemOptions);
+      keySystemOptions.getLicense = defaultPlayreadyGetLicense(keySystem, keySystemOptions);
     } else if (isFairplay) {
-      keySystemOptions.getLicense = defaultFairplayGetLicense(keySystemOptions);
+      keySystemOptions.getLicense = defaultFairplayGetLicense(keySystem, keySystemOptions);
     } else {
-      keySystemOptions.getLicense = defaultGetLicense(keySystemOptions);
+      keySystemOptions.getLicense = defaultGetLicense(keySystem, keySystemOptions);
     }
   }
 
