@@ -384,7 +384,7 @@ const eme = function(options = {}) {
         // TODO it's possible that the video state must be cleared if reusing the same video
         // element between sources
         setupSessions(player);
-        handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_)
+        handleWebKitNeedKeyEvent(event, getOptions(player), player.tech_, emeError)
           .catch((error) => {
             emeError(error);
           });
