@@ -1,3 +1,10 @@
+<a name="5.4.1"></a>
+## [5.4.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.4.0...v5.4.1) (2024-06-13)
+
+### Bug Fixes
+
+* pass emeError to handleWebKitNeedKeyEvent to avoid TypeError (#222) ([463c839](https://github.com/videojs/videojs-contrib-eme/commit/463c839)), closes [#222](https://github.com/videojs/videojs-contrib-eme/issues/222)
+
 <a name="5.4.0"></a>
 # [5.4.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.3.2...v5.4.0) (2024-06-04)
 
