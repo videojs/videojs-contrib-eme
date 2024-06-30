@@ -308,8 +308,20 @@ const eme = function(options = {}) {
   const player = this;
 
   const emeError = emeErrorHandler(player);
+  let contentHasEnded = false;
 
   player.ready(() => onPlayerReady(player, emeError));
+
+  player.on('ended', () =>{
+    contentHasEnded = true;
+
+    player.one('play', () => {
+      if (contentHasEnded && player.currentTime() === 0) {
+        contentHasEnded = true;
+        onPlayerReady(player, emeError);
+      }
+    });
+  });
 
   // Plugin API
   player.eme = {
