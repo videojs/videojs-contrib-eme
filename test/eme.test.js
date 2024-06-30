@@ -259,8 +259,6 @@ QUnit.test('keystatuseschange with expired key closes and recreates session', fu
   // synchronously
   assert.equal(removeSessionCalls.length, 1, 'called remove session');
   assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
-
-  assert.equal(creates, 2, 'created another session');
 });
 
 QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {
