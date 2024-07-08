@@ -314,6 +314,13 @@ const eme = function(options = {}) {
   // Plugin API
   player.eme = {
     /**
+     * For manual setup for eme listeners (for example: after player.reset call)
+     * basically for any cases when player.tech.el is changed
+     */
+    setupEmeListeners() {
+      onPlayerReady(player, emeError);
+    },
+    /**
     * Sets up MediaKeys on demand
     * Works around https://bugs.chromium.org/p/chromium/issues/detail?id=895449
     *
