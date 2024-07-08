@@ -1,3 +1,10 @@
+<a name="5.5.0"></a>
+# [5.5.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.4.1...v5.5.0) (2024-07-08)
+
+### Features
+
+* add manual setup eme listeners (#226) ([a22099a](https://github.com/videojs/videojs-contrib-eme/commit/a22099a)), closes [#226](https://github.com/videojs/videojs-contrib-eme/issues/226)
+
 <a name="5.4.1"></a>
 ## [5.4.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.4.0...v5.4.1) (2024-06-13)
 
