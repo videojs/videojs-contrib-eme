@@ -256,6 +256,27 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   if (window.MediaKeys) {
+    player.on('ended', () =>{
+
+      if (videojs.browser.IS_FIREFOX) {
+        let handled = false;
+
+        player.one(['seek', 'play'], () => {
+          if (handled) {
+            return;
+          }
+          const mockEncryptedEvent = {
+            initDataType: 'cenc',
+            initData: null,
+            target: player.tech_.el_
+          };
+
+          setupSessions(player);
+          handleEncryptedEvent(player, mockEncryptedEvent, getOptions(player), player.eme.sessions, player.tech_, emeError);
+          handled = true;
+        });
+      }
+    });
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
@@ -306,22 +327,9 @@ const onPlayerReady = (player, emeError) => {
  */
 const eme = function(options = {}) {
   const player = this;
-
   const emeError = emeErrorHandler(player);
-  let contentHasEnded = false;
 
   player.ready(() => onPlayerReady(player, emeError));
-
-  player.on('ended', () =>{
-    contentHasEnded = true;
-
-    player.one('play', () => {
-      if (contentHasEnded && player.currentTime() === 0) {
-        contentHasEnded = true;
-        onPlayerReady(player, emeError);
-      }
-    });
-  });
 
   // Plugin API
   player.eme = {
