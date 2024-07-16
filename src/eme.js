@@ -161,6 +161,10 @@ export const makeNewRequest = (player, requestOptions) => {
           return;
         }
 
+        if (event.messageType === 'license-renewal' && (!player.hasStarted() || player.paused())) {
+          return;
+        }
+
         getLicense(options, event.message, contentId)
           .then((license) => {
             resolve(keySession.update(license).then(() => {
