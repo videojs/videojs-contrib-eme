@@ -197,7 +197,7 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
 
 });
 
-QUnit.test('keystatuseschange with expired key closes and recreates session', function(assert) {
+QUnit.test('keystatuseschange with expired key closes', function(assert) {
   const removeSessionCalls = [];
   // once the eme module gets the removeSession function, the session argument is already
   // bound to the function (note that it's a custom session maintained by the plugin, not
@@ -259,6 +259,49 @@ QUnit.test('keystatuseschange with expired key closes and recreates session', fu
   // synchronously
   assert.equal(removeSessionCalls.length, 1, 'called remove session');
   assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
+
+  assert.equal(creates, 1, 'no new session created');
+});
+
+QUnit.test('all existing sessions are closed and removed on `ended`', function(assert) {
+  const removeSessionCalls = [];
+  // once the eme module gets the removeSession function, the session argument is already
+  // bound to the function (note that it's a custom session maintained by the plugin, not
+  // the native session), so only initData is passed
+  const removeSession = (initData) => removeSessionCalls.push(initData);
+  const initData = new Uint8Array([1, 2, 3]);
+  const mockSession = getMockSession();
+  const eventBus = {
+    trigger: (name) => {},
+    isDisposed: () => {
+      return false;
+    }
+  };
+  let creates = 0;
+
+  makeNewRequest(this.player, {
+    mediaKeys: {
+      createSession: () => {
+        creates++;
+
+        return mockSession;
+      }
+    },
+    initDataType: '',
+    initData,
+    options: {},
+    getLicense() {},
+    removeSession,
+    eventBus
+  });
+
+  assert.equal(creates, 1, 'created session');
+  assert.equal(mockSession.listeners.length, 2, 'added listeners');
+
+  this.player.trigger('ended');
+
+  assert.equal(mockSession.numCloses, 1, 'closed session');
+  assert.equal(removeSessionCalls.length, 1, 'called remove session');
 });
 
 QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {

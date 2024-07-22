@@ -4,7 +4,7 @@ import QUnit from 'qunit';
 import sinon from 'sinon';
 import videojs from 'video.js';
 import window from 'global/window';
-
+import * as plug from '../src/plugin';
 import {
   default as plugin,
   hasSession,
@@ -516,6 +516,30 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
     assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
   });
+});
+
+QUnit.skip('handleEncryptedEvent called on replay or seekback after `ended` ', function(assert) {
+  const done = assert.async();
+
+  videojs.browser = {
+    IS_FIREFOX: true
+  };
+  this.player.eme();
+
+  this.player.trigger('ready');
+  this.player.trigger('play');
+
+  const handleEncryptedEventSpy = sinon.stub(plug, 'setupSessions');
+
+  setTimeout(() => {
+    this.player.trigger('ended');
+
+    setTimeout(() => {
+      this.player.trigger('play');
+      assert.ok(handleEncryptedEventSpy.calledOnce, 'successfully');
+      done();
+    }, 0);
+  }, 0);
 });
 
 QUnit.test('handleMsNeedKeyEvent uses predefined init data', function(assert) {
