@@ -51,7 +51,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (player, event, options, sessions, eventBus, emeError) => {
+export function handleEncryptedEvent(player, event, options, sessions, eventBus, emeError) {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -89,7 +89,6 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
     }
 
     sessions.push({ initData });
-
     return standard5July2016({
       player,
       video: event.target,
@@ -109,7 +108,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
 
     emeError(error, metadata);
   });
-};
+}
 
 export const handleWebKitNeedKeyEvent = (event, options, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
@@ -256,6 +255,27 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   if (window.MediaKeys) {
+    player.on('ended', () =>{
+
+      if (videojs.browser.IS_FIREFOX) {
+        let handled = false;
+
+        player.one(['seek', 'play'], () => {
+          if (handled) {
+            return;
+          }
+          const mockEncryptedEvent = {
+            initDataType: 'cenc',
+            initData: null,
+            target: player.tech_.el_
+          };
+
+          setupSessions(player);
+          handleEncryptedEvent(player, mockEncryptedEvent, getOptions(player), player.eme.sessions, player.tech_, emeError);
+          handled = true;
+        });
+      }
+    });
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
@@ -306,7 +326,6 @@ const onPlayerReady = (player, emeError) => {
  */
 const eme = function(options = {}) {
   const player = this;
-
   const emeError = emeErrorHandler(player);
 
   player.ready(() => onPlayerReady(player, emeError));

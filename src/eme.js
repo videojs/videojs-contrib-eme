@@ -133,12 +133,13 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession
     });
 
-    player.on('dispose', () => {
+    player.on(['dispose', 'ended'], () => {
       keySession.close().then(() => {
         safeTriggerOnEventBus(eventBus, {
           type: 'keysessionclosed',
           keySession
         });
+        removeSession(initData);
       }).catch((error) => {
         const metadata = {
           errorType: EmeError.EMEFailedToCloseSession,
@@ -157,6 +158,10 @@ export const makeNewRequest = (player, requestOptions) => {
         });
         // all other types will be handled by keystatuseschange
         if (event.messageType !== 'license-request' && event.messageType !== 'license-renewal') {
+          return;
+        }
+
+        if (event.messageType === 'license-renewal' && (!player.hasStarted() || player.paused())) {
           return;
         }
 
@@ -245,7 +250,6 @@ export const makeNewRequest = (player, requestOptions) => {
               keySession
             });
             removeSession(initData);
-            makeNewRequest(player, requestOptions);
           }).catch((error) => {
             const metadata = {
               errorType: EmeError.EMEFailedToCloseSession,
