@@ -51,7 +51,7 @@ export const removeSession = (sessions, initData) => {
   }
 };
 
-export const handleEncryptedEvent = (player, event, options, sessions, eventBus, emeError) => {
+export function handleEncryptedEvent(player, event, options, sessions, eventBus, emeError) {
   if (!options || !options.keySystems) {
     // return silently since it may be handled by a different system
     return Promise.resolve();
@@ -89,7 +89,6 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
     }
 
     sessions.push({ initData });
-
     return standard5July2016({
       player,
       video: event.target,
@@ -109,7 +108,7 @@ export const handleEncryptedEvent = (player, event, options, sessions, eventBus,
 
     emeError(error, metadata);
   });
-};
+}
 
 export const handleWebKitNeedKeyEvent = (event, options, eventBus, emeError) => {
   if (!options.keySystems || !options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] || !event.initData) {
