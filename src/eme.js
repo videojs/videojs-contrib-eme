@@ -125,16 +125,38 @@ export const makeNewRequest = (player, requestOptions) => {
     keySystem
   } = requestOptions;
 
+  let timeElapsed = 0;
+  let pauseTimer;
+
+  player.on('pause', () => {
+    if (options.limitRenewalsOnPause && typeof options.limitRenewalsOnPause === 'number') {
+
+      pauseTimer = setInterval(() => {
+        timeElapsed++;
+        if (timeElapsed >= options.limitRenewalsOnPause) {
+          clearInterval(pauseTimer);
+        }
+      }, 1000);
+
+      player.on('play', () => {
+        clearInterval(pauseTimer);
+        timeElapsed = 0;
+      });
+    }
+  });
+
   try {
     const keySession = mediaKeys.createSession();
 
-    safeTriggerOnEventBus(eventBus, {
-      type: 'keysessioncreated',
-      keySession
-    });
-
-    player.on(['dispose', 'ended'], () => {
+    const closeAndRemoveSession = () => {
       keySession.close().then(() => {
+
+        // Because close() is async, this promise could resolve after the
+        // player has been disposed.
+        if (eventBus.isDisposed()) {
+          return;
+        }
+
         safeTriggerOnEventBus(eventBus, {
           type: 'keysessionclosed',
           keySession
@@ -148,6 +170,15 @@ export const makeNewRequest = (player, requestOptions) => {
 
         emeError(error, metadata);
       });
+    };
+
+    safeTriggerOnEventBus(eventBus, {
+      type: 'keysessioncreated',
+      keySession
+    });
+
+    player.on(['dispose', 'ended'], () => {
+      closeAndRemoveSession();
     });
 
     return new Promise((resolve, reject) => {
@@ -161,8 +192,16 @@ export const makeNewRequest = (player, requestOptions) => {
           return;
         }
 
-        if (event.messageType === 'license-renewal' && (!player.hasStarted() || player.paused())) {
-          return;
+        if (event.messageType === 'license-renewal') {
+          const limitRenewalsBeforePlay = options.limitRenewalsBeforePlay;
+          const limitRenewalsOnPause = options.limitRenewslsOnPause;
+
+          if (!player.hasStarted() && limitRenewalsBeforePlay ||
+              player.paused() && typeof limitRenewalsOnPause === 'number' && timeElapsed >= limitRenewalsOnPause) {
+
+            closeAndRemoveSession();
+            return;
+          }
         }
 
         getLicense(options, event.message, contentId)
@@ -236,28 +275,7 @@ export const makeNewRequest = (player, requestOptions) => {
         if (expired) {
           // Close session and remove it from the session list to ensure that a new
           // session can be created.
-          videojs.log.debug('Session expired, closing the session.');
-          keySession.close().then(() => {
-
-            // Because close() is async, this promise could resolve after the
-            // player has been disposed.
-            if (eventBus.isDisposed()) {
-              return;
-            }
-
-            safeTriggerOnEventBus(eventBus, {
-              type: 'keysessionclosed',
-              keySession
-            });
-            removeSession(initData);
-          }).catch((error) => {
-            const metadata = {
-              errorType: EmeError.EMEFailedToCloseSession,
-              keySystem
-            };
-
-            emeError(error, metadata);
-          });
+          closeAndRemoveSession();
         }
       }, false);
 
