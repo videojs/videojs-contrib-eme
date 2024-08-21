@@ -129,11 +129,11 @@ export const makeNewRequest = (player, requestOptions) => {
   let pauseTimer;
 
   player.on('pause', () => {
-    if (options.limitRenewalsOnPause && typeof options.limitRenewalsOnPause === 'number') {
+    if (options.limitRenewalsOnPauseTime && typeof options.limitRenewalsOnPauseTime === 'number') {
 
       pauseTimer = setInterval(() => {
         timeElapsed++;
-        if (timeElapsed >= options.limitRenewalsOnPause) {
+        if (timeElapsed >= options.limitRenewalsOnPauseTime) {
           clearInterval(pauseTimer);
         }
       }, 1000);
@@ -194,10 +194,10 @@ export const makeNewRequest = (player, requestOptions) => {
 
         if (event.messageType === 'license-renewal') {
           const limitRenewalsBeforePlay = options.limitRenewalsBeforePlay;
-          const limitRenewalsOnPause = options.limitRenewslsOnPause;
+          const limitRenewalsOnPauseTime = options.limitRenewalsOnPauseTime;
 
           if (!player.hasStarted() && limitRenewalsBeforePlay ||
-              player.paused() && typeof limitRenewalsOnPause === 'number' && timeElapsed >= limitRenewalsOnPause) {
+              player.paused() && typeof limitRenewalsOnPauseTime === 'number' && timeElapsed >= limitRenewalsOnPauseTime) {
 
             closeAndRemoveSession();
             return;
