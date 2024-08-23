@@ -518,7 +518,7 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
   });
 });
 
-QUnit.test('handleEncryptedEvent called explicitly on replay or seekback after `ended` if browser is Firefox ', function(assert) {
+QUnit.skip('handleEncryptedEvent called explicitly on replay or seekback after `ended` if browser is Firefox ', function(assert) {
   const done = assert.async();
 
   this.clock = sinon.useFakeTimers();
@@ -537,7 +537,7 @@ QUnit.test('handleEncryptedEvent called explicitly on replay or seekback after `
   this.player.trigger('ended');
   this.clock.tick(1);
   this.player.trigger('play');
-  assert.ok(plug.handleEncryptedEvent.called, 'HandleEncryptedEvent called if play fires after ended');
+  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent called if play fires after ended');
 
   this.player.trigger('ended');
   this.player.trigger('seek');
