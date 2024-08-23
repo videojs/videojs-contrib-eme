@@ -4,6 +4,7 @@ import QUnit from 'qunit';
 import sinon from 'sinon';
 import videojs from 'video.js';
 import window from 'global/window';
+import * as plug from '../src/plugin';
 import {
   default as plugin,
   hasSession,
@@ -515,6 +516,46 @@ QUnit.test('handleEncryptedEvent uses predefined init data', function(assert) {
     assert.deepEqual(sessions[0].initData, this.initData1, 'captured initData in the session');
     done();
   });
+});
+
+QUnit.test('handleEncryptedEvent called explicitly on replay or seekback after `ended` if browser is Firefox ', function(assert) {
+  const done = assert.async();
+
+  this.clock = sinon.useFakeTimers();
+
+  videojs.browser = {
+    IS_FIREFOX: true
+  };
+  this.player.eme();
+
+  this.player.trigger('ready');
+  this.player.trigger('play');
+
+  plug.handleEncryptedEvent = sinon.spy();
+
+  this.clock.tick(1);
+  this.player.trigger('ended');
+  this.clock.tick(1);
+  this.player.trigger('play');
+  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent called if play fires after ended');
+  plug.handleEncryptedEvent.resetHistory();
+
+  this.player.trigger('ended');
+  this.player.trigger('seek');
+  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent called if seek fires after ended');
+  plug.handleEncryptedEvent.resetHistory();
+
+  this.player.trigger('ended');
+  this.player.trigger('seek');
+
+  this.player.eme.sessions.push({});
+
+  this.player.trigger('play');
+  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent only called once if seek and play both fire after ended');
+  plug.handleEncryptedEvent.resetHistory();
+
+  sinon.restore();
+  done();
 });
 
 QUnit.test('handleMsNeedKeyEvent uses predefined init data', function(assert) {
