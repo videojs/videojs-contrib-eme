@@ -537,16 +537,19 @@ QUnit.test('handleEncryptedEvent called explicitly on replay or seekback after `
   this.player.trigger('ended');
   this.clock.tick(1);
   this.player.trigger('play');
-  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent called if play fires after ended');
-  plug.handleEncryptedEvent.resetHistory();
+  assert.ok(plug.handleEncryptedEvent.called, 'HandleEncryptedEvent called if play fires after ended');
+
   this.player.trigger('ended');
   this.player.trigger('seek');
-  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent called if seek fires after ended');
-  plug.handleEncryptedEvent.resetHistory();
+  assert.ok(plug.handleEncryptedEvent.calledTwice, 'HandleEncryptedEvent called if seek fires after ended');
+
   this.player.trigger('ended');
   this.player.trigger('seek');
+
+  this.player.eme.sessions.push({});
+
   this.player.trigger('play');
-  assert.ok(plug.handleEncryptedEvent.calledOnce, 'HandleEncryptedEvent only called once if seek and play both fire after ended');
+  assert.ok(plug.handleEncryptedEvent.calledThrice, 'HandleEncryptedEvent only called once if seek and play both fire after ended');
   sinon.restore();
   done();
 });

@@ -177,7 +177,7 @@ export const makeNewRequest = (player, requestOptions) => {
       keySession
     });
 
-    player.on(['dispose', 'ended'], () => {
+    player.on('dispose', () => {
       closeAndRemoveSession();
     });
 
@@ -197,7 +197,8 @@ export const makeNewRequest = (player, requestOptions) => {
           const limitRenewalsOnPauseTime = options.limitRenewalsOnPauseTime;
 
           if (!player.hasStarted() && limitRenewalsBeforePlay ||
-              player.paused() && typeof limitRenewalsOnPauseTime === 'number' && timeElapsed >= limitRenewalsOnPauseTime) {
+            (player.paused() && typeof limitRenewalsOnPauseTime === 'number' && timeElapsed >= limitRenewalsOnPauseTime) ||
+            player.ended()) {
 
             closeAndRemoveSession();
             return;

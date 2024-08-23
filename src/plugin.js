@@ -255,27 +255,37 @@ const onPlayerReady = (player, emeError) => {
   setupSessions(player);
 
   if (window.MediaKeys) {
-    player.on('ended', () =>{
+    const sendMockEncryptedEvent = () => {
+      const mockEncryptedEvent = {
+        initDataType: 'cenc',
+        initData: null,
+        target: player.tech_.el_
+      };
 
-      if (videojs.browser.IS_FIREFOX) {
-        let handled = false;
+      setupSessions(player);
+      handleEncryptedEvent(player, mockEncryptedEvent, getOptions(player), player.eme.sessions, player.tech_, emeError);
+    };
 
-        player.one(['seek', 'play'], () => {
-          if (handled) {
-            return;
+    if (videojs.browser.IS_FIREFOX) {
+      let handled;
+
+      player.on('ended', () =>{
+        handled = false;
+        player.one(['seek', 'play'], (e) => {
+          if (!handled) {
+            sendMockEncryptedEvent();
+            handled = true;
           }
-          const mockEncryptedEvent = {
-            initDataType: 'cenc',
-            initData: null,
-            target: player.tech_.el_
-          };
-
-          setupSessions(player);
-          handleEncryptedEvent(player, mockEncryptedEvent, getOptions(player), player.eme.sessions, player.tech_, emeError);
-          handled = true;
         });
-      }
-    });
+      });
+      player.on('play', () => {
+        if (player.eme.sessions.length === 0) {
+          handled = true;
+          sendMockEncryptedEvent();
+        }
+      });
+    }
+
     // Support EME 05 July 2016
     // Chrome 42+, Firefox 47+, Edge, Safari 12.1+ on macOS 10.14+
     player.tech_.el_.addEventListener('encrypted', (event) => {
