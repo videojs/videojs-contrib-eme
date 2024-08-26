@@ -129,11 +129,11 @@ export const makeNewRequest = (player, requestOptions) => {
   let pauseTimer;
 
   player.on('pause', () => {
-    if (options.limitRenewalsOnPauseTime && typeof options.limitRenewalsOnPauseTime === 'number') {
+    if (options.limitRenewalsMaxPauseDuration && typeof options.limitRenewalsMaxPauseDuration === 'number') {
 
       pauseTimer = setInterval(() => {
         timeElapsed++;
-        if (timeElapsed >= options.limitRenewalsOnPauseTime) {
+        if (timeElapsed >= options.limitRenewalsMaxPauseDuration) {
           clearInterval(pauseTimer);
         }
       }, 1000);
@@ -149,6 +149,7 @@ export const makeNewRequest = (player, requestOptions) => {
     const keySession = mediaKeys.createSession();
 
     const closeAndRemoveSession = () => {
+      videojs.log.debug('Session expired, closing the session.');
       keySession.close().then(() => {
 
         // Because close() is async, this promise could resolve after the
@@ -194,12 +195,13 @@ export const makeNewRequest = (player, requestOptions) => {
 
         if (event.messageType === 'license-renewal') {
           const limitRenewalsBeforePlay = options.limitRenewalsBeforePlay;
-          const limitRenewalsOnPauseTime = options.limitRenewalsOnPauseTime;
+          const limitRenewalsMaxPauseDuration = options.limitRenewalsMaxPauseDuration;
+          const validLimitRenewalsMaxPauseDuration = typeof limitRenewalsMaxPauseDuration === 'number';
+          const renewingBeforePlayback = !player.hasStarted() && limitRenewalsBeforePlay;
+          const maxPauseDurationReached = player.paused() && validLimitRenewalsMaxPauseDuration && timeElapsed >= limitRenewalsMaxPauseDuration;
+          const ended = player.ended();
 
-          if (!player.hasStarted() && limitRenewalsBeforePlay ||
-            (player.paused() && typeof limitRenewalsOnPauseTime === 'number' && timeElapsed >= limitRenewalsOnPauseTime) ||
-            player.ended()) {
-
+          if (renewingBeforePlayback || maxPauseDurationReached || ended) {
             closeAndRemoveSession();
             return;
           }

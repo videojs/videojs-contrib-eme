@@ -267,6 +267,10 @@ const onPlayerReady = (player, emeError) => {
     };
 
     if (videojs.browser.IS_FIREFOX) {
+      // Unlike Chrome, Firefox doesn't receive an `encrypted` event on
+      // replay and seek-back after content ends and `handleEncryptedEvent` is never called.
+      // So a fake encrypted event is necessary here.
+
       let handled;
 
       player.on('ended', () =>{
@@ -279,7 +283,10 @@ const onPlayerReady = (player, emeError) => {
         });
       });
       player.on('play', () => {
-        if (player.eme.sessions.length === 0) {
+        const options = player.eme.options;
+        const limitRenewalsMaxPauseDuration = options.limitRenewalsMaxPauseDuration;
+
+        if (player.eme.sessions.length === 0 && typeof limitRenewalsMaxPauseDuration === 'number') {
           handled = true;
           sendMockEncryptedEvent();
         }
