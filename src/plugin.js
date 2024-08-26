@@ -272,7 +272,7 @@ const onPlayerReady = (player, emeError) => {
       player.on('ended', () =>{
         handled = false;
         player.one(['seek', 'play'], (e) => {
-          if (!handled) {
+          if (!handled && player.eme.sessions.length === 0) {
             sendMockEncryptedEvent();
             handled = true;
           }
