@@ -197,7 +197,7 @@ QUnit.test('keystatuseschange triggers keystatuschange on eventBus for each key'
 
 });
 
-QUnit.test('keystatuseschange with expired key closes and recreates session', function(assert) {
+QUnit.test('keystatuseschange with expired key closes', function(assert) {
   const removeSessionCalls = [];
   // once the eme module gets the removeSession function, the session argument is already
   // bound to the function (note that it's a custom session maintained by the plugin, not
@@ -260,7 +260,73 @@ QUnit.test('keystatuseschange with expired key closes and recreates session', fu
   assert.equal(removeSessionCalls.length, 1, 'called remove session');
   assert.equal(removeSessionCalls[0], initData, 'called to remove session with initData');
 
-  assert.equal(creates, 2, 'created another session');
+  assert.equal(creates, 1, 'no new session created');
+});
+
+QUnit.test('sessions are closed and removed on `ended` after expiry', function(assert) {
+  const done = assert.async();
+  let getLicenseCalls = 0;
+  const options = {
+    keySystems: {
+      'com.widevine.alpha': {
+        url: 'some-url',
+        getLicense(emeOptions, keyMessage, callback) {
+          getLicenseCalls++;
+        }
+      }
+    }
+  };
+  const removeSessionCalls = [];
+  // once the eme module gets the removeSession function, the session argument is already
+  // bound to the function (note that it's a custom session maintained by the plugin, not
+  // the native session), so only initData is passed
+  const removeSession = (initData) => removeSessionCalls.push(initData);
+
+  const keySystemAccess = {
+    keySystem: 'com.widevine.alpha',
+    createMediaKeys: () => {
+      return Promise.resolve({
+        setServerCertificate: () => Promise.resolve(),
+        createSession: () => {
+          return {
+            addEventListener: (event, callback) => {
+              if (event === 'message') {
+                setTimeout(() => {
+                  callback({message: 'whatever', messageType: 'license-renewal'});
+                  assert.equal(getLicenseCalls, 0, 'did not call getLicense');
+                  assert.equal(removeSessionCalls.length, 1, 'session is removed');
+                  done();
+                });
+              }
+            },
+            keyStatuses: [],
+            generateRequest: () => Promise.resolve(),
+            close: () => {
+              return {
+                then: (nextCall) => {
+                  nextCall();
+                  return Promise.resolve();
+                }
+              };
+            }
+          };
+        }
+      });
+    }
+  };
+  const video = {
+    setMediaKeys: () => Promise.resolve()
+  };
+
+  this.player.ended = () => true;
+  standard5July2016({
+    player: this.player,
+    video,
+    keySystemAccess,
+    options,
+    eventBus: getMockEventBus(),
+    removeSession
+  });
 });
 
 QUnit.test('keystatuseschange with internal-error logs a warning', function(assert) {

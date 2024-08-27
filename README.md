@@ -36,6 +36,8 @@ Maintenance Status: Stable
     - [`keySystems`](#keysystems)
     - [`emeHeaders`](#emeheaders)
     - [`firstWebkitneedkeyTimeout`](#firstwebkitneedkeytimeout)
+    - [`limitRenewalsMaxPauseDuration`](#limitrenewalsmaxpauseduration)
+    - [`limitRenewalsBeforePlay`](#limitrenewalsbeforeplay)
   - [Setting Options per Source](#setting-options-per-source)
   - [Setting Options for All Sources](#setting-options-for-all-sources)
   - [Header Hierarchy and Removal](#header-hierarchy-and-removal)
@@ -368,6 +370,15 @@ emeHeaders: {
 
 The amount of time in milliseconds to wait on the first `webkitneedkey` event before making the key request. This was implemented due to a bug in Safari where rendition switches at the start of playback can cause `webkitneedkey` to fire multiple times, with only the last one being valid.
 
+#### `limitRenewalsMaxPauseDuration`
+
+The duration, in seconds, to wait in paused state before license-renewals are rejected and session is closed. This option limits excess license requests when using limited-duration licenses.
+
+#### `limitRenewalsBeforePlay`
+> Boolean
+
+If set to true, license renewal is rejected if license expires before play when player is idle. This option limits excess license requests when using limited-duration licenses.
+
 ### Setting Options per Source
 
 This is the recommended way of setting most options. Each source may have a different set of requirements; so, it is best to define options on a per source basis.
@@ -619,7 +630,7 @@ When the key session is created, an event of type `keysessioncreated` will be tr
 ```
 player.tech().on('keysessioncreated', function(keySession) {
   // Event data:
-  // keySession: the mediaKeySession object 
+  // keySession: the mediaKeySession object
   // https://www.w3.org/TR/encrypted-media/#mediakeysession-interface
 });
 ```
