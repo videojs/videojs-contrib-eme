@@ -1,3 +1,10 @@
+<a name="5.5.1"></a>
+## [5.5.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.5.0...v5.5.1) (2024-08-27)
+
+### Bug Fixes
+
+* excessive requests when using HDCP fallback with LDL (#225) ([348935e](https://github.com/videojs/videojs-contrib-eme/commit/348935e)), closes [#225](https://github.com/videojs/videojs-contrib-eme/issues/225)
+
 <a name="5.5.0"></a>
 # [5.5.0](https://github.com/videojs/videojs-contrib-eme/compare/v5.4.1...v5.5.0) (2024-07-08)
 
