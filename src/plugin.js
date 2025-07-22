@@ -59,7 +59,7 @@ export function handleEncryptedEvent(player, event, options, sessions, eventBus,
   // Legacy fairplay is the keysystem 'com.apple.fps.1_0'.
   // If we are using this keysystem we want to use WebkitMediaKeys.
   // This can be initialized manually with initLegacyFairplay().
-  if (options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] && window.WebKitMediaKeys) {
+  if (options.keySystems[LEGACY_FAIRPLAY_KEY_SYSTEM] && window.WebKitMediaKeys && player.eme.legacyFairplayIsUsed) {
     videojs.log.debug('eme', `Ignoring \'encrypted\' event, using legacy fairplay keySystem ${LEGACY_FAIRPLAY_KEY_SYSTEM}`);
     return Promise.resolve();
   }
@@ -470,6 +470,7 @@ const eme = function(options = {}) {
         }
       };
 
+      player.eme.legacyFairplayIsUsed = true;
       let videoElement = player.tech_.el_;
 
       // Support Safari EME with FairPlay
@@ -484,6 +485,7 @@ const eme = function(options = {}) {
           videoElement.removeEventListener('webkitneedkey', webkitNeedKeyEventHandler);
         }
 
+        player.eme.legacyFairplayIsUsed = false;
         videoElement = null;
       };
 
@@ -494,6 +496,7 @@ const eme = function(options = {}) {
       return cleanupWebkitNeedKeyHandler;
     },
     detectSupportedCDMs,
+    legacyFairplayIsUsed: false,
     options
   };
 };
