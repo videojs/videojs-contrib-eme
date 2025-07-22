@@ -439,8 +439,11 @@ QUnit.test('handleEncryptedEvent checks for legacy fairplay', function(assert) {
     }
   };
 
+  // this is set by initLegacyFairplay
+  this.player.eme.legacyFairplayIsUsed = true;
+
   handleEncryptedEvent(this.player, this.event1, options, sessions).then(() => {
-    assert.equal(sessions.length, 0, 'did not create a session when no options');
+    assert.equal(sessions.length, 0, 'did not create a session when legacy fairplay is used');
     done();
   });
 });
