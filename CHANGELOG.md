@@ -1,3 +1,11 @@
+<a name="5.5.2"></a>
+## [5.5.2](https://github.com/videojs/videojs-contrib-eme/compare/v5.5.1...v5.5.2) (2025-07-22)
+
+### Bug Fixes
+
+* check for legacy Fairplay support when switching out of handleEncryptedEvent (#234) ([595f2ad](https://github.com/videojs/videojs-contrib-eme/commit/595f2ad)), closes [#234](https://github.com/videojs/videojs-contrib-eme/issues/234)
+* improve legacy fairplay workflow detection (#235) ([9dff1b8](https://github.com/videojs/videojs-contrib-eme/commit/9dff1b8)), closes [#235](https://github.com/videojs/videojs-contrib-eme/issues/235)
+
 <a name="5.5.1"></a>
 ## [5.5.1](https://github.com/videojs/videojs-contrib-eme/compare/v5.5.0...v5.5.1) (2024-08-27)
 
